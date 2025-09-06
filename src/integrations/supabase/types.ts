@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      themes: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          in_scope: string[] | null
+          name: string
+          out_of_scope: string[] | null
+          pillar: string
+          sector: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          in_scope?: string[] | null
+          name: string
+          out_of_scope?: string[] | null
+          pillar: string
+          sector: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          in_scope?: string[] | null
+          name?: string
+          out_of_scope?: string[] | null
+          pillar?: string
+          sector?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
