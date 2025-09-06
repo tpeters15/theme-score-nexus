@@ -18,6 +18,7 @@ export function ThemeDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPillars, setSelectedPillars] = useState<string[]>([]);
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
   const filteredThemes = themes.filter(theme => {
     // Search filter
@@ -95,25 +96,58 @@ export function ThemeDashboard() {
               onClearAll={handleClearAllFilters}
             />
             
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search themes, pillars, or sectors..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
+              {/* Collapsible Search */}
+              <div className="relative flex items-center">
+                {!isSearchExpanded ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsSearchExpanded(true)}
+                    className="p-2 hover:bg-accent transition-colors"
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <div className="relative animate-scale-in">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search themes..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onBlur={() => {
+                        if (!searchQuery) setIsSearchExpanded(false);
+                      }}
+                      className="pl-10 w-64"
+                      autoFocus
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Hover Legend */}
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <Info className="h-4 w-4" />
-                    Legend
-                  </Button>
+                  <div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="gap-2 hover:bg-accent transition-colors"
+                      onMouseEnter={(e) => {
+                        // Trigger popover on hover
+                        e.currentTarget.click();
+                      }}
+                    >
+                      <Info className="h-4 w-4" />
+                      Legend
+                    </Button>
+                  </div>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-64 z-50">
+                <PopoverContent 
+                  align="end" 
+                  className="w-64 z-50 animate-fade-in"
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                >
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 bg-score-high rounded-full"></div>
