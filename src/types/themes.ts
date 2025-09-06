@@ -4,6 +4,8 @@ export interface Theme {
   pillar: string;
   sector: string;
   description?: string;
+  in_scope?: string[];
+  out_of_scope?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -64,11 +66,8 @@ export const DEFAULT_ATTRIBUTES: Omit<Attribute, 'id' | 'created_at' | 'updated_
   { name: 'Impact', weight: 5, description: 'Impact Collinearity, Scale' },
 ];
 
-export const SAMPLE_THEMES: Omit<Theme, 'id' | 'created_at' | 'updated_at'>[] = [
-  { name: 'Digital Banking', pillar: 'FinTech Revolution', sector: 'Financial Services' },
-  { name: 'EV Charging Infrastructure', pillar: 'Sustainable Future', sector: 'Clean Energy' },
-  { name: 'B2B SaaS Automation', pillar: 'Digital Transformation', sector: 'Software' },
-  { name: 'Telehealth Platforms', pillar: 'Digital Transformation', sector: 'Healthcare' },
-  { name: 'Sustainable Packaging', pillar: 'Sustainable Future', sector: 'Materials' },
-  { name: 'Payment Processing', pillar: 'FinTech Revolution', sector: 'Financial Services' },
-];
+export const PILLAR_COLORS = {
+  'Decarbonisation': 'bg-green-100 text-green-800 border-green-200',
+  'Energy Transition': 'bg-blue-100 text-blue-800 border-blue-200',
+  'Resource Sustainability': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+} as const;

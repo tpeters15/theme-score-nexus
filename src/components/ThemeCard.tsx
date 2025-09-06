@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ThemeWithScores, SCORE_THRESHOLDS } from "@/types/themes";
+import { ThemeWithScores, SCORE_THRESHOLDS, PILLAR_COLORS } from "@/types/themes";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface ThemeCardProps {
@@ -22,12 +22,7 @@ export function ThemeCard({ theme, onClick }: ThemeCardProps) {
   };
 
   const getPillarColor = (pillar: string) => {
-    switch (pillar) {
-      case 'FinTech Revolution': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Sustainable Future': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Digital Transformation': return 'bg-purple-100 text-purple-800 border-purple-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+    return PILLAR_COLORS[pillar as keyof typeof PILLAR_COLORS] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
   return (
