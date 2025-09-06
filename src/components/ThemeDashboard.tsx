@@ -2,10 +2,11 @@ import { useState } from "react";
 import { ThemeCard } from "./ThemeCard";
 import { ThemeDetailModal } from "./ThemeDetailModal";
 import { DashboardHeader } from "./DashboardHeader";
+import { ThemeFilter } from "./ThemeFilter";
 import { useThemes } from "@/hooks/useThemes";
 import { ThemeWithScores, Score } from "@/types/themes";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Filter, Download } from "lucide-react";
+import { Search, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -13,16 +14,36 @@ export function ThemeDashboard() {
   const { themes, loading, updateThemeScores } = useThemes();
   const [selectedTheme, setSelectedTheme] = useState<ThemeWithScores | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPillars, setSelectedPillars] = useState<string[]>([]);
+  const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
 
-  const filteredThemes = themes.filter(theme =>
-    theme.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    theme.pillar.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    theme.sector.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredThemes = themes.filter(theme => {
+    // Search filter
+    const matchesSearch = searchQuery === "" || 
+      theme.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      theme.pillar.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      theme.sector.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Pillar filter
+    const matchesPillar = selectedPillars.length === 0 || 
+      selectedPillars.includes(theme.pillar);
+
+    // Sector filter
+    const matchesSector = selectedSectors.length === 0 || 
+      selectedSectors.includes(theme.sector);
+
+    return matchesSearch && matchesPillar && matchesSector;
+  });
 
   const handleSaveScores = async (themeId: string, scores: Partial<Score>[]) => {
     await updateThemeScores(themeId, scores);
     setSelectedTheme(null);
+  };
+
+  const handleClearAllFilters = () => {
+    setSelectedPillars([]);
+    setSelectedSectors([]);
+    setSearchQuery("");
   };
 
   if (loading) {
@@ -56,17 +77,22 @@ export function ThemeDashboard() {
             
             <div className="flex items-center gap-3">
               <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
-              <Button variant="outline" size="sm">
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <ThemeFilter
+              themes={themes}
+              selectedPillars={selectedPillars}
+              selectedSectors={selectedSectors}
+              onPillarChange={setSelectedPillars}
+              onSectorChange={setSelectedSectors}
+              onClearAll={handleClearAllFilters}
+            />
+            
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
