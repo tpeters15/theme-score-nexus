@@ -30,7 +30,7 @@ export function ThemeDashboard() {
       <div className="min-h-screen bg-background">
         <DashboardHeader />
         <div className="container mx-auto px-6 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 p-8">
             {Array.from({ length: 12 }).map((_, i) => (
               <Skeleton key={i} className="h-80 w-96" />
             ))}
@@ -94,7 +94,7 @@ export function ThemeDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 p-8">
           {filteredThemes.map((theme) => (
             <ThemeCard
               key={theme.id}
