@@ -6,9 +6,11 @@ import { ThemeFilter } from "./ThemeFilter";
 import { useThemes } from "@/hooks/useThemes";
 import { ThemeWithScores, Score } from "@/types/themes";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Download } from "lucide-react";
+import { Search, Download, Info, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 export function ThemeDashboard() {
   const { themes, loading, updateThemeScores } = useThemes();
@@ -103,21 +105,59 @@ export function ThemeDashboard() {
               />
             </div>
             
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-score-high rounded-full"></div>
-                <span>High (70+)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-score-medium rounded-full"></div>
-                <span>Medium (40-69)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-score-low rounded-full"></div>
-                <span>Low (0-39)</span>
-              </div>
+            <div className="ml-auto">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <Info className="h-4 w-4" />
+                    Legend
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-64 z-50">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-score-high rounded-full"></div>
+                      <span>High (70+)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-score-medium rounded-full"></div>
+                      <span>Medium (40-69)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-score-low rounded-full"></div>
+                      <span>Low (0-39)</span>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
+
+          {(selectedPillars.length > 0 || selectedSectors.length > 0) && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {selectedPillars.map((pillar) => (
+                <Badge key={pillar} variant="secondary" className="flex items-center gap-1">
+                  {pillar}
+                  <X
+                    className="h-3 w-3 cursor-pointer"
+                    onClick={() => setSelectedPillars(selectedPillars.filter((p) => p !== pillar))}
+                  />
+                </Badge>
+              ))}
+              {selectedSectors.map((sector) => (
+                <Badge key={sector} variant="outline" className="flex items-center gap-1">
+                  {sector}
+                  <X
+                    className="h-3 w-3 cursor-pointer"
+                    onClick={() => setSelectedSectors(selectedSectors.filter((s) => s !== sector))}
+                  />
+                </Badge>
+              ))}
+              <Button variant="ghost" size="sm" onClick={handleClearAllFilters} className="h-auto px-2 text-xs">
+                Clear all
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 p-8">

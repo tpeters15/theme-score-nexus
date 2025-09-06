@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -72,7 +72,7 @@ export function ThemeFilter({
             size="sm"
             className="relative"
           >
-            Filter by Taxonomy
+            Filters
             {filterCount > 0 && (
               <Badge 
                 variant="secondary" 
@@ -85,9 +85,9 @@ export function ThemeFilter({
           </Button>
         </DropdownMenuTrigger>
         
-        <DropdownMenuContent align="start" className="w-80">
+        <DropdownMenuContent align="start" className="w-80 z-50 bg-popover border shadow-lg">
           <DropdownMenuLabel className="flex items-center justify-between">
-            <span>Strategic Pillars</span>
+            <span>Pillars</span>
             {hasActiveFilters && (
               <Button
                 variant="ghost"
@@ -123,7 +123,7 @@ export function ThemeFilter({
           <DropdownMenuSeparator />
           
           <DropdownMenuLabel>
-            Investment Sectors
+            Sectors
             {selectedPillars.length > 0 && (
               <span className="text-xs text-muted-foreground ml-2">
                 (filtered by selected pillars)
@@ -156,37 +156,6 @@ export function ThemeFilter({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Active Filter Tags */}
-      {hasActiveFilters && (
-        <div className="flex items-center gap-2 flex-wrap">
-          {selectedPillars.map(pillar => (
-            <Badge 
-              key={pillar} 
-              variant="secondary" 
-              className="flex items-center gap-1"
-            >
-              {pillar}
-              <X 
-                className="h-3 w-3 cursor-pointer" 
-                onClick={() => togglePillar(pillar)}
-              />
-            </Badge>
-          ))}
-          {selectedSectors.map(sector => (
-            <Badge 
-              key={sector} 
-              variant="outline" 
-              className="flex items-center gap-1"
-            >
-              {sector}
-              <X 
-                className="h-3 w-3 cursor-pointer" 
-                onClick={() => toggleSector(sector)}
-              />
-            </Badge>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
