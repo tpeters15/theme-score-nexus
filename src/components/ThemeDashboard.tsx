@@ -96,6 +96,33 @@ export function ThemeDashboard() {
               onClearAll={handleClearAllFilters}
             />
             
+            {/* Selected Filters */}
+            {(selectedPillars.length > 0 || selectedSectors.length > 0) && (
+              <div className="flex items-center gap-2 flex-wrap">
+                {selectedPillars.map((pillar) => (
+                  <Badge key={pillar} variant="secondary" className="flex items-center gap-1">
+                    {pillar}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setSelectedPillars(selectedPillars.filter((p) => p !== pillar))}
+                    />
+                  </Badge>
+                ))}
+                {selectedSectors.map((sector) => (
+                  <Badge key={sector} variant="outline" className="flex items-center gap-1">
+                    {sector}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setSelectedSectors(selectedSectors.filter((s) => s !== sector))}
+                    />
+                  </Badge>
+                ))}
+                <Button variant="ghost" size="sm" onClick={handleClearAllFilters} className="h-auto px-2 text-xs">
+                  Clear all
+                </Button>
+              </div>
+            )}
+            
             <div className="ml-auto flex items-center gap-2">
               {/* Collapsible Search */}
               <div className="relative flex items-center">
@@ -167,31 +194,6 @@ export function ThemeDashboard() {
             </div>
           </div>
 
-          {(selectedPillars.length > 0 || selectedSectors.length > 0) && (
-            <div className="flex items-center gap-2 flex-wrap">
-              {selectedPillars.map((pillar) => (
-                <Badge key={pillar} variant="secondary" className="flex items-center gap-1">
-                  {pillar}
-                  <X
-                    className="h-3 w-3 cursor-pointer"
-                    onClick={() => setSelectedPillars(selectedPillars.filter((p) => p !== pillar))}
-                  />
-                </Badge>
-              ))}
-              {selectedSectors.map((sector) => (
-                <Badge key={sector} variant="outline" className="flex items-center gap-1">
-                  {sector}
-                  <X
-                    className="h-3 w-3 cursor-pointer"
-                    onClick={() => setSelectedSectors(selectedSectors.filter((s) => s !== sector))}
-                  />
-                </Badge>
-              ))}
-              <Button variant="ghost" size="sm" onClick={handleClearAllFilters} className="h-auto px-2 text-xs">
-                Clear all
-              </Button>
-            </div>
-          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 p-8">
