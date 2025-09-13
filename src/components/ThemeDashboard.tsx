@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ThemeCard } from "./ThemeCard";
 import { ThemeDetailModal } from "./ThemeDetailModal";
+import { DetailedFrameworkModal } from "./DetailedFrameworkModal";
 import { DashboardHeader } from "./DashboardHeader";
 import { ThemeFilter } from "./ThemeFilter";
 import { useThemes } from "@/hooks/useThemes";
@@ -15,6 +16,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 export function ThemeDashboard() {
   const { themes, loading, updateThemeScores } = useThemes();
   const [selectedTheme, setSelectedTheme] = useState<ThemeWithScores | null>(null);
+  const [selectedDetailedTheme, setSelectedDetailedTheme] = useState<ThemeWithScores | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPillars, setSelectedPillars] = useState<string[]>([]);
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);

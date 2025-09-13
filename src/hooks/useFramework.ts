@@ -1,0 +1,265 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { FrameworkCategory, FrameworkCriteria, DetailedScore, ResearchDocument, N8nResearchRun, ThemeWithDetailedScores, FrameworkCategoryWithCriteria, UserRole } from '@/types/framework';
+import { Theme } from '@/types/themes';
+
+export const useFramework = () => {
+  const [categories, setCategories] = useState<FrameworkCategory[]>([]);
+  const [criteria, setCriteria] = useState<FrameworkCriteria[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+
+  useEffect(() => {
+    fetchFrameworkData();
+    fetchUserRole();
+  }, []);
+
+  const fetchUserRole = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (roleData) {
+        setUserRole(roleData.role);
+      }
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+    }
+  };
+
+  const fetchFrameworkData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch categories
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('framework_categories')
+        .select('*')
+        .order('display_order');
+
+      if (categoriesError) throw categoriesError;
+
+      // Fetch criteria
+      const { data: criteriaData, error: criteriaError } = await supabase
+        .from('framework_criteria')
+        .select('*')
+        .order('category_id, display_order');
+
+      if (criteriaError) throw criteriaError;
+
+      setCategories(categoriesData || []);
+      setCriteria(criteriaData || []);
+    } catch (error) {
+      console.error('Error fetching framework data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchThemeWithDetailedScores = async (themeId: string): Promise<ThemeWithDetailedScores | null> => {
+    try {
+      // Fetch theme
+      const { data: theme, error: themeError } = await supabase
+        .from('themes')
+        .select('*')
+        .eq('id', themeId)
+        .single();
+
+      if (themeError) throw themeError;
+
+      // Fetch detailed scores with criteria
+      const { data: scoresData, error: scoresError } = await supabase
+        .from('detailed_scores')
+        .select(`
+          *,
+          criteria:framework_criteria(*)
+        `)
+        .eq('theme_id', themeId);
+
+      if (scoresError) throw scoresError;
+
+      // Fetch research documents
+      const { data: documentsData, error: documentsError } = await supabase
+        .from('research_documents')
+        .select('*')
+        .eq('theme_id', themeId)
+        .order('created_at', { ascending: false });
+
+      if (documentsError) throw documentsError;
+
+      // Fetch research runs
+      const { data: runsData, error: runsError } = await supabase
+        .from('n8n_research_runs')
+        .select('*')
+        .eq('theme_id', themeId)
+        .order('started_at', { ascending: false });
+
+      if (runsError) throw runsError;
+
+      // Organize categories with criteria
+      const categoriesWithCriteria: FrameworkCategoryWithCriteria[] = categories.map(category => ({
+        ...category,
+        criteria: criteria.filter(c => c.category_id === category.id)
+      }));
+
+      // Calculate overall score and confidence
+      const { overall_score, overall_confidence } = calculateOverallScore(scoresData || [], categoriesWithCriteria);
+
+      return {
+        ...theme,
+        categories: categoriesWithCriteria,
+        detailed_scores: scoresData || [],
+        research_documents: documentsData || [],
+        research_runs: runsData || [],
+        overall_score,
+        overall_confidence
+      };
+    } catch (error) {
+      console.error('Error fetching theme with detailed scores:', error);
+      return null;
+    }
+  };
+
+  const calculateOverallScore = (scores: any[], categories: FrameworkCategoryWithCriteria[]) => {
+    let totalWeightedScore = 0;
+    let totalWeight = 0;
+    let confidenceMap: { [key: string]: number } = { 'High': 0, 'Medium': 0, 'Low': 0 };
+
+    for (const category of categories) {
+      let categoryScore = 0;
+      let categoryTotalCriteriaWeight = 0;
+      
+      for (const criteria of category.criteria) {
+        const score = scores.find(s => s.criteria_id === criteria.id);
+        if (score && score.score) {
+          categoryScore += (score.score * criteria.weight);
+          categoryTotalCriteriaWeight += criteria.weight;
+          
+          // Count confidence levels
+          if (score.confidence) {
+            confidenceMap[score.confidence]++;
+          }
+        }
+      }
+
+      if (categoryTotalCriteriaWeight > 0) {
+        const categoryWeightedScore = (categoryScore / categoryTotalCriteriaWeight) * (category.weight / 100);
+        totalWeightedScore += categoryWeightedScore;
+        totalWeight += (category.weight / 100);
+      }
+    }
+
+    const overall_score = totalWeight > 0 ? Math.round((totalWeightedScore / totalWeight) * 20) : 0; // Scale to 0-100
+
+    // Determine overall confidence
+    const totalScores = Object.values(confidenceMap).reduce((a, b) => a + b, 0);
+    let overall_confidence: 'High' | 'Medium' | 'Low' = 'Medium';
+    
+    if (totalScores > 0) {
+      const highPercentage = confidenceMap['High'] / totalScores;
+      const lowPercentage = confidenceMap['Low'] / totalScores;
+      
+      if (highPercentage >= 0.6) {
+        overall_confidence = 'High';
+      } else if (lowPercentage >= 0.4) {
+        overall_confidence = 'Low';
+      }
+    }
+
+    return { overall_score, overall_confidence };
+  };
+
+  const updateDetailedScore = async (themeId: string, criteriaId: string, scoreData: Partial<DetailedScore>) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase
+        .from('detailed_scores')
+        .upsert({
+          theme_id: themeId,
+          criteria_id: criteriaId,
+          ...scoreData,
+          updated_by: user?.id,
+          updated_at: new Date().toISOString(),
+          update_source: 'manual'
+        });
+
+      if (error) throw error;
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating detailed score:', error);
+      return false;
+    }
+  };
+
+  const startN8nResearch = async (themeId: string, criteriaIds: string[], webhookUrl: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Create research run record
+      const { data: runData, error: runError } = await supabase
+        .from('n8n_research_runs')
+        .insert({
+          theme_id: themeId,
+          criteria_ids: criteriaIds,
+          webhook_url: webhookUrl,
+          started_by: user?.id,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (runError) throw runError;
+
+      // Trigger n8n webhook
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          run_id: runData.id,
+          theme_id: themeId,
+          criteria_ids: criteriaIds,
+          criteria_details: criteriaIds.map(id => {
+            const criterion = criteria.find(c => c.id === id);
+            return {
+              id,
+              name: criterion?.name,
+              code: criterion?.code,
+              ai_prompt: criterion?.ai_prompt,
+              scoring_rubric: criterion?.scoring_rubric
+            };
+          }).filter(Boolean)
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to trigger n8n workflow');
+      }
+
+      return runData;
+    } catch (error) {
+      console.error('Error starting n8n research:', error);
+      throw error;
+    }
+  };
+
+  return {
+    categories,
+    criteria,
+    loading,
+    userRole,
+    fetchThemeWithDetailedScores,
+    updateDetailedScore,
+    startN8nResearch,
+    refreshFrameworkData: fetchFrameworkData
+  };
+};
