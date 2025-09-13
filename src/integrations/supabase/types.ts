@@ -14,6 +14,262 @@ export type Database = {
   }
   public: {
     Tables: {
+      detailed_scores: {
+        Row: {
+          ai_research_data: Json | null
+          analyst_notes: string | null
+          confidence: string | null
+          criteria_id: string | null
+          id: string
+          notes: string | null
+          score: number | null
+          theme_id: string | null
+          update_source: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          ai_research_data?: Json | null
+          analyst_notes?: string | null
+          confidence?: string | null
+          criteria_id?: string | null
+          id?: string
+          notes?: string | null
+          score?: number | null
+          theme_id?: string | null
+          update_source?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          ai_research_data?: Json | null
+          analyst_notes?: string | null
+          confidence?: string | null
+          criteria_id?: string | null
+          id?: string
+          notes?: string | null
+          score?: number | null
+          theme_id?: string | null
+          update_source?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "detailed_scores_criteria_id_fkey"
+            columns: ["criteria_id"]
+            isOneToOne: false
+            referencedRelation: "framework_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "detailed_scores_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      framework_categories: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string | null
+          display_order: number
+          id: string
+          name: string
+          updated_at: string | null
+          weight: number
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description?: string | null
+          display_order: number
+          id?: string
+          name: string
+          updated_at?: string | null
+          weight: number
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          name?: string
+          updated_at?: string | null
+          weight?: number
+        }
+        Relationships: []
+      }
+      framework_criteria: {
+        Row: {
+          ai_prompt: string | null
+          category_id: string | null
+          code: string
+          created_at: string | null
+          description: string | null
+          display_order: number
+          id: string
+          name: string
+          objective: string | null
+          scoring_rubric: Json | null
+          updated_at: string | null
+          weight: number
+        }
+        Insert: {
+          ai_prompt?: string | null
+          category_id?: string | null
+          code: string
+          created_at?: string | null
+          description?: string | null
+          display_order: number
+          id?: string
+          name: string
+          objective?: string | null
+          scoring_rubric?: Json | null
+          updated_at?: string | null
+          weight: number
+        }
+        Update: {
+          ai_prompt?: string | null
+          category_id?: string | null
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          name?: string
+          objective?: string | null
+          scoring_rubric?: Json | null
+          updated_at?: string | null
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "framework_criteria_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "framework_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      n8n_research_runs: {
+        Row: {
+          completed_at: string | null
+          criteria_ids: string[] | null
+          error_message: string | null
+          id: string
+          n8n_execution_id: string | null
+          results_summary: Json | null
+          started_at: string | null
+          started_by: string | null
+          status: string | null
+          theme_id: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          criteria_ids?: string[] | null
+          error_message?: string | null
+          id?: string
+          n8n_execution_id?: string | null
+          results_summary?: Json | null
+          started_at?: string | null
+          started_by?: string | null
+          status?: string | null
+          theme_id?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          criteria_ids?: string[] | null
+          error_message?: string | null
+          id?: string
+          n8n_execution_id?: string | null
+          results_summary?: Json | null
+          started_at?: string | null
+          started_by?: string | null
+          status?: string | null
+          theme_id?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "n8n_research_runs_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      research_documents: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          criteria_id: string | null
+          description: string | null
+          document_type: string | null
+          file_path: string | null
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          n8n_agent_run_id: string | null
+          theme_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          criteria_id?: string | null
+          description?: string | null
+          document_type?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          n8n_agent_run_id?: string | null
+          theme_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          criteria_id?: string | null
+          description?: string | null
+          document_type?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          n8n_agent_run_id?: string | null
+          theme_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "research_documents_criteria_id_fkey"
+            columns: ["criteria_id"]
+            isOneToOne: false
+            referencedRelation: "framework_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "research_documents_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       themes: {
         Row: {
           created_at: string | null
@@ -50,15 +306,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "analyst"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -185,6 +468,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "analyst"],
+    },
   },
 } as const
