@@ -3,6 +3,7 @@ import { ThemeWithScores, SCORE_THRESHOLDS, PILLAR_COLORS } from "@/types/themes
 import { TrendingUp, TrendingDown, Minus, BarChart3, Users, Clock } from "lucide-react";
 import { PinContainer } from "@/components/ui/3d-pin";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 interface ThemeCardProps {
   theme: ThemeWithScores;
@@ -10,6 +11,7 @@ interface ThemeCardProps {
 }
 
 export function ThemeCard({ theme, onClick }: ThemeCardProps) {
+  const navigate = useNavigate();
   const getScoreColor = (score: number) => {
     if (score >= SCORE_THRESHOLDS.HIGH) return 'text-emerald-400';
     if (score >= SCORE_THRESHOLDS.MEDIUM) return 'text-amber-400';
@@ -37,10 +39,19 @@ export function ThemeCard({ theme, onClick }: ThemeCardProps) {
 
   const scorePercentage = (theme.weighted_total_score / 100) * 100;
 
+  const handleCardClick = () => {
+    navigate(`/theme/${theme.id}`);
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClick();
+  };
+
   return (
     <PinContainer
       title={`Explore ${theme.name}`}
-      onClick={onClick}
+      onClick={handleCardClick}
       containerClassName="w-96 h-80"
     >
       <div className="flex flex-col p-6 tracking-tight text-foreground w-[20rem] h-[20rem] bg-gradient-to-b from-background/90 to-background/50 backdrop-blur-sm border border-border rounded-2xl">
@@ -112,9 +123,12 @@ export function ThemeCard({ theme, onClick }: ThemeCardProps) {
               Updated recently
             </div>
           </div>
-          <div className="text-primary text-sm font-medium">
-            Analyze →
-          </div>
+          <button 
+            onClick={handleEditClick}
+            className="text-primary text-sm font-medium hover:text-primary/80 transition-colors"
+          >
+            Edit Scores
+          </button>
         </div>
       </div>
     </PinContainer>
