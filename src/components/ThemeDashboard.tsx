@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ThemeCard } from "./ThemeCard";
+import { ThemeTableView } from "./ThemeTableView";
 import { ThemeDetailModal } from "./ThemeDetailModal";
 import { DetailedFrameworkModal } from "./DetailedFrameworkModal";
 import { DashboardHeader } from "./DashboardHeader";
@@ -7,11 +8,12 @@ import { ThemeFilter } from "./ThemeFilter";
 import { useThemes } from "@/hooks/useThemes";
 import { ThemeWithScores, Score } from "@/types/themes";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Download, Info, X } from "lucide-react";
+import { Search, Download, Info, X, Grid3X3, Table2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Toggle } from "@/components/ui/toggle";
 
 interface ThemeDashboardProps {
   initialPillarFilter?: string;
@@ -28,6 +30,7 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
   );
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
   const filteredThemes = themes.filter(theme => {
     // Search filter
@@ -99,6 +102,26 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
             </div>
             
             <div className="flex items-center gap-3">
+              {/* View Mode Toggle */}
+              <div className="flex items-center border rounded-md p-1">
+                <Toggle
+                  pressed={viewMode === 'cards'}
+                  onPressedChange={() => setViewMode('cards')}
+                  size="sm"
+                  className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Toggle>
+                <Toggle
+                  pressed={viewMode === 'table'}
+                  onPressedChange={() => setViewMode('table')}
+                  size="sm"
+                  className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                >
+                  <Table2 className="h-4 w-4" />
+                </Toggle>
+              </div>
+              
               <Button variant="outline" size="sm">
                 <Download className="h-4 w-4 mr-2" />
                 Export
@@ -216,15 +239,25 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
 
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 p-8">
-          {filteredThemes.map((theme) => (
-            <ThemeCard
-              key={theme.id}
-              theme={theme}
-              onClick={() => setSelectedTheme(theme)}
+        {/* Dynamic View Rendering */}
+        {viewMode === 'cards' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 p-8">
+            {filteredThemes.map((theme) => (
+              <ThemeCard
+                key={theme.id}
+                theme={theme}
+                onClick={() => setSelectedTheme(theme)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="px-8">
+            <ThemeTableView 
+              themes={filteredThemes}
+              onEditTheme={setSelectedTheme}
             />
-          ))}
-        </div>
+          </div>
+        )}
 
         {filteredThemes.length === 0 && searchQuery && (
           <div className="text-center py-12">
