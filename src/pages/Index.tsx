@@ -1,7 +1,9 @@
 import { ExecutiveDashboard } from "@/components/ExecutiveDashboard";
+import { SignalsDashboard } from "@/components/SignalsDashboard";
 
 const Index = () => {
-  return <ExecutiveDashboard />;
+  // For now, showing SignalsDashboard - can add routing later
+  return <SignalsDashboard />;
 };
 
 export default Index;
