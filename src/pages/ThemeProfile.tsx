@@ -118,82 +118,136 @@ const ThemeProfile = () => {
           <p className="text-lg text-muted-foreground">{theme.description}</p>
         )}
 
-        {/* Score Overview */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Overall Score
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <div className="text-4xl font-bold">
-                <span className={getScoreColor(theme.overall_score)}>
-                  {theme.overall_score}
-                </span>
-                <span className="text-lg text-muted-foreground">/100</span>
-              </div>
-              <div>
+        {/* Framework Score Analysis - Main Hero Content */}
+        <div className="grid gap-6">
+          {/* Overview Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="text-center">
+              <CardContent className="pt-6">
+                <div className="text-3xl font-bold">
+                  <span className={getScoreColor(theme.overall_score)}>
+                    {theme.overall_score}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">Overall Score</p>
                 <Badge 
                   variant={theme.overall_confidence === 'High' ? 'default' : 
                            theme.overall_confidence === 'Medium' ? 'secondary' : 'destructive'}
+                  className="mt-2"
                 >
                   {theme.overall_confidence} Confidence
                 </Badge>
-              </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="text-center">
+              <CardContent className="pt-6">
+                <div className="text-3xl font-bold text-primary">
+                  {theme.categories.length}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">Categories</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="text-center">
+              <CardContent className="pt-6">
+                <div className="text-3xl font-bold text-primary">
+                  {theme.detailed_scores.filter(s => s.score !== null).length}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">Scored Criteria</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="text-center">
+              <CardContent className="pt-6">
+                <div className="text-3xl font-bold text-primary">
+                  {theme.research_documents.length}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">Research Docs</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Framework Categories with Scores */}
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold">Framework Analysis</h2>
+            <div className="grid gap-4">
+              {theme.categories.map((category) => {
+                const categoryScores = theme.detailed_scores.filter(s => 
+                  category.criteria.some(c => c.id === s.criteria_id)
+                );
+                const avgScore = categoryScores.length > 0 
+                  ? categoryScores.reduce((sum, s) => sum + (s.score || 0), 0) / categoryScores.length 
+                  : 0;
+                
+                return (
+                  <Card key={category.id} className="overflow-hidden">
+                    <CardHeader className="bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg">{category.name} ({category.code})</CardTitle>
+                          <CardDescription>{category.description}</CardDescription>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold">
+                            <span className={getScoreColor(avgScore * 20)}>
+                              {avgScore.toFixed(1)}
+                            </span>
+                            <span className="text-sm text-muted-foreground">/5</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">Category Average</p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      <div className="grid gap-3">
+                        {category.criteria.map((criteria) => {
+                          const score = theme.detailed_scores.find(s => s.criteria_id === criteria.id);
+                          return (
+                            <div key={criteria.id} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-medium text-sm">{criteria.code}</h4>
+                                  <span className="text-sm">{criteria.name}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">{criteria.description}</p>
+                              </div>
+                              <div className="text-right ml-4">
+                                {score?.score ? (
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-lg font-bold ${getScoreColor(score.score * 20)}`}>
+                                      {score.score}/5
+                                    </span>
+                                    {score.confidence && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {score.confidence}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">Not scored</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
-      {/* Scope */}
-      {(theme.in_scope?.length || theme.out_of_scope?.length) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {theme.in_scope?.length && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-green-600">In Scope</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {theme.in_scope.map((item, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
-          
-          {theme.out_of_scope?.length && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-red-600">Out of Scope</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {theme.out_of_scope.map((item, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-
-      {/* Tabs */}
+      {/* Contextual Information - Accessible but not center-stage */}
       <Tabs defaultValue="research" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="research">Research & Documents</TabsTrigger>
-          <TabsTrigger value="analysis">Framework Analysis</TabsTrigger>
-          <TabsTrigger value="activity">Research Activity</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="research">Research</TabsTrigger>
+          <TabsTrigger value="scope">Scope</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsTrigger value="detailed">Detailed Analysis</TabsTrigger>
         </TabsList>
 
         <TabsContent value="research" className="space-y-6">
@@ -247,48 +301,54 @@ const ThemeProfile = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="analysis" className="space-y-6">
-          <div className="grid gap-6">
-            {theme.categories.map((category) => (
-              <Card key={category.id}>
-                <CardHeader>
-                  <CardTitle>{category.name} ({category.code})</CardTitle>
-                  <CardDescription>{category.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {category.criteria.map((criteria) => {
-                      const score = theme.detailed_scores.find(s => s.criteria_id === criteria.id);
-                      return (
-                        <div key={criteria.id} className="flex items-center justify-between p-3 border rounded">
-                          <div className="flex-1">
-                            <h4 className="font-medium">{criteria.name} ({criteria.code})</h4>
-                            <p className="text-sm text-muted-foreground">{criteria.description}</p>
-                          </div>
-                          <div className="text-right">
-                            {score?.score ? (
-                              <div className="flex items-center gap-2">
-                                <span className={`font-bold ${getScoreColor(score.score)}`}>
-                                  {score.score}/5
-                                </span>
-                                {score.confidence && (
-                                  <Badge variant="outline" className="text-xs">
-                                    {score.confidence}
-                                  </Badge>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">Not scored</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        <TabsContent value="scope" className="space-y-6">
+          {(theme.in_scope?.length || theme.out_of_scope?.length) ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {theme.in_scope?.length && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-score-high">In Scope</CardTitle>
+                    <CardDescription>Areas included in this investment theme</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {theme.in_scope.map((item, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <div className="w-2 h-2 bg-score-high rounded-full mt-2 flex-shrink-0" />
+                          <span className="text-sm">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {theme.out_of_scope?.length && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-score-low">Out of Scope</CardTitle>
+                    <CardDescription>Areas explicitly excluded from this theme</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {theme.out_of_scope.map((item, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <div className="w-2 h-2 bg-score-low rounded-full mt-2 flex-shrink-0" />
+                          <span className="text-sm">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-8">
+                <p className="text-muted-foreground">No scope definition available</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-6">
@@ -343,6 +403,62 @@ const ThemeProfile = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="detailed" className="space-y-6">
+          <div className="grid gap-6">
+            {theme.categories.map((category) => (
+              <Card key={category.id}>
+                <CardHeader>
+                  <CardTitle>{category.name} ({category.code})</CardTitle>
+                  <CardDescription>{category.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {category.criteria.map((criteria) => {
+                      const score = theme.detailed_scores.find(s => s.criteria_id === criteria.id);
+                      return (
+                        <div key={criteria.id} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex-1">
+                              <h4 className="font-medium">{criteria.name} ({criteria.code})</h4>
+                              <p className="text-sm text-muted-foreground">{criteria.description}</p>
+                            </div>
+                            <div className="text-right">
+                              {score?.score ? (
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-xl font-bold ${getScoreColor(score.score * 20)}`}>
+                                    {score.score}/5
+                                  </span>
+                                  {score.confidence && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {score.confidence}
+                                    </Badge>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">Not scored</span>
+                              )}
+                            </div>
+                          </div>
+                          {score?.notes && (
+                            <div className="mt-3 p-3 bg-muted/30 rounded text-sm">
+                              <strong>Notes:</strong> {score.notes}
+                            </div>
+                          )}
+                          {score?.analyst_notes && (
+                            <div className="mt-2 p-3 bg-primary/5 rounded text-sm">
+                              <strong>Analyst Notes:</strong> {score.analyst_notes}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
 
