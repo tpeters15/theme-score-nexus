@@ -5,6 +5,9 @@ import { ThemeDetailModal } from "./ThemeDetailModal";
 import { DetailedFrameworkModal } from "./DetailedFrameworkModal";
 import { DashboardHeader } from "./DashboardHeader";
 import { ThemeFilter } from "./ThemeFilter";
+import { ThemeFilterPills } from "./ThemeFilterPills";
+import { ThemeFilterSidebar } from "./ThemeFilterSidebar";
+import { ThemeFilterSegmented } from "./ThemeFilterSegmented";
 import { useThemes } from "@/hooks/useThemes";
 import { ThemeWithScores, Score } from "@/types/themes";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -138,14 +141,50 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <ThemeFilter
-                themes={themes}
-                selectedPillars={selectedPillars}
-                selectedSectors={selectedSectors}
-                onPillarChange={setSelectedPillars}
-                onSectorChange={setSelectedSectors}
-                onClearAll={handleClearAllFilters}
-              />
+          {/* Option 1: Search + Filter Pills */}
+          <div className="space-y-4">
+            <div className="text-xs text-muted-foreground font-medium">Option 1: Search + Filter Pills</div>
+            <ThemeFilterPills
+              themes={themes}
+              selectedPillars={selectedPillars}
+              selectedSectors={selectedSectors}
+              onPillarChange={setSelectedPillars}
+              onSectorChange={setSelectedSectors}
+              onClearAll={handleClearAllFilters}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          </div>
+
+          {/* Option 2: Sidebar Filter */}
+          <div className="space-y-4">
+            <div className="text-xs text-muted-foreground font-medium">Option 2: Sidebar Filter</div>
+            <ThemeFilterSidebar
+              themes={themes}
+              selectedPillars={selectedPillars}
+              selectedSectors={selectedSectors}
+              onPillarChange={setSelectedPillars}
+              onSectorChange={setSelectedSectors}
+              onClearAll={handleClearAllFilters}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          </div>
+
+          {/* Option 3: Segmented Control */}
+          <div className="space-y-4">
+            <div className="text-xs text-muted-foreground font-medium">Option 3: Segmented Control + Dropdown</div>
+            <ThemeFilterSegmented
+              themes={themes}
+              selectedPillars={selectedPillars}
+              selectedSectors={selectedSectors}
+              onPillarChange={setSelectedPillars}
+              onSectorChange={setSelectedSectors}
+              onClearAll={handleClearAllFilters}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          </div>
             
               {/* Selected Filters */}
               {(selectedPillars.length > 0 || selectedSectors.length > 0) && (
