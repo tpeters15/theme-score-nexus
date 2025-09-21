@@ -20,12 +20,14 @@ const ThemeProfile = () => {
   const [showFrameworkModal, setShowFrameworkModal] = useState(false);
 
   useEffect(() => {
-    const loadTheme = async () => {
+  const loadTheme = async () => {
       if (!themeId) return;
       
+      console.log("Loading theme:", themeId);
       setLoading(true);
       try {
         const themeData = await fetchThemeWithDetailedScores(themeId);
+        console.log("Theme data loaded:", themeData);
         setTheme(themeData);
       } catch (error) {
         console.error("Failed to load theme:", error);
