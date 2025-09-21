@@ -2,34 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Sleek Minimal Design System - Modern & Professional */
+/* High-End PE Research Platform Design System */
 
 @layer base {
   :root {
-    /* Ultra-minimal Color Palette */
-    --background: 0 0% 99%;
-    --foreground: 0 0% 13%;
+    /* Professional Color Palette - Dark Mode First */
+    --background: 222 13% 7%;
+    --foreground: 210 11% 96%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 13%;
+    --card: 222 13% 9%;
+    --card-foreground: 210 11% 96%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 13%;
+    --popover: 222 13% 11%;
+    --popover-foreground: 210 11% 96%;
 
-    /* Primary - Modern Blue */
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 98%;
-    --primary-hover: 221 83% 48%;
+    /* Primary - Professional Blue */
+    --primary: 212 100% 54%;
+    --primary-foreground: 222 13% 7%;
+    --primary-hover: 212 100% 48%;
 
-    /* Minimal Grays */
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 13%;
+    /* Refined Grays */
+    --secondary: 217 13% 15%;
+    --secondary-foreground: 210 11% 96%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 217 13% 13%;
+    --muted-foreground: 215 12% 65%;
 
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 13%;
+    --accent: 217 13% 15%;
+    --accent-foreground: 210 11% 96%;
 
     /* Refined Status Colors */
     --score-high: 142 71% 45%;
@@ -42,44 +42,48 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 221 83% 53%;
+    --border: 217 13% 20%;
+    --input: 217 13% 15%;
+    --ring: 212 100% 54%;
 
-    --radius: 8px;
+    --radius: 6px;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 13%;
-    --sidebar-primary: 0 0% 13%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 0 0% 13%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 221 83% 53%;
+    /* Professional surface colors */
+    --surface-elevated: 217 13% 11%;
+    --surface-hover: 217 13% 17%;
+    
+    --sidebar-background: 222 13% 7%;
+    --sidebar-foreground: 210 11% 96%;
+    --sidebar-primary: 212 100% 54%;
+    --sidebar-primary-foreground: 222 13% 7%;
+    --sidebar-accent: 217 13% 15%;
+    --sidebar-accent-foreground: 210 11% 96%;
+    --sidebar-border: 217 13% 20%;
+    --sidebar-ring: 212 100% 54%;
   }
 
-  .dark {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 95%;
+  .light {
+    --background: 210 11% 98%;
+    --foreground: 222 13% 9%;
 
-    --card: 0 0% 6%;
-    --card-foreground: 0 0% 95%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 13% 9%;
 
-    --popover: 0 0% 6%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 13% 9%;
 
-    --primary: 221 83% 58%;
-    --primary-foreground: 0 0% 4%;
-    --primary-hover: 221 83% 63%;
+    --primary: 212 100% 54%;
+    --primary-foreground: 210 11% 98%;
+    --primary-hover: 212 100% 48%;
 
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 210 11% 96%;
+    --secondary-foreground: 222 13% 9%;
 
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 210 11% 96%;
+    --muted-foreground: 215 12% 45%;
 
-    --accent: 0 0% 10%;
-    --accent-foreground: 0 0% 95%;
+    --accent: 210 11% 96%;
+    --accent-foreground: 222 13% 9%;
 
     --score-high: 142 71% 55%;
     --score-high-foreground: 0 0% 6%;
@@ -91,18 +95,21 @@
     --destructive: 0 72% 61%;
     --destructive-foreground: 0 0% 6%;
 
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 221 83% 58%;
+    --border: 215 12% 85%;
+    --input: 210 11% 94%;
+    --ring: 212 100% 54%;
     
-    --sidebar-background: 0 0% 4%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 221 83% 58%;
-    --sidebar-primary-foreground: 0 0% 4%;
-    --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 221 83% 58%;
+    --surface-elevated: 0 0% 100%;
+    --surface-hover: 210 11% 98%;
+    
+    --sidebar-background: 210 11% 98%;
+    --sidebar-foreground: 222 13% 9%;
+    --sidebar-primary: 212 100% 54%;
+    --sidebar-primary-foreground: 210 11% 98%;
+    --sidebar-accent: 210 11% 96%;
+    --sidebar-accent-foreground: 222 13% 9%;
+    --sidebar-border: 215 12% 85%;
+    --sidebar-ring: 212 100% 54%;
   }
 }
 
@@ -116,13 +123,53 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  /* Typography improvements */
+  /* Professional Typography */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-medium tracking-tight;
+    @apply font-semibold tracking-tight;
   }
 
-  /* Smooth interactions */
+  h1 { @apply text-3xl; }
+  h2 { @apply text-2xl; }
+  h3 { @apply text-xl; }
+  h4 { @apply text-lg; }
+
+  /* Data-dense text styles */
+  .text-data-primary {
+    @apply text-sm font-medium text-foreground;
+  }
+  
+  .text-data-secondary {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .text-metric {
+    @apply text-lg font-semibold tabular-nums;
+  }
+
+  /* Professional interactions */
   button, a, [role="button"] {
-    @apply transition-colors duration-200;
+    @apply transition-all duration-150;
+  }
+
+  /* Custom surfaces */
+  .surface-elevated {
+    @apply bg-surface-elevated border border-border;
+  }
+
+  .surface-hover {
+    @apply hover:bg-surface-hover;
+  }
+
+  /* Professional table styling */
+  .table-professional {
+    @apply text-sm;
+  }
+
+  .table-professional th {
+    @apply font-semibold text-xs uppercase tracking-wide text-muted-foreground border-b-2;
+  }
+
+  .table-professional td {
+    @apply py-3 border-b border-border/50;
   }
 }

@@ -130,73 +130,74 @@ export function ThemeTableView({ themes, onEditTheme }: ThemeTableViewProps) {
   );
 
   return (
-    <div className="rounded-md border bg-card">
-      <Table>
+    <div className="surface-elevated rounded-lg overflow-hidden">
+      <Table className="table-professional">
         <TableHeader>
-          <TableRow>
-            <TableHead>
-              <SortButton field="name">Theme</SortButton>
+          <TableRow className="border-b-2 hover:bg-transparent">
+            <TableHead className="h-10 px-4">
+              <SortButton field="name">Investment Theme</SortButton>
             </TableHead>
-            <TableHead>
-              <SortButton field="pillar">Pillar</SortButton>
+            <TableHead className="h-10 px-4">
+              <SortButton field="pillar">Strategic Pillar</SortButton>
             </TableHead>
-            <TableHead>
+            <TableHead className="h-10 px-4">
               <SortButton field="sector">Sector</SortButton>
             </TableHead>
-            <TableHead>
-              <SortButton field="score">Score</SortButton>
+            <TableHead className="h-10 px-4 text-right">
+              <SortButton field="score">Investment Score</SortButton>
             </TableHead>
-            <TableHead>
+            <TableHead className="h-10 px-4">
               <SortButton field="confidence">Confidence</SortButton>
             </TableHead>
-            <TableHead className="w-20">Actions</TableHead>
+            <TableHead className="w-16 h-10 px-4"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sortedThemes.map((theme) => (
             <TableRow 
               key={theme.id}
-              className="cursor-pointer hover:bg-muted/50"
+              className="cursor-pointer surface-hover transition-colors group"
               onClick={() => navigate(`/theme/${theme.id}`)}
             >
-              <TableCell className="font-medium">
-                <div>
-                  <div className="font-semibold text-foreground">{theme.name}</div>
-                  <div className="text-sm text-muted-foreground truncate max-w-xs">
-                    {theme.description}
+              <TableCell className="px-4 py-3">
+                <div className="space-y-1">
+                  <div className="text-data-primary font-medium">{theme.name}</div>
+                  <div className="text-data-secondary truncate max-w-md">
+                    {theme.description || "No description available"}
                   </div>
                 </div>
               </TableCell>
-              <TableCell>
-                <Badge variant="outline" className={getPillarColor(theme.pillar)}>
+              <TableCell className="px-4 py-3">
+                <Badge variant="outline" className={`${getPillarColor(theme.pillar)} text-xs font-medium`}>
                   {theme.pillar}
                 </Badge>
               </TableCell>
-              <TableCell>
-                <span className="text-sm text-muted-foreground">{theme.sector}</span>
+              <TableCell className="px-4 py-3">
+                <span className="text-data-secondary font-medium">{theme.sector}</span>
               </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  {getScoreIcon(theme.weighted_total_score)}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className={`font-semibold ${getScoreColor(theme.weighted_total_score)}`}>
-                        {Math.round(theme.weighted_total_score)}
-                      </span>
+              <TableCell className="px-4 py-3 text-right">
+                <div className="flex items-center justify-end gap-3">
+                  <div className="text-right">
+                    <div className={`text-metric ${getScoreColor(theme.weighted_total_score)}`}>
+                      {Math.round(theme.weighted_total_score)}
                     </div>
+                    <div className="text-data-secondary">/ 100</div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    {getScoreIcon(theme.weighted_total_score)}
                     <Progress 
                       value={theme.weighted_total_score} 
-                      className="h-2 w-16"
+                      className="h-1.5 w-12"
                     />
                   </div>
                 </div>
               </TableCell>
-              <TableCell>
-                <Badge variant="outline" className={getConfidenceColor(theme.overall_confidence)}>
+              <TableCell className="px-4 py-3">
+                <Badge variant="outline" className={`${getConfidenceColor(theme.overall_confidence)} text-xs`}>
                   {theme.overall_confidence}
                 </Badge>
               </TableCell>
-              <TableCell>
+              <TableCell className="px-4 py-3">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -204,9 +205,9 @@ export function ThemeTableView({ themes, onEditTheme }: ThemeTableViewProps) {
                     e.stopPropagation();
                     onEditTheme(theme);
                   }}
-                  className="h-8 w-8 p-0"
+                  className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <Edit className="h-4 w-4" />
+                  <Edit className="h-3.5 w-3.5" />
                 </Button>
               </TableCell>
             </TableRow>

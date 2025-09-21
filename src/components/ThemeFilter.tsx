@@ -70,24 +70,24 @@ export function ThemeFilter({
           <Button 
             variant="outline" 
             size="sm"
-            className="relative"
+            className="relative h-8 text-xs"
           >
             Filters
             {filterCount > 0 && (
               <Badge 
                 variant="secondary" 
-                className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                className="ml-1.5 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs"
               >
                 {filterCount}
               </Badge>
             )}
-            <ChevronDown className="ml-2 h-4 w-4" />
+            <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
           </Button>
         </DropdownMenuTrigger>
         
-        <DropdownMenuContent align="start" className="w-80 z-50 bg-popover border shadow-lg">
-          <DropdownMenuLabel className="flex items-center justify-between">
-            <span>Pillars</span>
+        <DropdownMenuContent align="start" className="w-72 z-50 bg-popover border shadow-lg">
+          <DropdownMenuLabel className="flex items-center justify-between text-xs">
+            <span>Strategic Pillars</span>
             {hasActiveFilters && (
               <Button
                 variant="ghost"
@@ -100,20 +100,20 @@ export function ThemeFilter({
             )}
           </DropdownMenuLabel>
           
-          <div className="p-2 space-y-1">
+          <div className="p-1.5 space-y-0.5">
             {availablePillars.map(pillar => (
               <div
                 key={pillar}
-                className="flex items-center justify-between p-2 rounded-md hover:bg-accent cursor-pointer"
+                className="flex items-center justify-between p-2 rounded-md hover:bg-accent cursor-pointer transition-colors"
                 onClick={() => togglePillar(pillar)}
               >
-                <span className="text-sm">{pillar}</span>
+                <span className="text-xs font-medium">{pillar}</span>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs h-4 px-1.5">
                     {themes.filter(t => t.pillar === pillar).length}
                   </Badge>
                   {selectedPillars.includes(pillar) && (
-                    <div className="w-2 h-2 bg-primary rounded-full" />
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
                   )}
                 </div>
               </div>
@@ -122,32 +122,32 @@ export function ThemeFilter({
 
           <DropdownMenuSeparator />
           
-          <DropdownMenuLabel>
+          <DropdownMenuLabel className="text-xs">
             Sectors
             {selectedPillars.length > 0 && (
               <span className="text-xs text-muted-foreground ml-2">
-                (filtered by selected pillars)
+                (filtered by pillars)
               </span>
             )}
           </DropdownMenuLabel>
           
-          <div className="p-2 space-y-1 max-h-60 overflow-y-auto">
+          <div className="p-1.5 space-y-0.5 max-h-48 overflow-y-auto">
             {sectorsForSelectedPillars.map(sector => (
               <div
                 key={sector}
-                className="flex items-center justify-between p-2 rounded-md hover:bg-accent cursor-pointer"
+                className="flex items-center justify-between p-2 rounded-md hover:bg-accent cursor-pointer transition-colors"
                 onClick={() => toggleSector(sector)}
               >
-                <span className="text-sm">{sector}</span>
+                <span className="text-xs font-medium">{sector}</span>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs h-4 px-1.5">
                     {themes.filter(t => 
                       t.sector === sector && 
                       (selectedPillars.length === 0 || selectedPillars.includes(t.pillar))
                     ).length}
                   </Badge>
                   {selectedSectors.includes(sector) && (
-                    <div className="w-2 h-2 bg-primary rounded-full" />
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
                   )}
                 </div>
               </div>

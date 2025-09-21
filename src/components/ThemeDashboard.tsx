@@ -80,107 +80,116 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
     <div className="min-h-screen bg-background">
       <DashboardHeader />
       
-      <div className="container mx-auto px-6 py-8">
-        <div className="mb-8 space-y-4">
-          <div className="flex items-center justify-between">
+      <div className="container mx-auto px-6 py-6">
+        <div className="mb-6 space-y-6">
+          <div className="flex items-start justify-between">
             <div>
               {onBackToOverview && (
                 <Button 
                   variant="ghost" 
                   onClick={onBackToOverview}
-                  className="mb-2 -ml-4"
+                  className="mb-3 -ml-2 text-xs"
+                  size="sm"
                 >
-                  ← Back to Portfolio Overview
+                  ← Portfolio Overview
                 </Button>
               )}
-              <h2 className="text-3xl font-bold text-foreground">
-                {initialPillarFilter ? `${initialPillarFilter} Themes` : 'Investment Themes'}
-              </h2>
-              <p className="text-muted-foreground">
-                {filteredThemes.length} themes {initialPillarFilter ? `in ${initialPillarFilter}` : `across ${new Set(themes.map(t => t.pillar)).size} strategic pillars`}
-              </p>
+              <div className="space-y-1">
+                <h2 className="text-2xl font-semibold text-foreground">
+                  {initialPillarFilter ? `${initialPillarFilter} Investment Themes` : 'Investment Themes'}
+                </h2>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span>{filteredThemes.length} themes</span>
+                  <span>•</span>
+                  <span>{new Set(themes.map(t => t.pillar)).size} strategic pillars</span>
+                  <span>•</span>
+                  <span>Last updated: {new Date().toLocaleDateString()}</span>
+                </div>
+              </div>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {/* View Mode Toggle */}
-              <div className="flex items-center border rounded-md p-1">
+              <div className="flex items-center bg-muted rounded-md p-0.5">
                 <Toggle
                   pressed={viewMode === 'cards'}
                   onPressedChange={() => setViewMode('cards')}
                   size="sm"
-                  className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                  className="h-7 px-2 data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
                 >
-                  <Grid3X3 className="h-4 w-4" />
+                  <Grid3X3 className="h-3.5 w-3.5" />
                 </Toggle>
                 <Toggle
                   pressed={viewMode === 'table'}
                   onPressedChange={() => setViewMode('table')}
                   size="sm"
-                  className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                  className="h-7 px-2 data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
                 >
-                  <Table2 className="h-4 w-4" />
+                  <Table2 className="h-3.5 w-3.5" />
                 </Toggle>
               </div>
               
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" className="text-xs">
+                <Download className="h-3.5 w-3.5 mr-1.5" />
                 Export
               </Button>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 flex-wrap">
-            <ThemeFilter
-              themes={themes}
-              selectedPillars={selectedPillars}
-              selectedSectors={selectedSectors}
-              onPillarChange={setSelectedPillars}
-              onSectorChange={setSelectedSectors}
-              onClearAll={handleClearAllFilters}
-            />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ThemeFilter
+                themes={themes}
+                selectedPillars={selectedPillars}
+                selectedSectors={selectedSectors}
+                onPillarChange={setSelectedPillars}
+                onSectorChange={setSelectedSectors}
+                onClearAll={handleClearAllFilters}
+              />
             
-            {/* Selected Filters */}
-            {(selectedPillars.length > 0 || selectedSectors.length > 0) && (
-              <div className="flex items-center gap-2 flex-wrap">
-                {selectedPillars.map((pillar) => (
-                  <Badge key={pillar} variant="secondary" className="flex items-center gap-1">
-                    {pillar}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => setSelectedPillars(selectedPillars.filter((p) => p !== pillar))}
-                    />
-                  </Badge>
-                ))}
-                {selectedSectors.map((sector) => (
-                  <Badge key={sector} variant="outline" className="flex items-center gap-1">
-                    {sector}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => setSelectedSectors(selectedSectors.filter((s) => s !== sector))}
-                    />
-                  </Badge>
-                ))}
-                <Button variant="ghost" size="sm" onClick={handleClearAllFilters} className="h-auto px-2 text-xs">
-                  Clear all
-                </Button>
-              </div>
-            )}
+              {/* Selected Filters */}
+              {(selectedPillars.length > 0 || selectedSectors.length > 0) && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  {selectedPillars.map((pillar) => (
+                    <Badge key={pillar} variant="secondary" className="flex items-center gap-1 text-xs">
+                      {pillar}
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => setSelectedPillars(selectedPillars.filter((p) => p !== pillar))}
+                      />
+                    </Badge>
+                  ))}
+                  {selectedSectors.map((sector) => (
+                    <Badge key={sector} variant="outline" className="flex items-center gap-1 text-xs">
+                      {sector}
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => setSelectedSectors(selectedSectors.filter((s) => s !== sector))}
+                      />
+                    </Badge>
+                  ))}
+                  <Button variant="ghost" size="sm" onClick={handleClearAllFilters} className="h-auto px-1 text-xs">
+                    Clear all
+                  </Button>
+                </div>
+              )}
+            </div>
             
-            <div className="ml-auto flex items-center gap-2">
-              {/* Collapsible Search */}
+            <div className="flex items-center gap-2">
+              {/* Compact Search */}
               <div className="relative flex items-center">
                 {!isSearchExpanded ? (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setIsSearchExpanded(true)}
-                    className="p-2 hover:bg-accent transition-colors"
+                    className="p-1.5 h-8 w-8"
                   >
-                    <Search className="h-4 w-4" />
+                    <Search className="h-3.5 w-3.5" />
                   </Button>
                 ) : (
                   <div className="relative animate-scale-in">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                     <Input
                       placeholder="Search themes..."
                       value={searchQuery}
@@ -188,47 +197,44 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
                       onBlur={() => {
                         if (!searchQuery) setIsSearchExpanded(false);
                       }}
-                      className="pl-10 w-64"
+                      className="pl-8 w-48 h-8 text-sm"
                       autoFocus
                     />
                   </div>
                 )}
               </div>
 
-              {/* Hover Legend */}
+              {/* Compact Legend */}
               <Popover>
                 <PopoverTrigger asChild>
-                  <div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="gap-2 hover:bg-accent transition-colors"
-                      onMouseEnter={(e) => {
-                        // Trigger popover on hover
-                        e.currentTarget.click();
-                      }}
-                    >
-                      <Info className="h-4 w-4" />
-                      Legend
-                    </Button>
-                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="gap-1 h-8 px-2 text-xs hover:bg-accent"
+                    onMouseEnter={(e) => {
+                      e.currentTarget.click();
+                    }}
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                    Legend
+                  </Button>
                 </PopoverTrigger>
                 <PopoverContent 
                   align="end" 
-                  className="w-64 z-50 animate-fade-in"
+                  className="w-48 z-50 animate-fade-in p-3"
                   onOpenAutoFocus={(e) => e.preventDefault()}
                 >
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-score-high rounded-full"></div>
+                      <div className="w-2 h-2 bg-score-high rounded-full"></div>
                       <span>High (70+)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-score-medium rounded-full"></div>
+                      <div className="w-2 h-2 bg-score-medium rounded-full"></div>
                       <span>Medium (40-69)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-score-low rounded-full"></div>
+                      <div className="w-2 h-2 bg-score-low rounded-full"></div>
                       <span>Low (0-39)</span>
                     </div>
                   </div>
@@ -251,7 +257,7 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
             ))}
           </div>
         ) : (
-          <div className="px-8">
+          <div>
             <ThemeTableView 
               themes={filteredThemes}
               onEditTheme={setSelectedTheme}
