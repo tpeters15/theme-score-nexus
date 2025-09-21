@@ -37,7 +37,7 @@ const ThemeProfile = () => {
     };
 
     loadTheme();
-  }, [themeId, fetchThemeWithDetailedScores]);
+  }, [themeId]);
 
   if (loading) {
     return (
