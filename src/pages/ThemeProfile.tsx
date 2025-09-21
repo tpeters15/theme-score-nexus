@@ -11,6 +11,11 @@ import { ThemeWithDetailedScores, ResearchDocument, N8nResearchRun } from "@/typ
 import { PILLAR_COLORS } from "@/types/themes";
 import { DetailedFrameworkModal } from "@/components/DetailedFrameworkModal";
 import { ThemeFileUpload } from "@/components/ThemeFileUpload";
+import { DocumentViewer } from "@/components/DocumentViewer";
+import { DocumentIntelligence } from "@/components/DocumentIntelligence";
+import { InlineScoreEditor } from "@/components/InlineScoreEditor";
+import { BulkScoringModal } from "@/components/BulkScoringModal";
+import { ScoreProgressIndicator } from "@/components/ScoreProgressIndicator";
 
 const ThemeProfile = () => {
   const { themeId } = useParams<{ themeId: string }>();
@@ -19,6 +24,8 @@ const ThemeProfile = () => {
   const [theme, setTheme] = useState<ThemeWithDetailedScores | null>(null);
   const [loading, setLoading] = useState(true);
   const [showFrameworkModal, setShowFrameworkModal] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<ResearchDocument | null>(null);
+  const [showBulkScoring, setShowBulkScoring] = useState(false);
 
   const refreshTheme = async () => {
     if (!themeId) return;
@@ -108,12 +115,19 @@ const ThemeProfile = () => {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
         </Button>
-        <Button
-          onClick={() => setShowFrameworkModal(true)}
-          className="mb-6"
-        >
-          View Framework Analysis
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setShowFrameworkModal(true)}
+            variant="outline"
+          >
+            View Framework Analysis
+          </Button>
+          <Button
+            onClick={() => setShowBulkScoring(true)}
+          >
+            Bulk Scoring
+          </Button>
+        </div>
       </div>
 
       {/* Theme Header */}
@@ -132,52 +146,61 @@ const ThemeProfile = () => {
 
         {/* Framework Score Analysis - Main Hero Content */}
         <div className="grid gap-6">
-          {/* Overview Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <div className="text-3xl font-bold">
-                  <span className={getScoreColor(theme.overall_score)}>
-                    {theme.overall_score}
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">Overall Score</p>
-                <Badge 
-                  variant={theme.overall_confidence === 'High' ? 'default' : 
-                           theme.overall_confidence === 'Medium' ? 'secondary' : 'destructive'}
-                  className="mt-2"
-                >
-                  {theme.overall_confidence} Confidence
-                </Badge>
-              </CardContent>
-            </Card>
-            
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <div className="text-3xl font-bold text-primary">
-                  {theme.categories.length}
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">Categories</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <div className="text-3xl font-bold text-primary">
-                  {theme.detailed_scores.filter(s => s.score !== null).length}
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">Scored Criteria</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <div className="text-3xl font-bold text-primary">
-                  {theme.research_documents.length}
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">Research Docs</p>
-              </CardContent>
-            </Card>
+          {/* Overview Metrics and Progress */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card className="text-center">
+                  <CardContent className="pt-6">
+                    <div className="text-3xl font-bold">
+                      <span className={getScoreColor(theme.overall_score)}>
+                        {theme.overall_score}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">Overall Score</p>
+                    <Badge 
+                      variant={theme.overall_confidence === 'High' ? 'default' : 
+                               theme.overall_confidence === 'Medium' ? 'secondary' : 'destructive'}
+                      className="mt-2"
+                    >
+                      {theme.overall_confidence} Confidence
+                    </Badge>
+                  </CardContent>
+                </Card>
+                
+                <Card className="text-center">
+                  <CardContent className="pt-6">
+                    <div className="text-3xl font-bold text-primary">
+                      {theme.categories.length}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">Categories</p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="text-center">
+                  <CardContent className="pt-6">
+                    <div className="text-3xl font-bold text-primary">
+                      {theme.detailed_scores.filter(s => s.score !== null).length}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">Scored Criteria</p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="text-center">
+                  <CardContent className="pt-6">
+                    <div className="text-3xl font-bold text-primary">
+                      {theme.research_documents.length}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">Research Docs</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Score Progress */}
+            <div className="lg:col-span-1">
+              <ScoreProgressIndicator theme={theme} />
+            </div>
           </div>
 
           {/* Framework Categories with Scores */}
@@ -216,30 +239,24 @@ const ThemeProfile = () => {
                         {category.criteria.map((criteria) => {
                           const score = theme.detailed_scores.find(s => s.criteria_id === criteria.id);
                           return (
-                            <div key={criteria.id} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-medium text-sm">{criteria.code}</h4>
-                                  <span className="text-sm">{criteria.name}</span>
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-1">{criteria.description}</p>
-                              </div>
-                              <div className="text-right ml-4">
-                                {score?.score ? (
+                            <div key={criteria.id} className="p-3 bg-muted/20 rounded-lg">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex-1">
                                   <div className="flex items-center gap-2">
-                                    <span className={`text-lg font-bold ${getScoreColor(score.score * 20)}`}>
-                                      {score.score}/5
-                                    </span>
-                                    {score.confidence && (
-                                      <Badge variant="outline" className="text-xs">
-                                        {score.confidence}
-                                      </Badge>
-                                    )}
+                                    <h4 className="font-medium text-sm">{criteria.code}</h4>
+                                    <span className="text-sm">{criteria.name}</span>
                                   </div>
-                                ) : (
-                                  <span className="text-sm text-muted-foreground">Not scored</span>
-                                )}
+                                  <p className="text-xs text-muted-foreground mt-1">{criteria.description}</p>
+                                </div>
                               </div>
+                              <InlineScoreEditor
+                                themeId={theme.id}
+                                criteriaId={criteria.id}
+                                currentScore={score?.score}
+                                currentConfidence={score?.confidence}
+                                currentNotes={score?.notes}
+                                onScoreUpdate={refreshTheme}
+                              />
                             </div>
                           );
                         })}
@@ -263,62 +280,12 @@ const ThemeProfile = () => {
         </TabsList>
 
         <TabsContent value="research" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Research Documents
-              </CardTitle>
-              <CardDescription>
-                Documents and research materials for this theme
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <ThemeFileUpload themeId={themeId!} onUploadComplete={refreshTheme} />
-              
-              {theme.research_documents.length > 0 ? (
-                <div className="space-y-4">
-                  <h4 className="font-medium">Existing Documents</h4>
-                  {theme.research_documents.map((doc: ResearchDocument) => (
-                    <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <h4 className="font-medium">{doc.title}</h4>
-                          {doc.description && (
-                            <p className="text-sm text-muted-foreground">{doc.description}</p>
-                          )}
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className="text-xs">
-                              {doc.document_type}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(doc.created_at).toLocaleDateString()}
-                            </span>
-                            {doc.file_size && (
-                              <span className="text-xs text-muted-foreground">
-                                {(doc.file_size / 1024 / 1024).toFixed(1)} MB
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      {doc.file_path && (
-                        <Button variant="ghost" size="sm">
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No research documents uploaded yet</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <ThemeFileUpload themeId={themeId!} onUploadComplete={refreshTheme} />
+          
+          <DocumentIntelligence 
+            documents={theme.research_documents}
+            onDocumentSelect={setSelectedDocument}
+          />
         </TabsContent>
 
         <TabsContent value="scope" className="space-y-6">
@@ -488,6 +455,23 @@ const ThemeProfile = () => {
           theme={theme}
           isOpen={showFrameworkModal}
           onClose={() => setShowFrameworkModal(false)}
+        />
+      )}
+
+      {showBulkScoring && (
+        <BulkScoringModal
+          theme={theme}
+          isOpen={showBulkScoring}
+          onClose={() => setShowBulkScoring(false)}
+          onScoringComplete={refreshTheme}
+        />
+      )}
+
+      {selectedDocument && (
+        <DocumentViewer
+          document={selectedDocument}
+          isOpen={!!selectedDocument}
+          onClose={() => setSelectedDocument(null)}
         />
       )}
     </div>
