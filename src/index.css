@@ -2,114 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
-/* PE Research Platform Design System - Institutional Grade */
+/* Sleek Minimal Design System - Modern & Professional */
 
 @layer base {
   :root {
-    /* Core Brand - Professional Blues & Grays */
-    --background: 210 11% 96%;
-    --foreground: 215 25% 27%;
+    /* Ultra-minimal Color Palette */
+    --background: 0 0% 99%;
+    --foreground: 0 0% 13%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
+    --card-foreground: 0 0% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
+    --popover-foreground: 0 0% 13%;
 
-    /* Primary - Deep Professional Blue */
-    --primary: 215 84% 32%;
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 215 84% 28%;
+    /* Primary - Modern Blue */
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 98%;
+    --primary-hover: 221 83% 48%;
 
-    /* Secondary - Sophisticated Gray */
-    --secondary: 215 14% 91%;
-    --secondary-foreground: 215 25% 27%;
+    /* Minimal Grays */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 13%;
 
-    --muted: 215 14% 94%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 215 14% 91%;
-    --accent-foreground: 215 25% 27%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 13%;
 
-    /* Status Colors for Scoring */
-    --score-high: 142 76% 36%;      /* Professional Green */
-    --score-high-foreground: 0 0% 100%;
-    --score-medium: 45 93% 47%;     /* Professional Amber */
-    --score-medium-foreground: 0 0% 100%;
-    --score-low: 0 84% 60%;         /* Professional Red */
-    --score-low-foreground: 0 0% 100%;
+    /* Refined Status Colors */
+    --score-high: 142 71% 45%;
+    --score-high-foreground: 0 0% 98%;
+    --score-medium: 38 92% 50%;
+    --score-medium-foreground: 0 0% 98%;
+    --score-low: 0 72% 51%;
+    --score-low-foreground: 0 0% 98%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 215 14% 89%;
-    --input: 215 14% 89%;
-    --ring: 215 84% 32%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 221 83% 53%;
 
-    --radius: 0.5rem;
+    --radius: 8px;
 
     --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
+    --sidebar-foreground: 0 0% 13%;
+    --sidebar-primary: 0 0% 13%;
     --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 13%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 221 83% 53%;
   }
 
   .dark {
-    --background: 215 28% 17%;
-    --foreground: 215 20% 95%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 95%;
 
-    --card: 215 28% 20%;
-    --card-foreground: 215 20% 95%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 215 28% 20%;
-    --popover-foreground: 215 20% 95%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 215 84% 58%;
-    --primary-foreground: 215 28% 17%;
-    --primary-hover: 215 84% 62%;
+    --primary: 221 83% 58%;
+    --primary-foreground: 0 0% 4%;
+    --primary-hover: 221 83% 63%;
 
-    --secondary: 215 28% 25%;
-    --secondary-foreground: 215 20% 95%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 215 28% 25%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 215 28% 25%;
-    --accent-foreground: 215 20% 95%;
+    --accent: 0 0% 10%;
+    --accent-foreground: 0 0% 95%;
 
-    --score-high: 142 76% 46%;
-    --score-high-foreground: 0 0% 100%;
-    --score-medium: 45 93% 57%;
-    --score-medium-foreground: 0 0% 100%;
-    --score-low: 0 84% 70%;
-    --score-low-foreground: 0 0% 100%;
+    --score-high: 142 71% 55%;
+    --score-high-foreground: 0 0% 6%;
+    --score-medium: 38 92% 60%;
+    --score-medium-foreground: 0 0% 6%;
+    --score-low: 0 72% 61%;
+    --score-low-foreground: 0 0% 6%;
 
-    --destructive: 0 62.8% 50.6%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 72% 61%;
+    --destructive-foreground: 0 0% 6%;
 
-    --border: 215 28% 25%;
-    --input: 215 28% 25%;
-    --ring: 215 84% 58%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 221 83% 58%;
     
-    --sidebar-background: 215 28% 17%;
-    --sidebar-foreground: 215 20% 95%;
-    --sidebar-primary: 215 84% 58%;
-    --sidebar-primary-foreground: 215 28% 17%;
-    --sidebar-accent: 215 28% 25%;
-    --sidebar-accent-foreground: 215 20% 95%;
-    --sidebar-border: 215 28% 25%;
-    --sidebar-ring: 215 84% 58%;
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 221 83% 58%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 221 83% 58%;
   }
 }
 
@@ -119,6 +112,17 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Typography improvements */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
+  }
+
+  /* Smooth interactions */
+  button, a, [role="button"] {
+    @apply transition-colors duration-200;
   }
 }
