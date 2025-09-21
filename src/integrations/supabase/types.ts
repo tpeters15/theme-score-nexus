@@ -207,6 +207,60 @@ export type Database = {
           },
         ]
       }
+      regulations: {
+        Row: {
+          analysis_url: string | null
+          compliance_deadline: string | null
+          created_at: string
+          description: string | null
+          effective_date: string | null
+          id: string
+          impact_level: string
+          jurisdiction: string
+          key_provisions: string[] | null
+          regulation_type: string
+          regulatory_body: string | null
+          source_url: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          analysis_url?: string | null
+          compliance_deadline?: string | null
+          created_at?: string
+          description?: string | null
+          effective_date?: string | null
+          id?: string
+          impact_level?: string
+          jurisdiction: string
+          key_provisions?: string[] | null
+          regulation_type: string
+          regulatory_body?: string | null
+          source_url?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          analysis_url?: string | null
+          compliance_deadline?: string | null
+          created_at?: string
+          description?: string | null
+          effective_date?: string | null
+          id?: string
+          impact_level?: string
+          jurisdiction?: string
+          key_provisions?: string[] | null
+          regulation_type?: string
+          regulatory_body?: string | null
+          source_url?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       research_documents: {
         Row: {
           created_at: string | null
@@ -269,6 +323,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      theme_regulations: {
+        Row: {
+          created_at: string
+          criteria_impacts: string[] | null
+          id: string
+          impact_description: string | null
+          regulation_id: string
+          relevance_score: number | null
+          theme_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criteria_impacts?: string[] | null
+          id?: string
+          impact_description?: string | null
+          regulation_id: string
+          relevance_score?: number | null
+          theme_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criteria_impacts?: string[] | null
+          id?: string
+          impact_description?: string | null
+          regulation_id?: string
+          relevance_score?: number | null
+          theme_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       themes: {
         Row: {

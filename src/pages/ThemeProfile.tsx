@@ -16,11 +16,15 @@ import { DocumentIntelligence } from "@/components/DocumentIntelligence";
 import { InlineScoreEditor } from "@/components/InlineScoreEditor";
 import { BulkScoringModal } from "@/components/BulkScoringModal";
 import { ScoreProgressIndicator } from "@/components/ScoreProgressIndicator";
+import { RegulatoryTable } from "@/components/RegulatoryTable";
+import { RegulatorySummaryCard } from "@/components/RegulatorySummaryCard";
+import { useRegulations } from "@/hooks/useRegulations";
 
 const ThemeProfile = () => {
   const { themeId } = useParams<{ themeId: string }>();
   const navigate = useNavigate();
   const { fetchThemeWithDetailedScores } = useFramework();
+  const { regulations, loading: regulationsLoading } = useRegulations(themeId || '');
   const [theme, setTheme] = useState<ThemeWithDetailedScores | null>(null);
   const [loading, setLoading] = useState(true);
   const [showFrameworkModal, setShowFrameworkModal] = useState(false);
@@ -272,8 +276,9 @@ const ThemeProfile = () => {
 
       {/* Contextual Information - Accessible but not center-stage */}
       <Tabs defaultValue="research" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="research">Research</TabsTrigger>
+          <TabsTrigger value="regulatory">Regulatory</TabsTrigger>
           <TabsTrigger value="scope">Scope</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="detailed">Detailed Analysis</TabsTrigger>
@@ -286,6 +291,23 @@ const ThemeProfile = () => {
             documents={theme.research_documents}
             onDocumentSelect={setSelectedDocument}
           />
+        </TabsContent>
+
+        <TabsContent value="regulatory" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-1">
+              <RegulatorySummaryCard regulations={regulations} />
+            </div>
+            <div className="lg:col-span-3">
+              <RegulatoryTable 
+                regulations={regulations}
+                onRegulationClick={(regulation) => {
+                  // Future: Open regulation detail modal
+                  console.log('Selected regulation:', regulation);
+                }}
+              />
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="scope" className="space-y-6">
