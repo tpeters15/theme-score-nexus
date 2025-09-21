@@ -10,6 +10,7 @@ import { useFramework } from "@/hooks/useFramework";
 import { ThemeWithDetailedScores, ResearchDocument, N8nResearchRun } from "@/types/framework";
 import { PILLAR_COLORS } from "@/types/themes";
 import { DetailedFrameworkModal } from "@/components/DetailedFrameworkModal";
+import { ThemeFileUpload } from "@/components/ThemeFileUpload";
 
 const ThemeProfile = () => {
   const { themeId } = useParams<{ themeId: string }>();
@@ -18,6 +19,17 @@ const ThemeProfile = () => {
   const [theme, setTheme] = useState<ThemeWithDetailedScores | null>(null);
   const [loading, setLoading] = useState(true);
   const [showFrameworkModal, setShowFrameworkModal] = useState(false);
+
+  const refreshTheme = async () => {
+    if (!themeId) return;
+    
+    try {
+      const themeData = await fetchThemeWithDetailedScores(themeId);
+      setTheme(themeData);
+    } catch (error) {
+      console.error("Failed to refresh theme:", error);
+    }
+  };
 
   useEffect(() => {
   const loadTheme = async () => {
@@ -261,9 +273,12 @@ const ThemeProfile = () => {
                 Documents and research materials for this theme
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
+              <ThemeFileUpload themeId={themeId!} onUploadComplete={refreshTheme} />
+              
               {theme.research_documents.length > 0 ? (
                 <div className="space-y-4">
+                  <h4 className="font-medium">Existing Documents</h4>
                   {theme.research_documents.map((doc: ResearchDocument) => (
                     <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center gap-3">
@@ -280,6 +295,11 @@ const ThemeProfile = () => {
                             <span className="text-xs text-muted-foreground">
                               {new Date(doc.created_at).toLocaleDateString()}
                             </span>
+                            {doc.file_size && (
+                              <span className="text-xs text-muted-foreground">
+                                {(doc.file_size / 1024 / 1024).toFixed(1)} MB
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -294,7 +314,7 @@ const ThemeProfile = () => {
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No research documents available yet</p>
+                  <p>No research documents uploaded yet</p>
                 </div>
               )}
             </CardContent>
