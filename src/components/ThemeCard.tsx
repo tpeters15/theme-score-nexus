@@ -49,12 +49,11 @@ export function ThemeCard({ theme, onClick }: ThemeCardProps) {
   };
 
   return (
-    <PinContainer
-      title={`Explore ${theme.name}`}
+    <div 
       onClick={handleCardClick}
-      containerClassName="w-96 h-80"
+      className="w-96 h-80 cursor-pointer group"
     >
-      <div className="flex flex-col p-6 tracking-tight text-foreground w-[20rem] h-[20rem] bg-gradient-to-b from-background/90 to-background/50 backdrop-blur-sm border border-border rounded-2xl">
+      <div className="flex flex-col p-6 tracking-tight text-foreground w-[20rem] h-[20rem] bg-gradient-to-b from-background/90 to-background/50 backdrop-blur-sm border border-border rounded-2xl transition-colors hover:border-border/80">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -131,6 +130,6 @@ export function ThemeCard({ theme, onClick }: ThemeCardProps) {
           </button>
         </div>
       </div>
-    </PinContainer>
+    </div>
   );
 }

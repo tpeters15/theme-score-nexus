@@ -30,7 +30,7 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
   );
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
 
   const filteredThemes = themes.filter(theme => {
     // Search filter
