@@ -1,15 +1,6 @@
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { ThemeWithScores } from "@/types/themes";
 
 interface ThemeFilterProps {
@@ -29,8 +20,6 @@ export function ThemeFilter({
   onSectorChange,
   onClearAll,
 }: ThemeFilterProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
   // Get unique pillars and sectors
   const availablePillars = Array.from(new Set(themes.map(theme => theme.pillar))).sort();
   const availableSectors = Array.from(new Set(themes.map(theme => theme.sector))).sort();
@@ -61,101 +50,105 @@ export function ThemeFilter({
   };
 
   const hasActiveFilters = selectedPillars.length > 0 || selectedSectors.length > 0;
-  const filterCount = selectedPillars.length + selectedSectors.length;
 
   return (
-    <div className="flex items-center gap-4">
-      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="outline" 
+    <div className="space-y-4 p-4 bg-surface rounded-lg border border-surface">
+      {/* Header with clear all */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-medium text-foreground">Filters</h3>
+          {hasActiveFilters && (
+            <Badge variant="secondary" className="h-5 px-2 text-xs">
+              {selectedPillars.length + selectedSectors.length}
+            </Badge>
+          )}
+        </div>
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
             size="sm"
-            className="relative h-8 text-xs"
+            onClick={onClearAll}
+            className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
           >
-            Filters
-            {filterCount > 0 && (
-              <Badge 
-                variant="secondary" 
-                className="ml-1.5 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs"
-              >
-                {filterCount}
-              </Badge>
-            )}
-            <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+            <X className="h-3 w-3 mr-1" />
+            Clear all
           </Button>
-        </DropdownMenuTrigger>
-        
-        <DropdownMenuContent align="start" className="w-72 z-50 bg-popover border shadow-lg">
-          <DropdownMenuLabel className="flex items-center justify-between text-xs">
-            <span>Strategic Pillars</span>
-            {hasActiveFilters && (
+        )}
+      </div>
+
+      {/* Strategic Pillars Row */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Strategic Pillars
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {availablePillars.map(pillar => {
+            const isSelected = selectedPillars.includes(pillar);
+            const count = themes.filter(t => t.pillar === pillar).length;
+            
+            return (
               <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClearAll}
-                className="h-auto p-1 text-xs text-muted-foreground hover:text-foreground"
-              >
-                Clear all
-              </Button>
-            )}
-          </DropdownMenuLabel>
-          
-          <div className="p-1.5 space-y-0.5">
-            {availablePillars.map(pillar => (
-              <div
                 key={pillar}
-                className="flex items-center justify-between p-2 rounded-md hover:bg-accent cursor-pointer transition-colors"
+                variant={isSelected ? "default" : "outline"}
+                size="sm"
                 onClick={() => togglePillar(pillar)}
+                className="h-8 px-3 text-xs font-medium transition-all hover:scale-105"
               >
-                <span className="text-xs font-medium">{pillar}</span>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs h-4 px-1.5">
-                    {themes.filter(t => t.pillar === pillar).length}
-                  </Badge>
-                  {selectedPillars.includes(pillar) && (
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+                {pillar}
+                <Badge 
+                  variant={isSelected ? "secondary" : "outline"} 
+                  className="ml-2 h-4 px-1.5 text-xs"
+                >
+                  {count}
+                </Badge>
+              </Button>
+            );
+          })}
+        </div>
+      </div>
 
-          <DropdownMenuSeparator />
-          
-          <DropdownMenuLabel className="text-xs">
+      {/* Sectors Row */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Sectors
-            {selectedPillars.length > 0 && (
-              <span className="text-xs text-muted-foreground ml-2">
-                (filtered by pillars)
-              </span>
-            )}
-          </DropdownMenuLabel>
-          
-          <div className="p-1.5 space-y-0.5 max-h-48 overflow-y-auto">
-            {sectorsForSelectedPillars.map(sector => (
-              <div
+          </span>
+          {selectedPillars.length > 0 && (
+            <Badge variant="outline" className="h-4 px-1.5 text-xs">
+              Filtered by pillars
+            </Badge>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+          {sectorsForSelectedPillars.map(sector => {
+            const isSelected = selectedSectors.includes(sector);
+            const count = themes.filter(t => 
+              t.sector === sector && 
+              (selectedPillars.length === 0 || selectedPillars.includes(t.pillar))
+            ).length;
+            
+            return (
+              <Button
                 key={sector}
-                className="flex items-center justify-between p-2 rounded-md hover:bg-accent cursor-pointer transition-colors"
+                variant={isSelected ? "default" : "outline"}
+                size="sm"
                 onClick={() => toggleSector(sector)}
+                className="h-8 px-3 text-xs font-medium transition-all hover:scale-105"
               >
-                <span className="text-xs font-medium">{sector}</span>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs h-4 px-1.5">
-                    {themes.filter(t => 
-                      t.sector === sector && 
-                      (selectedPillars.length === 0 || selectedPillars.includes(t.pillar))
-                    ).length}
-                  </Badge>
-                  {selectedSectors.includes(sector) && (
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
+                {sector}
+                <Badge 
+                  variant={isSelected ? "secondary" : "outline"} 
+                  className="ml-2 h-4 px-1.5 text-xs"
+                >
+                  {count}
+                </Badge>
+              </Button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
