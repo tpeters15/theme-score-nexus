@@ -13,12 +13,19 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
-export function ThemeDashboard() {
+interface ThemeDashboardProps {
+  initialPillarFilter?: string;
+  onBackToOverview?: () => void;
+}
+
+export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeDashboardProps = {}) {
   const { themes, loading, updateThemeScores } = useThemes();
   const [selectedTheme, setSelectedTheme] = useState<ThemeWithScores | null>(null);
   const [selectedDetailedTheme, setSelectedDetailedTheme] = useState<ThemeWithScores | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPillars, setSelectedPillars] = useState<string[]>([]);
+  const [selectedPillars, setSelectedPillars] = useState<string[]>(
+    initialPillarFilter ? [initialPillarFilter] : []
+  );
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
@@ -74,9 +81,20 @@ export function ThemeDashboard() {
         <div className="mb-8 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold text-foreground">Investment Themes</h2>
+              {onBackToOverview && (
+                <Button 
+                  variant="ghost" 
+                  onClick={onBackToOverview}
+                  className="mb-2 -ml-4"
+                >
+                  ← Back to Portfolio Overview
+                </Button>
+              )}
+              <h2 className="text-3xl font-bold text-foreground">
+                {initialPillarFilter ? `${initialPillarFilter} Themes` : 'Investment Themes'}
+              </h2>
               <p className="text-muted-foreground">
-                {themes.length} themes across {new Set(themes.map(t => t.pillar)).size} strategic pillars
+                {filteredThemes.length} themes {initialPillarFilter ? `in ${initialPillarFilter}` : `across ${new Set(themes.map(t => t.pillar)).size} strategic pillars`}
               </p>
             </div>
             

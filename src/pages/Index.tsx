@@ -1,7 +1,7 @@
-import { ThemeDashboard } from "@/components/ThemeDashboard";
+import { ExecutiveDashboard } from "@/components/ExecutiveDashboard";
 
 const Index = () => {
-  return <ThemeDashboard />;
+  return <ExecutiveDashboard />;
 };
 
 export default Index;
