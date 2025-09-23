@@ -31,15 +31,15 @@ export function ExecutiveDashboard() {
       
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Recent Activity */}
-        <RecentActivityCard themes={themes} />
+        {/* Regulatory Alerts */}
+        <RegulatoryImpactAlerts />
         
         {/* Market Insights */}
         <SignalHighlightsCard />
       </div>
       
-      {/* Regulatory Alerts - Full Width */}
-      <RegulatoryImpactAlerts />
+      {/* Recent Activity - Full Width */}
+      <RecentActivityCard themes={themes} />
     </div>
   );
 }
