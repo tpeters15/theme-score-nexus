@@ -4,82 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useHighImpactRegulations } from "@/hooks/useHighImpactRegulations";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface RegulatoryAlert {
-  id: string;
-  title: string;
-  description: string;
-  impact_level: string;
-  jurisdiction: string;
-  regulatory_body: string;
-  compliance_deadline?: string;
-  effective_date?: string;
-  status: string;
-  relevance_score: number;
-}
-
-interface RegulatoryImpactAlertsProps {
-  // For now, we'll use mock data until we have a way to fetch high-impact regulations
-}
-
-export function RegulatoryImpactAlerts({}: RegulatoryImpactAlertsProps) {
-  // Mock high-impact regulatory alerts
-  const alerts: RegulatoryAlert[] = [
-    {
-      id: "1",
-      title: "EU Corporate Sustainability Reporting Directive (CSRD)",
-      description: "New mandatory sustainability reporting requirements for large companies",
-      impact_level: "high",
-      jurisdiction: "European Union",
-      regulatory_body: "European Commission",
-      compliance_deadline: "2025-01-01",
-      effective_date: "2024-01-05",
-      status: "active",
-      relevance_score: 95
-    },
-    {
-      id: "2",
-      title: "SEC Climate Risk Disclosure Rules",
-      description: "Enhanced climate-related disclosure requirements for public companies",
-      impact_level: "high",
-      jurisdiction: "United States",
-      regulatory_body: "Securities and Exchange Commission",
-      compliance_deadline: "2025-03-15",
-      effective_date: "2024-03-06",
-      status: "active",
-      relevance_score: 88
-    },
-    {
-      id: "3",
-      title: "UK Taxonomy Regulation",
-      description: "Green taxonomy framework for sustainable finance classification",
-      impact_level: "medium",
-      jurisdiction: "United Kingdom",
-      regulatory_body: "HM Treasury",
-      compliance_deadline: "2024-12-31",
-      effective_date: "2024-06-01",
-      status: "pending",
-      relevance_score: 82
-    }
-  ];
-
-  const getImpactColor = (level: string) => {
-    switch (level) {
-      case 'high': return "bg-red-100 text-red-800 border-red-200";
-      case 'medium': return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case 'low': return "bg-green-100 text-green-800 border-green-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return "bg-green-100 text-green-800 border-green-200";
-      case 'pending': return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case 'draft': return "bg-blue-100 text-blue-800 border-blue-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
+export function RegulatoryImpactAlerts() {
+  const { regulations, loading, error } = useHighImpactRegulations();
 
   const getDaysUntilDeadline = (deadline: string) => {
     const deadlineDate = new Date(deadline);
@@ -88,6 +17,52 @@ export function RegulatoryImpactAlerts({}: RegulatoryImpactAlertsProps) {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              Regulatory Impact Alerts
+            </CardTitle>
+            <Button variant="outline" size="sm" asChild>
+              <a href="/regulatory-tracker">View All Regulations</a>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-32 w-full" />
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              Regulatory Impact Alerts
+            </CardTitle>
+            <Button variant="outline" size="sm" asChild>
+              <a href="/regulatory-tracker">View All Regulations</a>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Unable to load regulatory alerts. Please try again later.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -103,46 +78,46 @@ export function RegulatoryImpactAlerts({}: RegulatoryImpactAlertsProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {alerts.map((alert) => {
-          const daysUntilDeadline = alert.compliance_deadline ? getDaysUntilDeadline(alert.compliance_deadline) : null;
+        {regulations.map((regulation) => {
+          const daysUntilDeadline = regulation.compliance_deadline ? getDaysUntilDeadline(regulation.compliance_deadline) : null;
           
           return (
             <div
-              key={alert.id}
+              key={regulation.id}
               className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <h4 className="font-medium text-sm leading-tight">{alert.title}</h4>
+                  <h4 className="font-medium text-sm leading-tight">{regulation.title}</h4>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={cn(
                     "text-xs font-medium",
-                    alert.impact_level === "high" ? "text-red-600" : 
-                    alert.impact_level === "medium" ? "text-yellow-600" : "text-green-600"
+                    regulation.impact_level === "high" ? "text-red-600" : 
+                    regulation.impact_level === "medium" ? "text-yellow-600" : "text-green-600"
                   )}>
-                    {alert.impact_level.toUpperCase()}
+                    {regulation.impact_level.toUpperCase()}
                   </span>
                   <span className="text-xs text-muted-foreground">•</span>
-                  <span className="text-xs text-muted-foreground">{alert.relevance_score}%</span>
+                  <span className="text-xs text-muted-foreground">{regulation.relevance_score}%</span>
                 </div>
               </div>
               
               <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                {alert.description}
+                {regulation.description}
               </p>
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>{alert.jurisdiction}</span>
+                  <span>{regulation.jurisdiction}</span>
                   <span>•</span>
-                  <span>{alert.regulatory_body}</span>
+                  <span>{regulation.regulatory_body}</span>
                   <span>•</span>
-                  <span className="capitalize">{alert.status}</span>
+                  <span className="capitalize">{regulation.status}</span>
                 </div>
                 
-                {alert.compliance_deadline && (
+                {regulation.compliance_deadline && (
                   <div className="flex items-center gap-2">
                     <Clock className="h-3 w-3 text-orange-500" />
                     <span className={cn(
