@@ -93,7 +93,9 @@ function calculateThemeFrameworkScores(
       for (const criterion of criteria.filter(c => c.category_id === category.id)) {
         const score = themeScores.find(s => s.criteria_id === criterion.id);
         if (score && score.score) {
-          categoryScore += (score.score * criterion.weight);
+          // Convert 1-5 scale to 0-100 percentage scale
+          const percentageScore = ((score.score - 1) / 4) * 100;
+          categoryScore += (percentageScore * criterion.weight);
           categoryTotalCriteriaWeight += criterion.weight;
           
           // Count confidence levels
