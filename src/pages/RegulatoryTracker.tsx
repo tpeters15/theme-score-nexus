@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Toggle } from "@/components/ui/toggle";
 import { 
   Shield, 
   Search, 
@@ -15,12 +16,16 @@ import {
   Building2,
   Globe2,
   FileText,
-  Link
+  Link,
+  Grid3X3,
+  Table2,
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { RegulationThemeLinkModal } from "@/components/RegulationThemeLinkModal";
+import { RegulatoryTable } from "@/components/RegulatoryTable";
 import type { Regulation } from "@/types/regulatory";
 
 // Interface removed - now using type from regulatory.ts
@@ -34,6 +39,7 @@ export default function RegulatoryTracker() {
   const [loading, setLoading] = useState(true);
   const [selectedRegulation, setSelectedRegulation] = useState<Regulation | null>(null);
   const [showLinkModal, setShowLinkModal] = useState(false);
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
   // Fetch regulations from database with theme information
   const fetchRegulations = async () => {
@@ -150,10 +156,18 @@ export default function RegulatoryTracker() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">Regulatory Tracker</h1>
-          <p className="text-muted-foreground">Loading regulatory data...</p>
+      <div className="container mx-auto px-6 py-6">
+        <div className="mb-6 space-y-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="space-y-1">
+                <h2 className="text-2xl font-semibold text-foreground">Regulatory Tracker</h2>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span>Loading regulatory data...</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="space-y-4">
           {[1, 2, 3].map(i => (
@@ -170,241 +184,275 @@ export default function RegulatoryTracker() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold text-foreground">Regulatory Tracker</h1>
-        <p className="text-muted-foreground">
-          Central repository for regulatory and policy instruments affecting climate tech investments
-        </p>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search regulations..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+    <div className="container mx-auto px-6 py-6">
+      <div className="mb-6 space-y-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="space-y-1">
+              <h2 className="text-2xl font-semibold text-foreground">Regulatory Tracker</h2>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span>{filteredRegulations.length} regulations</span>
+                <span>•</span>
+                <span>{jurisdictions.length} jurisdictions</span>
+                <span>•</span>
+                <span>Last updated: {new Date().toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-muted rounded-md p-0.5">
+              <Toggle
+                pressed={viewMode === 'cards'}
+                onPressedChange={() => setViewMode('cards')}
+                size="sm"
+                className="h-7 px-2 data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
+              >
+                <Grid3X3 className="h-3.5 w-3.5" />
+              </Toggle>
+              <Toggle
+                pressed={viewMode === 'table'}
+                onPressedChange={() => setViewMode('table')}
+                size="sm"
+                className="h-7 px-2 data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
+              >
+                <Table2 className="h-3.5 w-3.5" />
+              </Toggle>
             </div>
             
-            <Select value={selectedJurisdiction} onValueChange={setSelectedJurisdiction}>
-              <SelectTrigger>
-                <SelectValue placeholder="Jurisdiction" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Jurisdictions</SelectItem>
-                {jurisdictions.map(jurisdiction => (
-                  <SelectItem key={jurisdiction} value={jurisdiction.toLowerCase()}>
-                    {jurisdiction}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={selectedImpact} onValueChange={setSelectedImpact}>
-              <SelectTrigger>
-                <SelectValue placeholder="Impact Level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Impact Levels</SelectItem>
-                <SelectItem value="high">High Impact</SelectItem>
-                <SelectItem value="medium">Medium Impact</SelectItem>
-                <SelectItem value="low">Low Impact</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger>
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-              </SelectContent>
-            </Select>
+            <Button variant="outline" size="sm" className="text-xs">
+              <Download className="h-3.5 w-3.5 mr-1.5" />
+              Export
+            </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Regulations List */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">
-            Regulations ({filteredRegulations.length})
-          </h2>
-          <Button variant="outline">
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Export Data
-          </Button>
         </div>
 
-        {filteredRegulations.map((regulation) => {
-          const daysUntilDeadline = regulation.compliance_deadline ? 
-            getDaysUntilDeadline(regulation.compliance_deadline) : null;
-          
-          return (
-            <Card key={regulation.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Shield className="h-5 w-5 text-blue-600" />
-                      <h3 className="font-semibold text-lg">{regulation.title}</h3>
-                      <Badge variant="outline" className={cn("text-xs", getImpactColor(regulation.impact_level))}>
-                        {regulation.impact_level.toUpperCase()} IMPACT
-                      </Badge>
-                      {regulation.relevance_score && (
-                       <span className="text-sm text-muted-foreground">
-                          {regulation.relevance_score}/5 relevance
-                        </span>
-                      )}
-                    </div>
-                    
-                    <p className="text-muted-foreground mb-4">
-                      {regulation.description}
-                    </p>
-                    
-                    {/* Metadata */}
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-4">
-                      <div className="flex items-center gap-2">
-                        <Globe2 className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">
-                          <span className="font-medium">Jurisdiction:</span> {regulation.jurisdiction}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">
-                          <span className="font-medium">Regulatory Body:</span> {regulation.regulatory_body}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className={cn("text-xs", getStatusColor(regulation.status))}>
-                          {regulation.status.toUpperCase()}
+        {/* Filters */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Filters
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search regulations..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              <Select value={selectedJurisdiction} onValueChange={setSelectedJurisdiction}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Jurisdiction" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Jurisdictions</SelectItem>
+                  {jurisdictions.map(jurisdiction => (
+                    <SelectItem key={jurisdiction} value={jurisdiction.toLowerCase()}>
+                      {jurisdiction}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Select value={selectedImpact} onValueChange={setSelectedImpact}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Impact Level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Impact Levels</SelectItem>
+                  <SelectItem value="high">High Impact</SelectItem>
+                  <SelectItem value="medium">Medium Impact</SelectItem>
+                  <SelectItem value="low">Low Impact</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Dynamic View Rendering */}
+      {viewMode === 'table' ? (
+        <RegulatoryTable 
+          regulations={filteredRegulations}
+          onRegulationClick={handleLinkToThemes}
+        />
+      ) : (
+        /* Cards View */
+        <div className="space-y-4">
+          {filteredRegulations.map((regulation) => {
+            const daysUntilDeadline = regulation.compliance_deadline ? 
+              getDaysUntilDeadline(regulation.compliance_deadline) : null;
+            
+            return (
+              <Card key={regulation.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Shield className="h-5 w-5 text-blue-600" />
+                        <h3 className="font-semibold text-lg">{regulation.title}</h3>
+                        <Badge variant="outline" className={cn("text-xs", getImpactColor(regulation.impact_level))}>
+                          {regulation.impact_level.toUpperCase()} IMPACT
                         </Badge>
+                        {regulation.relevance_score && (
+                         <span className="text-sm text-muted-foreground">
+                            {regulation.relevance_score}/5 relevance
+                          </span>
+                        )}
                       </div>
-                    </div>
-
-                    {/* Key Provisions */}
-                    {regulation.key_provisions && regulation.key_provisions.length > 0 && (
-                      <div className="mb-4">
-                        <span className="text-sm font-medium">Key Provisions:</span>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {regulation.key_provisions.map((provision, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {provision}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Impact Description */}
-                    {regulation.impact_description && (
-                      <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <span className="text-sm font-medium text-blue-800">Impact on Target Customers:</span>
-                        <div className="text-xs text-blue-700 mt-1">{regulation.impact_description}</div>
-                      </div>
-                    )}
-
-                    {/* Affected Themes */}
-                    {regulation.affected_themes && regulation.affected_themes.length > 0 && (
-                      <div className="mb-4">
-                        <span className="text-sm font-medium">Affected Investment Themes:</span>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {regulation.affected_themes.map((theme, index) => (
-                            <Badge key={index} variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                              {theme}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Dates and Deadline */}
-                    <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                      {regulation.effective_date && (
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          <span>Effective: {format(new Date(regulation.effective_date), 'MMM d, yyyy')}</span>
-                        </div>
-                      )}
                       
-                      {regulation.compliance_deadline && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3 text-orange-500" />
-                          <span className={cn(
-                            "font-medium",
-                            daysUntilDeadline && daysUntilDeadline < 90 ? "text-red-600" : "text-muted-foreground"
-                          )}>
-                            Deadline: {format(new Date(regulation.compliance_deadline), 'MMM d, yyyy')}
-                            {daysUntilDeadline && daysUntilDeadline > 0 && (
-                              <span className="ml-1">({daysUntilDeadline} days left)</span>
-                            )}
+                      <p className="text-muted-foreground mb-4">
+                        {regulation.description}
+                      </p>
+                      
+                      {/* Metadata */}
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-4">
+                        <div className="flex items-center gap-2">
+                          <Globe2 className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            <span className="font-medium">Jurisdiction:</span> {regulation.jurisdiction}
                           </span>
                         </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            <span className="font-medium">Regulatory Body:</span> {regulation.regulatory_body}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className={cn("text-xs", getStatusColor(regulation.status))}>
+                            {regulation.status.toUpperCase()}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* Key Provisions */}
+                      {regulation.key_provisions && regulation.key_provisions.length > 0 && (
+                        <div className="mb-4">
+                          <span className="text-sm font-medium">Key Provisions:</span>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {regulation.key_provisions.map((provision, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {provision}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Impact Description */}
+                      {regulation.impact_description && (
+                        <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <span className="text-sm font-medium text-blue-800">Impact on Target Customers:</span>
+                          <div className="text-xs text-blue-700 mt-1">{regulation.impact_description}</div>
+                        </div>
+                      )}
+
+                      {/* Affected Themes */}
+                      {regulation.affected_themes && regulation.affected_themes.length > 0 && (
+                        <div className="mb-4">
+                          <span className="text-sm font-medium">Affected Investment Themes:</span>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {regulation.affected_themes.map((theme, index) => (
+                              <Badge key={index} variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                                {theme}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Dates and Deadline */}
+                      <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                        {regulation.effective_date && (
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>Effective: {format(new Date(regulation.effective_date), 'MMM d, yyyy')}</span>
+                          </div>
+                        )}
+                        
+                        {regulation.compliance_deadline && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3 text-orange-500" />
+                            <span className={cn(
+                              "font-medium",
+                              daysUntilDeadline && daysUntilDeadline < 90 ? "text-red-600" : "text-muted-foreground"
+                            )}>
+                              Deadline: {format(new Date(regulation.compliance_deadline), 'MMM d, yyyy')}
+                              {daysUntilDeadline && daysUntilDeadline > 0 && (
+                                <span className="ml-1">({daysUntilDeadline} days left)</span>
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-col gap-2 ml-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleLinkToThemes(regulation)}
+                        className="gap-2"
+                      >
+                        <Link className="h-3 w-3" />
+                        Link to Themes
+                      </Button>
+                      {regulation.source_url && (
+                        <Button variant="outline" size="sm">
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          Source
+                        </Button>
+                      )}
+                      {regulation.analysis_url && (
+                        <Button variant="outline" size="sm">
+                          <FileText className="h-3 w-3 mr-1" />
+                          Analysis
+                        </Button>
                       )}
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            );
+          })}
 
-                  {/* Actions */}
-                  <div className="flex flex-col gap-2 ml-4">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleLinkToThemes(regulation)}
-                      className="gap-2"
-                    >
-                      <Link className="h-3 w-3" />
-                      Link to Themes
-                    </Button>
-                    {regulation.source_url && (
-                      <Button variant="outline" size="sm">
-                        <ExternalLink className="h-3 w-3 mr-1" />
-                        Source
-                      </Button>
-                    )}
-                    {regulation.analysis_url && (
-                      <Button variant="outline" size="sm">
-                        <FileText className="h-3 w-3 mr-1" />
-                        Analysis
-                      </Button>
-                    )}
-                  </div>
-                </div>
+          {filteredRegulations.length === 0 && (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-semibold mb-2">No regulations found</h3>
+                <p className="text-muted-foreground">
+                  Try adjusting your search criteria or filters
+                </p>
               </CardContent>
             </Card>
-          );
-        })}
-
-        {filteredRegulations.length === 0 && (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">No regulations found</h3>
-              <p className="text-muted-foreground">
-                Try adjusting your search criteria or filters
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Theme Link Modal */}
       {showLinkModal && selectedRegulation && (
