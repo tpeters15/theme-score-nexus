@@ -40,6 +40,7 @@ export function useResearchDocuments() {
           theme:themes(id, name, pillar, sector),
           criteria:framework_criteria(id, name, code)
         `)
+        .not("file_path", "is", null) // Only get documents with actual files
         .order("created_at", { ascending: false });
 
       if (error) {
