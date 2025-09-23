@@ -15,7 +15,8 @@ export interface Regulation {
   relevance_score: number;
   impact_description: string;
   criteria_impacts: string[];
-  affected_themes?: string[]; // Add this for theme names
+  affected_themes?: string[]; // Theme names for display
+  theme_ids?: string[]; // Theme IDs for filtering
 }
 
 export interface ThemeRegulation {

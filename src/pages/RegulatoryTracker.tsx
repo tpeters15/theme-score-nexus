@@ -40,11 +40,25 @@ export default function RegulatoryTracker() {
   const [selectedRegulation, setSelectedRegulation] = useState<Regulation | null>(null);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+  const [selectedTheme, setSelectedTheme] = useState("all");
+  const [themes, setThemes] = useState<{id: string; name: string}[]>([]);
 
   // Fetch regulations from database with theme information
   const fetchRegulations = async () => {
     try {
       setLoading(true);
+      
+      // Fetch all themes for filtering
+      const { data: themesData, error: themesError } = await supabase
+        .from('themes')
+        .select('id, name')
+        .order('name');
+
+      if (themesError) {
+        console.error('Error fetching themes:', themesError);
+      } else {
+        setThemes(themesData || []);
+      }
       
       // Fetch regulations with theme relationships
       const { data: regulationsData, error: regulationsError } = await supabase
@@ -65,7 +79,8 @@ export default function RegulatoryTracker() {
           relevance_score,
           impact_description,
           criteria_impacts,
-          theme:theme_id (
+          theme_id,
+          themes!theme_id (
             id,
             name
           )
@@ -78,7 +93,10 @@ export default function RegulatoryTracker() {
       // Transform and combine the data
       const transformedRegulations: Regulation[] = (regulationsData || []).map(reg => {
         const themeRels = (themeRegulations || []).filter(tr => tr.regulation_id === reg.id);
-        const affectedThemes = themeRels.map(tr => (tr.theme as any)?.name).filter(Boolean);
+        const affectedThemes = themeRels.map(tr => {
+          const theme = tr.themes as any;
+          return theme?.name;
+        }).filter(Boolean);
         const maxRelevance = Math.max(...themeRels.map(tr => tr.relevance_score || 0), 0);
         
         return {
@@ -86,7 +104,8 @@ export default function RegulatoryTracker() {
           relevance_score: maxRelevance || 3,
           impact_description: themeRels[0]?.impact_description || 'Regulatory impact assessment pending',
           criteria_impacts: themeRels[0]?.criteria_impacts || [],
-          affected_themes: affectedThemes
+          affected_themes: affectedThemes,
+          theme_ids: themeRels.map(tr => tr.theme_id).filter(Boolean)
         };
       });
 
@@ -149,7 +168,10 @@ export default function RegulatoryTracker() {
     
     const matchesStatus = selectedStatus === "all" || regulation.status === selectedStatus;
     
-    return matchesSearch && matchesJurisdiction && matchesImpact && matchesStatus;
+    const matchesTheme = selectedTheme === "all" || 
+                        (regulation.theme_ids && regulation.theme_ids.includes(selectedTheme));
+    
+    return matchesSearch && matchesJurisdiction && matchesImpact && matchesStatus && matchesTheme;
   });
 
   const jurisdictions = [...new Set(regulations.map(r => r.jurisdiction))];
@@ -237,7 +259,7 @@ export default function RegulatoryTracker() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -257,6 +279,20 @@ export default function RegulatoryTracker() {
                   {jurisdictions.map(jurisdiction => (
                     <SelectItem key={jurisdiction} value={jurisdiction.toLowerCase()}>
                       {jurisdiction}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedTheme} onValueChange={setSelectedTheme}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Investment Theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Themes</SelectItem>
+                  {themes.map(theme => (
+                    <SelectItem key={theme.id} value={theme.id}>
+                      {theme.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
