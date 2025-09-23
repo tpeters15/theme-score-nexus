@@ -159,15 +159,6 @@ export function RegulatoryImpactAlerts({}: RegulatoryImpactAlertsProps) {
           );
         })}
         
-        <div className="pt-2 border-t">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Showing {alerts.length} high-priority alerts</span>
-            <Button variant="ghost" size="sm" className="h-auto p-0 text-primary">
-              <ExternalLink className="h-3 w-3 mr-1" />
-              Regulatory Research
-            </Button>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );

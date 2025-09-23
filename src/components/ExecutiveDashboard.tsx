@@ -31,16 +31,20 @@ export function ExecutiveDashboard() {
     <div className="space-y-6">
       <DashboardHeader />
       <div className="container mx-auto px-6">
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Left Column */}
-          <div className="space-y-6">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {/* Top Themes */}
+          <div>
             <TopThemesOverview themes={themes} />
-            <RegulatoryImpactAlerts />
           </div>
           
-          {/* Right Column */}
+          {/* Intelligence Feed */}
           <div>
             <IntelligenceFeed themes={themes} />
+          </div>
+          
+          {/* Regulatory Alerts */}
+          <div>
+            <RegulatoryImpactAlerts />
           </div>
         </div>
       </div>
