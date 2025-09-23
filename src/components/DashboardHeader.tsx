@@ -1,4 +1,4 @@
-import { Building2, BarChart3, Users, Settings, Bell, Search } from "lucide-react";
+import { Building2, Settings, Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -7,29 +7,17 @@ export function DashboardHeader() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-6">
         <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-1.5 bg-primary rounded-md">
-                <Building2 className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold text-foreground">Nexus Capital</h1>
-                <p className="text-xs text-muted-foreground">Investment Research Platform</p>
-              </div>
+          {/* Left spacing */}
+          <div className="w-20"></div>
+          
+          {/* Centered logo and description */}
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 bg-primary rounded-md">
+              <Building2 className="h-5 w-5 text-primary-foreground" />
             </div>
-            
-            <div className="hidden md:flex items-center gap-1 ml-6">
-              <Button variant="ghost" size="sm" className="text-xs">
-                <BarChart3 className="h-3.5 w-3.5 mr-1.5" />
-                Deal Flow
-              </Button>
-              <Button variant="ghost" size="sm" className="text-xs">
-                <Users className="h-3.5 w-3.5 mr-1.5" />
-                Portfolio
-              </Button>
-              <Button variant="ghost" size="sm" className="text-xs">
-                Research
-              </Button>
+            <div className="text-center">
+              <h1 className="text-lg font-semibold text-foreground">Nexus Capital</h1>
+              <p className="text-xs text-muted-foreground">Investment Research Platform</p>
             </div>
           </div>
           
