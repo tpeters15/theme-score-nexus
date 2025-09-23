@@ -3,7 +3,7 @@ import { ThemeCard } from "./ThemeCard";
 import { ThemeTableView } from "./ThemeTableView";
 import { ThemeDetailModal } from "./ThemeDetailModal";
 import { DetailedFrameworkModal } from "./DetailedFrameworkModal";
-import { DashboardHeader } from "./DashboardHeader";
+
 import { ThemeFilterSegmented } from "./ThemeFilterSegmented";
 import { useThemes } from "@/hooks/useThemes";
 import { ThemeWithScores, Score } from "@/types/themes";
@@ -64,7 +64,6 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <DashboardHeader />
         <div className="container mx-auto px-6 py-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 p-8">
             {Array.from({ length: 12 }).map((_, i) => (
@@ -78,7 +77,7 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader />
+      
       
       <div className="container mx-auto px-6 py-6">
         <div className="mb-6 space-y-6">
