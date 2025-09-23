@@ -115,12 +115,25 @@ export function RegulatoryImpactAlerts() {
                 {regulation.description}
               </p>
               
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span>{regulation.jurisdiction}</span>
-                <span>•</span>
-                <span>{regulation.regulatory_body}</span>
-                <span>•</span>
-                <span className="capitalize">{regulation.status}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <span>{regulation.jurisdiction}</span>
+                  <span>•</span>
+                  <span>{regulation.regulatory_body}</span>
+                  <span>•</span>
+                  <span className="capitalize">{regulation.status}</span>
+                  {(regulation as any).connected_themes?.length > 0 && (
+                    <>
+                      <span>•</span>
+                      <Badge 
+                        variant="outline" 
+                        className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-primary/20"
+                      >
+                        {(regulation as any).connected_themes[0].name}
+                      </Badge>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           );
