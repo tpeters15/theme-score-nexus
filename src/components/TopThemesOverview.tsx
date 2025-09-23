@@ -1,9 +1,10 @@
-import { TrendingUp, Star, Activity } from "lucide-react";
+import { TrendingUp, Star, Activity, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 import type { ThemeWithScores } from "@/types/themes";
 
 interface TopThemesOverviewProps {
@@ -11,11 +12,21 @@ interface TopThemesOverviewProps {
 }
 
 export function TopThemesOverview({ themes }: TopThemesOverviewProps) {
+  const navigate = useNavigate();
+  
   // Get top 5 themes by weighted total score
   const topThemes = themes
     .filter(theme => theme.weighted_total_score > 0)
     .sort((a, b) => b.weighted_total_score - a.weighted_total_score)
     .slice(0, 5);
+
+  const handleThemeClick = (themeId: string) => {
+    navigate(`/theme/${themeId}`);
+  };
+
+  const handleViewAllThemes = () => {
+    navigate('/themes');
+  };
 
   const getScoreColor = (score: number) => {
     if (score >= 70) return "text-green-600";
@@ -67,7 +78,7 @@ export function TopThemesOverview({ themes }: TopThemesOverviewProps) {
             <TrendingUp className="h-5 w-5" />
             High Priority Themes
           </CardTitle>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleViewAllThemes}>
             View All Themes
           </Button>
         </div>
@@ -76,7 +87,8 @@ export function TopThemesOverview({ themes }: TopThemesOverviewProps) {
         {topThemes.map((theme, index) => (
           <div
             key={theme.id}
-            className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+            onClick={() => handleThemeClick(theme.id)}
+            className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer group"
           >
             <div className="flex items-center gap-4 flex-1">
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
@@ -85,7 +97,9 @@ export function TopThemesOverview({ themes }: TopThemesOverviewProps) {
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-medium truncate">{theme.name}</h4>
+                  <h4 className="font-medium truncate group-hover:text-primary transition-colors">
+                    {theme.name}
+                  </h4>
                   <Badge variant="outline" className={cn("text-xs", getPillarColor(theme.pillar))}>
                     {theme.pillar}
                   </Badge>
@@ -107,11 +121,14 @@ export function TopThemesOverview({ themes }: TopThemesOverviewProps) {
               </div>
             </div>
             
-            <div className="w-24">
-              <Progress 
-                value={theme.weighted_total_score} 
-                className="h-2"
-              />
+            <div className="flex items-center gap-3">
+              <div className="w-24">
+                <Progress 
+                  value={theme.weighted_total_score} 
+                  className="h-2"
+                />
+              </div>
+              <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
           </div>
         ))}
