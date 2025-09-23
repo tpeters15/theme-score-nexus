@@ -93,14 +93,21 @@ export function RegulatoryImpactAlerts() {
                   <Shield className="h-3 w-3 text-muted-foreground mt-1 flex-shrink-0" />
                   <h4 className="font-medium text-sm leading-tight">{regulation.title}</h4>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "text-xs font-medium",
-                    regulation.impact_level === "high" ? "text-red-600" : 
-                    regulation.impact_level === "medium" ? "text-yellow-600" : "text-green-600"
-                  )}>
-                    {regulation.impact_level?.toUpperCase() || 'UNKNOWN'}
-                  </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {(regulation as any).connected_themes?.slice(0, 2).map((theme: any) => (
+                    <Badge 
+                      key={theme.id} 
+                      variant="outline" 
+                      className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-primary/20"
+                    >
+                      {theme.name}
+                    </Badge>
+                  ))}
+                  {(regulation as any).connected_themes?.length > 2 && (
+                    <span className="text-xs text-muted-foreground">
+                      +{(regulation as any).connected_themes.length - 2} more
+                    </span>
+                  )}
                 </div>
               </div>
               

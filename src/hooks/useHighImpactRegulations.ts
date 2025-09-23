@@ -25,16 +25,23 @@ export function useHighImpactRegulations() {
         throw fetchError;
       }
 
-      // For each regulation, get the highest relevance score from theme_regulations
+      // For each regulation, get the theme connections and highest relevance score
       const regulationsWithRelevance = await Promise.all(
         (data || []).map(async (reg) => {
           const { data: themeRegData } = await supabase
             .from('theme_regulations')
-            .select('relevance_score, impact_description, criteria_impacts')
+            .select(`
+              relevance_score, 
+              impact_description, 
+              criteria_impacts,
+              themes!theme_regulations_theme_id_fkey (
+                id,
+                name,
+                pillar
+              )
+            `)
             .eq('regulation_id', reg.id)
-            .order('relevance_score', { ascending: false })
-            .limit(1)
-            .single();
+            .order('relevance_score', { ascending: false });
 
           return {
             id: reg.id,
@@ -50,10 +57,11 @@ export function useHighImpactRegulations() {
             analysis_url: reg.analysis_url,
             regulatory_body: reg.regulatory_body,
             key_provisions: reg.key_provisions || [],
-            relevance_score: themeRegData?.relevance_score || 0,
-            impact_description: themeRegData?.impact_description || reg.description,
-            criteria_impacts: themeRegData?.criteria_impacts || []
-          } as Regulation;
+            relevance_score: themeRegData?.[0]?.relevance_score || 0,
+            impact_description: themeRegData?.[0]?.impact_description || reg.description,
+            criteria_impacts: themeRegData?.[0]?.criteria_impacts || [],
+            connected_themes: themeRegData?.map(tr => tr.themes).filter(Boolean) || []
+          } as Regulation & { connected_themes: any[] };
         })
       );
 
