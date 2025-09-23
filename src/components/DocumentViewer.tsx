@@ -21,7 +21,14 @@ export function DocumentViewer({ document, isOpen, onClose }: DocumentViewerProp
   const [loading, setLoading] = useState(false);
 
   const handleDownload = async () => {
-    if (!document.file_path) return;
+    if (!document.file_path) {
+      toast({
+        title: "Download failed",
+        description: "No file path available for this document",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setLoading(true);
     try {
@@ -29,7 +36,17 @@ export function DocumentViewer({ document, isOpen, onClose }: DocumentViewerProp
         .from('research-documents')
         .download(document.file_path);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('not found') || error.message.includes('does not exist')) {
+          toast({
+            title: "File not found",
+            description: "This file no longer exists in storage",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
 
       const url = URL.createObjectURL(data);
       const a = window.document.createElement('a');
@@ -48,7 +65,7 @@ export function DocumentViewer({ document, isOpen, onClose }: DocumentViewerProp
       console.error("Download error:", error);
       toast({
         title: "Download failed",
-        description: "Could not download the document",
+        description: "Could not download the file. Please try again.",
         variant: "destructive",
       });
     } finally {

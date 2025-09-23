@@ -62,6 +62,44 @@ export const useFramework = () => {
     }
   };
 
+  const filterExistingDocuments = async (documents: ResearchDocument[]): Promise<ResearchDocument[]> => {
+    if (!documents.length) return documents;
+
+    const validDocuments: ResearchDocument[] = [];
+
+    for (const doc of documents) {
+      if (!doc.file_path) {
+        // Skip documents without file paths
+        continue;
+      }
+
+      try {
+        // Check if file exists in storage by trying to get its metadata
+        const { data, error } = await supabase.storage
+          .from('research-documents')
+          .list(doc.file_path.includes('/') ? doc.file_path.substring(0, doc.file_path.lastIndexOf('/')) : '', {
+            limit: 1000
+          });
+
+        // Check if the exact file exists in the list
+        const filename = doc.file_path.split('/').pop();
+        const fileExists = data?.some(file => file.name === filename);
+
+        if (!error && fileExists) {
+          validDocuments.push(doc);
+        } else {
+          console.warn(`File not found in storage: ${doc.file_path}`);
+          // Optionally, you could delete the orphaned database record here
+          // await supabase.from('research_documents').delete().eq('id', doc.id);
+        }
+      } catch (error) {
+        console.warn(`Error checking file existence for ${doc.file_path}:`, error);
+      }
+    }
+
+    return validDocuments;
+  };
+
   const fetchThemeWithDetailedScores = async (themeId: string): Promise<ThemeWithDetailedScores | null> => {
     try {
       // Fetch theme
@@ -106,6 +144,9 @@ export const useFramework = () => {
 
       if (documentsError) throw documentsError;
 
+      // Filter documents to only include those with files that actually exist in storage
+      const validDocuments = await filterExistingDocuments(documentsData || []);
+
       // Fetch research runs
       const { data: runsData, error: runsError } = await supabase
         .from('n8n_research_runs')
@@ -134,7 +175,7 @@ export const useFramework = () => {
         ...theme,
         categories: categoriesWithCriteria,
         detailed_scores: scoresWithCriteria,
-        research_documents: documentsData || [],
+        research_documents: validDocuments,
         research_runs: runsData || [],
         overall_score,
         overall_confidence
