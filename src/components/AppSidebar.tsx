@@ -42,7 +42,7 @@ export function AppSidebar() {
     >
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Climate Tech Intelligence</SidebarGroupLabel>
+          <SidebarGroupLabel>M/T Intelligence</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (

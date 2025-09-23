@@ -99,7 +99,7 @@ export default function Auth() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Shield className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">Climate Tech Intelligence</h1>
+            <h1 className="text-2xl font-bold text-foreground">M/T Intelligence</h1>
           </div>
           <p className="text-muted-foreground">
             Access your investment intelligence platform
