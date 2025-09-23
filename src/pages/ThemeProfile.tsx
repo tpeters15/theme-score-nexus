@@ -115,8 +115,8 @@ const ThemeProfile = () => {
   const completionRate = totalCriteria > 0 ? Math.round((scoredCriteria / totalCriteria) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Professional Header */}
+    <div className="bg-background">
+      {/* Page Header */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">

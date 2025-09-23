@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { DashboardHeader } from "@/components/DashboardHeader";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -11,9 +12,12 @@ export function AppLayout({ children }: AppLayoutProps) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <main className="flex-1">
-          {children}
-        </main>
+        <div className="flex-1 flex flex-col">
+          <DashboardHeader />
+          <main className="flex-1">
+            {children}
+          </main>
+        </div>
       </div>
     </SidebarProvider>
   );
