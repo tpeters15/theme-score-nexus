@@ -265,35 +265,62 @@ export function InlineScoreEditor({
   }
 
   return (
-    <div className={`group flex items-center justify-between ${className}`}>
-      <div className="flex items-center gap-2">
-        {currentScore ? (
-          <>
-            <span className={`text-lg font-bold ${getScoreColor(currentScore)}`}>
-              {currentScore}/5
-            </span>
-            {currentConfidence && getConfidenceBadge(currentConfidence)}
-          </>
-        ) : (
-          <span className="text-sm text-muted-foreground">Not scored</span>
-        )}
+    <div className={`group ${className}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 space-y-2">
+          {currentScore ? (
+            <>
+              <div className="flex items-center gap-3">
+                <span className={`text-lg font-bold ${getScoreColor(currentScore)}`}>
+                  {currentScore}/5
+                </span>
+                {currentConfidence && getConfidenceBadge(currentConfidence)}
+              </div>
+              
+              {/* Show scoring rubric description for current score */}
+              {scoringRubric && scoringRubric[currentScore as keyof typeof scoringRubric] && (
+                <div className="p-3 bg-muted/50 rounded-lg border">
+                  <div className="text-sm font-medium text-foreground">
+                    {currentScore} - {scoringRubric[currentScore as keyof typeof scoringRubric]?.label}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {scoringRubric[currentScore as keyof typeof scoringRubric]?.description}
+                  </div>
+                </div>
+              )}
+              
+              {/* Show rationale/notes if they exist */}
+              {currentNotes && (
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="text-xs font-medium text-blue-800 mb-1">Rationale & Evidence:</div>
+                  <div className="text-xs text-blue-700 whitespace-pre-wrap">{currentNotes}</div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="p-3 bg-muted/30 rounded-lg border border-dashed">
+              <span className="text-sm text-muted-foreground">Not scored</span>
+              <div className="text-xs text-muted-foreground mt-1">Click to add score and rationale</div>
+            </div>
+          )}
+        </div>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsEditing(true)}
+          className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+        >
+          {currentScore ? (
+            <Edit className="h-4 w-4" />
+          ) : (
+            <>
+              <TrendingUp className="h-4 w-4 mr-1" />
+              Score
+            </>
+          )}
+        </Button>
       </div>
-      
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setIsEditing(true)}
-        className="opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        {currentScore ? (
-          <Edit className="h-4 w-4" />
-        ) : (
-          <>
-            <TrendingUp className="h-4 w-4 mr-1" />
-            Score
-          </>
-        )}
-      </Button>
     </div>
   );
 }
