@@ -18,6 +18,7 @@ import { BulkScoringModal } from "@/components/BulkScoringModal";
 import { ScoreProgressIndicator } from "@/components/ScoreProgressIndicator";
 import { RegulatoryTable } from "@/components/RegulatoryTable";
 import { RegulatorySummaryCard } from "@/components/RegulatorySummaryCard";
+import { FrameworkCategoryCard } from "@/components/FrameworkCategoryCard";
 import { useRegulations } from "@/hooks/useRegulations";
 
 const ThemeProfile = () => {
@@ -108,7 +109,7 @@ const ThemeProfile = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <Button
@@ -207,68 +208,19 @@ const ThemeProfile = () => {
             </div>
           </div>
 
-          {/* Framework Categories with Scores */}
+          {/* Framework Categories with Progressive Disclosure */}
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold">Framework Analysis</h2>
-            <div className="grid gap-4">
-              {theme.categories.map((category) => {
-                const categoryScores = theme.detailed_scores.filter(s => 
-                  category.criteria.some(c => c.id === s.criteria_id)
-                );
-                const avgScore = categoryScores.length > 0 
-                  ? categoryScores.reduce((sum, s) => sum + (s.score || 0), 0) / categoryScores.length 
-                  : 0;
-                
-                return (
-                  <Card key={category.id} className="overflow-hidden">
-                    <CardHeader className="bg-muted/30">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="text-lg">{category.name} ({category.code})</CardTitle>
-                          <CardDescription>{category.description}</CardDescription>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold">
-                            <span className={getScoreColor(avgScore * 20)}>
-                              {avgScore.toFixed(1)}
-                            </span>
-                            <span className="text-sm text-muted-foreground">/5</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">Category Average</p>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <div className="grid gap-3">
-                        {category.criteria.map((criteria) => {
-                          const score = theme.detailed_scores.find(s => s.criteria_id === criteria.id);
-                          return (
-                            <div key={criteria.id} className="p-3 bg-muted/20 rounded-lg">
-                              <div className="flex items-start justify-between mb-2">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <h4 className="font-medium text-sm">{criteria.code}</h4>
-                                    <span className="text-sm">{criteria.name}</span>
-                                  </div>
-                                  <p className="text-xs text-muted-foreground mt-1">{criteria.description}</p>
-                                </div>
-                              </div>
-                              <InlineScoreEditor
-                                themeId={theme.id}
-                                criteriaId={criteria.id}
-                                currentScore={score?.score}
-                                currentConfidence={score?.confidence}
-                                currentNotes={score?.notes}
-                                onScoreUpdate={refreshTheme}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+            <div className="space-y-4">
+              {theme.categories.map((category) => (
+                <FrameworkCategoryCard
+                  key={category.id}
+                  category={category}
+                  scores={theme.detailed_scores}
+                  themeId={theme.id}
+                  onScoreUpdate={refreshTheme}
+                />
+              ))}
             </div>
           </div>
         </div>
