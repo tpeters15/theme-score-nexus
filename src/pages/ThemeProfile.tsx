@@ -276,12 +276,10 @@ const ThemeProfile = () => {
 
       {/* Contextual Information - Accessible but not center-stage */}
       <Tabs defaultValue="research" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="research">Research</TabsTrigger>
           <TabsTrigger value="regulatory">Regulatory</TabsTrigger>
-          <TabsTrigger value="scope">Scope</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-          <TabsTrigger value="detailed">Detailed Analysis</TabsTrigger>
+          <TabsTrigger value="scope">Theme Details</TabsTrigger>
         </TabsList>
 
         <TabsContent value="research" className="space-y-6">
@@ -360,115 +358,6 @@ const ThemeProfile = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="activity" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Research Runs
-              </CardTitle>
-              <CardDescription>
-                History of automated research activities
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {theme.research_runs.length > 0 ? (
-                <div className="space-y-4">
-                  {theme.research_runs.map((run: N8nResearchRun) => (
-                    <div key={run.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <Users className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <Badge 
-                              variant={run.status === 'completed' ? 'default' : 
-                                     run.status === 'running' ? 'secondary' : 
-                                     run.status === 'failed' ? 'destructive' : 'outline'}
-                            >
-                              {run.status}
-                            </Badge>
-                            <span className="text-sm text-muted-foreground">
-                              {run.criteria_ids.length} criteria analyzed
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            Started: {new Date(run.started_at).toLocaleString()}
-                          </p>
-                          {run.completed_at && (
-                            <p className="text-sm text-muted-foreground">
-                              Completed: {new Date(run.completed_at).toLocaleString()}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No research runs available yet</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="detailed" className="space-y-6">
-          <div className="grid gap-6">
-            {theme.categories.map((category) => (
-              <Card key={category.id}>
-                <CardHeader>
-                  <CardTitle>{category.name} ({category.code})</CardTitle>
-                  <CardDescription>{category.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {category.criteria.map((criteria) => {
-                      const score = theme.detailed_scores.find(s => s.criteria_id === criteria.id);
-                      return (
-                        <div key={criteria.id} className="border rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex-1">
-                              <h4 className="font-medium">{criteria.name} ({criteria.code})</h4>
-                              <p className="text-sm text-muted-foreground">{criteria.description}</p>
-                            </div>
-                            <div className="text-right">
-                              {score?.score ? (
-                                <div className="flex items-center gap-2">
-                                  <span className={`text-xl font-bold ${getScoreColor(score.score * 20)}`}>
-                                    {score.score}/5
-                                  </span>
-                                  {score.confidence && (
-                                    <Badge variant="outline" className="text-xs">
-                                      {score.confidence}
-                                    </Badge>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground">Not scored</span>
-                              )}
-                            </div>
-                          </div>
-                          {score?.notes && (
-                            <div className="mt-3 p-3 bg-muted/30 rounded text-sm">
-                              <strong>Notes:</strong> {score.notes}
-                            </div>
-                          )}
-                          {score?.analyst_notes && (
-                            <div className="mt-2 p-3 bg-primary/5 rounded text-sm">
-                              <strong>Analyst Notes:</strong> {score.analyst_notes}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
       </Tabs>
 
       {/* Framework Modal */}
