@@ -11,6 +11,7 @@ import { useFramework } from "@/hooks/useFramework";
 interface InlineScoreEditorProps {
   themeId: string;
   criteriaId: string;
+  criteria?: any; // Full criteria object with scoring rubric
   currentScore?: number | null;
   currentConfidence?: string | null;
   currentNotes?: string;
@@ -19,14 +20,30 @@ interface InlineScoreEditorProps {
 }
 
 const CONFIDENCE_OPTIONS = [
-  { value: "High", label: "High", color: "bg-score-high text-score-high-foreground" },
-  { value: "Medium", label: "Medium", color: "bg-score-medium text-score-medium-foreground" },
-  { value: "Low", label: "Low", color: "bg-score-low text-score-low-foreground" },
+  { 
+    value: "High", 
+    label: "High Confidence", 
+    color: "bg-score-high text-score-high-foreground",
+    description: "Based on strong evidence, multiple reliable sources, or clear market data"
+  },
+  { 
+    value: "Medium", 
+    label: "Medium Confidence", 
+    color: "bg-score-medium text-score-medium-foreground",
+    description: "Based on moderate evidence, some assumptions, or limited data points"
+  },
+  { 
+    value: "Low", 
+    label: "Low Confidence", 
+    color: "bg-score-low text-score-low-foreground",
+    description: "Based on limited evidence, significant assumptions, or requires more research"
+  },
 ];
 
 export function InlineScoreEditor({
   themeId,
   criteriaId,
+  criteria,
   currentScore,
   currentConfidence,
   currentNotes,
@@ -101,6 +118,50 @@ export function InlineScoreEditor({
     return "text-score-low";
   };
 
+  const parseScoringRubric = (rubric: any) => {
+    try {
+      if (typeof rubric === 'string') {
+        return JSON.parse(rubric);
+      }
+      if (typeof rubric === 'object' && rubric !== null && !Array.isArray(rubric)) {
+        return rubric;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  const scoringRubric = criteria?.scoring_rubric ? parseScoringRubric(criteria.scoring_rubric) : null;
+  
+  const getScoreOptions = () => {
+    if (!scoringRubric) {
+      return [
+        { value: "1", label: "1 - Poor", description: "Below expectations" },
+        { value: "3", label: "3 - Average", description: "Meets expectations" },
+        { value: "5", label: "5 - Excellent", description: "Exceeds expectations" }
+      ];
+    }
+    
+    return [
+      { 
+        value: "1", 
+        label: `1 - ${scoringRubric[1]?.label || 'Poor'}`, 
+        description: scoringRubric[1]?.description || "Below expectations"
+      },
+      { 
+        value: "3", 
+        label: `3 - ${scoringRubric[3]?.label || 'Average'}`, 
+        description: scoringRubric[3]?.description || "Meets expectations"
+      },
+      { 
+        value: "5", 
+        label: `5 - ${scoringRubric[5]?.label || 'Excellent'}`, 
+        description: scoringRubric[5]?.description || "Exceeds expectations"
+      }
+    ];
+  };
+
   const getConfidenceBadge = (conf: string) => {
     const option = CONFIDENCE_OPTIONS.find(opt => opt.value === conf);
     return option ? (
@@ -111,36 +172,64 @@ export function InlineScoreEditor({
   };
 
   if (isEditing) {
+    const scoreOptions = getScoreOptions();
+    
     return (
-      <div className={`space-y-3 p-3 border rounded-lg bg-card ${className}`}>
-        <div className="grid grid-cols-2 gap-3">
+      <div className={`space-y-4 p-4 border rounded-lg bg-card ${className}`}>
+        <div className="grid grid-cols-1 gap-4">
+          {/* Score Selection with Enhanced Dropdown */}
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">
               Score (1-5)
             </label>
-            <Input
-              type="number"
-              min="1"
-              max="5"
-              step="0.1"
-              value={score}
-              onChange={(e) => setScore(e.target.value)}
-              placeholder="1-5"
-              className="h-8"
-            />
+            <Select value={score} onValueChange={setScore}>
+              <SelectTrigger className="h-auto min-h-[40px] bg-background">
+                <SelectValue placeholder="Select a score" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border shadow-lg z-50">
+                {scoreOptions.map((option) => (
+                  <SelectItem 
+                    key={option.value} 
+                    value={option.value}
+                    className="cursor-pointer hover:bg-accent focus:bg-accent"
+                  >
+                    <div className="py-2">
+                      <div className="font-medium">{option.label}</div>
+                      <div className="text-xs text-muted-foreground mt-1 max-w-[300px]">
+                        {option.description}
+                      </div>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
+          {/* Confidence Selection with Enhanced Dropdown */}
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">
-              Confidence
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">
+              Confidence Level
             </label>
             <Select value={confidence} onValueChange={setConfidence}>
-              <SelectTrigger className="h-8">
-                <SelectValue placeholder="Select confidence" />
+              <SelectTrigger className="h-auto min-h-[40px] bg-background">
+                <SelectValue placeholder="Select confidence level" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background border shadow-lg z-50">
                 {CONFIDENCE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                  <SelectItem 
+                    key={option.value} 
+                    value={option.value}
+                    className="cursor-pointer hover:bg-accent focus:bg-accent"
+                  >
+                    <div className="py-2">
+                      <div className="font-medium flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${option.color.includes('high') ? 'bg-green-500' : option.color.includes('medium') ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
+                        {option.label}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1 max-w-[300px]">
+                        {option.description}
+                      </div>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -149,15 +238,15 @@ export function InlineScoreEditor({
         </div>
         
         <div>
-          <label className="text-xs font-medium text-muted-foreground mb-1 block">
-            Notes (optional)
+          <label className="text-sm font-medium text-muted-foreground mb-2 block">
+            Rationale & Evidence
           </label>
           <Textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Add notes about this score..."
-            className="min-h-[60px] text-sm"
-            rows={2}
+            placeholder="Provide detailed rationale for this score, including specific evidence, data sources, market research, or analysis that supports your assessment..."
+            className="min-h-[100px] text-sm bg-background"
+            rows={4}
           />
         </div>
 

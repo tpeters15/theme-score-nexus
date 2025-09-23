@@ -149,16 +149,17 @@ export function FrameworkCategoryCard({
                         </p>
                       </div>
                     </div>
-                     {isScoringCategory ? (
-                       <InlineScoreEditor
-                         themeId={themeId}
-                         criteriaId={criteria.id}
-                         currentScore={score?.score}
-                         currentConfidence={score?.confidence}
-                         currentNotes={score?.notes}
-                         onScoreUpdate={onScoreUpdate}
-                       />
-                     ) : (
+                      {isScoringCategory ? (
+                        <InlineScoreEditor
+                          themeId={themeId}
+                          criteriaId={criteria.id}
+                          criteria={criteria}
+                          currentScore={score?.score}
+                          currentConfidence={score?.confidence}
+                          currentNotes={score?.notes}
+                          onScoreUpdate={onScoreUpdate}
+                        />
+                      ) : (
                        <div className="p-3 bg-blue-50 rounded border border-blue-200">
                          <p className="text-sm text-blue-800 font-medium">Qualitative Assessment</p>
                          <p className="text-xs text-blue-600 mt-1">
