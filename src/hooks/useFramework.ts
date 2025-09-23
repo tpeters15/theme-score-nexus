@@ -73,6 +73,17 @@ export const useFramework = () => {
 
       if (themeError) throw themeError;
 
+      // Fetch framework categories with criteria
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('framework_categories')
+        .select(`
+          *,
+          criteria:framework_criteria(*)
+        `)
+        .order('display_order');
+
+      if (categoriesError) throw categoriesError;
+
       // Fetch detailed scores with criteria
       const { data: scoresData, error: scoresError } = await supabase
         .from('detailed_scores')
@@ -102,10 +113,10 @@ export const useFramework = () => {
 
       if (runsError) throw runsError;
 
-      // Organize categories with criteria
-      const categoriesWithCriteria: FrameworkCategoryWithCriteria[] = categories.map(category => ({
+      // Transform categories data to match our interface
+      const categoriesWithCriteria: FrameworkCategoryWithCriteria[] = (categoriesData || []).map(category => ({
         ...category,
-        criteria: criteria.filter(c => c.category_id === category.id)
+        criteria: category.criteria || []
       }));
 
       // Calculate overall score and confidence

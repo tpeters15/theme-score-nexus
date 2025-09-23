@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index";
+import Themes from "./pages/Themes";
+import Signals from "./pages/Signals";
+import Research from "./pages/Research";
 import ThemeProfile from "./pages/ThemeProfile";
 import NotFound from "./pages/NotFound";
 
@@ -21,6 +24,9 @@ const App = () => (
           <AppLayout>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/themes" element={<Themes />} />
+              <Route path="/signals" element={<Signals />} />
+              <Route path="/research" element={<Research />} />
               <Route path="/theme/:themeId" element={<ThemeProfile />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
