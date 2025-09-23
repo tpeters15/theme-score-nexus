@@ -97,10 +97,10 @@ export function RegulatoryImpactAlerts() {
                     regulation.impact_level === "high" ? "text-red-600" : 
                     regulation.impact_level === "medium" ? "text-yellow-600" : "text-green-600"
                   )}>
-                    {regulation.impact_level.toUpperCase()}
+                    {regulation.impact_level?.toUpperCase() || 'UNKNOWN'}
                   </span>
                   <span className="text-xs text-muted-foreground">•</span>
-                  <span className="text-xs text-muted-foreground">{regulation.relevance_score}%</span>
+                  <span className="text-xs text-muted-foreground">{regulation.relevance_score || 0}%</span>
                 </div>
               </div>
               
