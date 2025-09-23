@@ -1,3 +1,4 @@
+import { TopThemesOverview } from "./TopThemesOverview";
 import { IntelligenceFeed } from "./IntelligenceFeed";
 import { RegulatoryImpactAlerts } from "./RegulatoryImpactAlerts";
 import { useThemes } from "@/hooks/useThemes";
@@ -24,6 +25,11 @@ export function ExecutiveDashboard() {
 
   return (
     <div className="container mx-auto px-6 space-y-8">
+      {/* Hero Section - Top Themes Overview */}
+      <div className="w-full">
+        <TopThemesOverview themes={themes} />
+      </div>
+      
       {/* Main Content Grid */}
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Intelligence Feed - Takes 2 columns */}
