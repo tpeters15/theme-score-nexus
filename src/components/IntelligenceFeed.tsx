@@ -146,43 +146,6 @@ export function IntelligenceFeed({ themes }: IntelligenceFeedProps) {
           </CardContent>
         </Card>
 
-        {/* Quick Access - Top Performers */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-score-high" />
-              Top Performers
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {topPerformers.length > 0 ? (
-              topPerformers.map((theme, index) => (
-                <div key={theme.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-score-high text-score-high-foreground text-xs font-bold">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm">{theme.name}</div>
-                      <div className="text-xs text-muted-foreground">{theme.sector}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-score-high">{Math.round(theme.weighted_total_score)}</div>
-                    <Badge variant="outline" className="text-xs">
-                      {theme.overall_confidence}
-                    </Badge>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <div className="text-sm">No high performers yet</div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </section>
   );
