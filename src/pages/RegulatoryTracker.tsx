@@ -31,28 +31,55 @@ export default function RegulatoryTracker() {
   const [regulations, setRegulations] = useState<Regulation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch regulations from database
+  // Fetch regulations from database with theme information
   useEffect(() => {
     async function fetchRegulations() {
       try {
         setLoading(true);
-        const { data, error } = await supabase
+        
+        // Fetch regulations with theme relationships
+        const { data: regulationsData, error: regulationsError } = await supabase
           .from('regulations')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Error fetching regulations:', error);
+        if (regulationsError) {
+          console.error('Error fetching regulations:', regulationsError);
           return;
         }
 
-        // Transform data to match our interface with default values
-        const transformedRegulations: Regulation[] = (data || []).map(reg => ({
-          ...reg,
-          relevance_score: 4, // Default since this comes from theme_regulations
-          impact_description: 'Regulatory impact assessment pending',
-          criteria_impacts: []
-        }));
+        // Fetch theme-regulation relationships to get affected themes
+        const { data: themeRegulations, error: themeRegError } = await supabase
+          .from('theme_regulations')
+          .select(`
+            regulation_id,
+            relevance_score,
+            impact_description,
+            criteria_impacts,
+            theme:theme_id (
+              id,
+              name
+            )
+          `);
+
+        if (themeRegError) {
+          console.error('Error fetching theme regulations:', themeRegError);
+        }
+
+        // Transform and combine the data
+        const transformedRegulations: Regulation[] = (regulationsData || []).map(reg => {
+          const themeRels = (themeRegulations || []).filter(tr => tr.regulation_id === reg.id);
+          const affectedThemes = themeRels.map(tr => (tr.theme as any)?.name).filter(Boolean);
+          const maxRelevance = Math.max(...themeRels.map(tr => tr.relevance_score || 0), 0);
+          
+          return {
+            ...reg,
+            relevance_score: maxRelevance || 3,
+            impact_description: themeRels[0]?.impact_description || 'Regulatory impact assessment pending',
+            criteria_impacts: themeRels[0]?.criteria_impacts || [],
+            affected_themes: affectedThemes
+          };
+        });
 
         setRegulations(transformedRegulations);
       } catch (error) {
@@ -280,6 +307,20 @@ export default function RegulatoryTracker() {
                       <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                         <span className="text-sm font-medium text-blue-800">Impact on Target Customers:</span>
                         <div className="text-xs text-blue-700 mt-1">{regulation.impact_description}</div>
+                      </div>
+                    )}
+
+                    {/* Affected Themes */}
+                    {regulation.affected_themes && regulation.affected_themes.length > 0 && (
+                      <div className="mb-4">
+                        <span className="text-sm font-medium">Affected Investment Themes:</span>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {regulation.affected_themes.map((theme, index) => (
+                            <Badge key={index} variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                              {theme}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                     )}
 
