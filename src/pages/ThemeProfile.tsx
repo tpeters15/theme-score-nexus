@@ -308,28 +308,32 @@ const ThemeProfile = () => {
 
           {/* Research Materials */}
           <TabsContent value="research" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="lg:col-span-1">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Upload className="h-5 w-5" />
-                    Upload Research
+            <div className="space-y-6">
+              {/* Clean Document Overview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Research Documents
                   </CardTitle>
                   <CardDescription>
-                    Add supporting documents and analysis
+                    {theme.research_documents.length} document{theme.research_documents.length !== 1 ? 's' : ''} available
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ThemeFileUpload themeId={themeId!} onUploadComplete={refreshTheme} />
+                  <DocumentIntelligence 
+                    documents={theme.research_documents}
+                    onDocumentSelect={setSelectedDocument}
+                  />
                 </CardContent>
               </Card>
               
-              <div className="lg:col-span-2">
-                <DocumentIntelligence 
-                  documents={theme.research_documents}
-                  onDocumentSelect={setSelectedDocument}
-                />
-              </div>
+              {/* Minimal File Upload */}
+              <Card>
+                <CardContent className="pt-6">
+                  <ThemeFileUpload themeId={themeId!} onUploadComplete={refreshTheme} />
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
