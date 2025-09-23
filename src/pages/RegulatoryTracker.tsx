@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,94 +18,52 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import type { Regulation } from "@/types/regulatory";
 
-interface Regulation {
-  id: string;
-  title: string;
-  description: string;
-  impact_level: string;
-  jurisdiction: string;
-  regulatory_body: string;
-  compliance_deadline?: string;
-  effective_date?: string;
-  status: string;
-  regulation_type: string;
-  key_provisions?: string[];
-  source_url?: string;
-  analysis_url?: string;
-  relevance_score?: number;
-  affected_themes?: string[];
-}
+// Interface removed - now using type from regulatory.ts
 
 export default function RegulatoryTracker() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedJurisdiction, setSelectedJurisdiction] = useState("all");
   const [selectedImpact, setSelectedImpact] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [regulations, setRegulations] = useState<Regulation[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - this would come from your Supabase query
-  const regulations: Regulation[] = [
-    {
-      id: "1",
-      title: "EU Corporate Sustainability Reporting Directive (CSRD)",
-      description: "New mandatory sustainability reporting requirements for large companies operating in the EU",
-      impact_level: "high",
-      jurisdiction: "European Union",
-      regulatory_body: "European Commission",
-      compliance_deadline: "2025-01-01",
-      effective_date: "2024-01-05",
-      status: "active",
-      regulation_type: "reporting",
-      key_provisions: ["Sustainability reporting", "Double materiality assessment", "Assurance requirements"],
-      relevance_score: 95,
-      affected_themes: ["ESG Reporting", "Carbon Accounting", "Supply Chain Transparency"]
-    },
-    {
-      id: "2",
-      title: "SEC Climate Risk Disclosure Rules",
-      description: "Enhanced climate-related disclosure requirements for public companies",
-      impact_level: "high",
-      jurisdiction: "United States",
-      regulatory_body: "Securities and Exchange Commission",
-      compliance_deadline: "2025-03-15",
-      effective_date: "2024-03-06",
-      status: "active",
-      regulation_type: "disclosure",
-      key_provisions: ["Climate risk disclosure", "Greenhouse gas emissions reporting", "Governance disclosures"],
-      relevance_score: 88,
-      affected_themes: ["Climate Risk Management", "Carbon Footprinting", "Corporate Governance"]
-    },
-    {
-      id: "3",
-      title: "UK Taxonomy Regulation",
-      description: "Green taxonomy framework for sustainable finance classification",
-      impact_level: "medium",
-      jurisdiction: "United Kingdom",
-      regulatory_body: "HM Treasury",
-      compliance_deadline: "2024-12-31",
-      effective_date: "2024-06-01",
-      status: "pending",
-      regulation_type: "taxonomy",
-      key_provisions: ["Green classification", "Investment standards", "Disclosure requirements"],
-      relevance_score: 82,
-      affected_themes: ["Sustainable Finance", "Green Investment", "Environmental Standards"]
-    },
-    {
-      id: "4",
-      title: "California Climate Corporate Data Accountability Act",
-      description: "Mandatory scope 1, 2, and 3 emissions reporting for large companies",
-      impact_level: "high",
-      jurisdiction: "California, USA",
-      regulatory_body: "California Air Resources Board",
-      compliance_deadline: "2026-01-01",
-      effective_date: "2024-10-01",
-      status: "active",
-      regulation_type: "emissions",
-      key_provisions: ["Scope 1 & 2 reporting", "Scope 3 reporting", "Third-party verification"],
-      relevance_score: 90,
-      affected_themes: ["Carbon Accounting", "Supply Chain Emissions", "Emissions Verification"]
+  // Fetch regulations from database
+  useEffect(() => {
+    async function fetchRegulations() {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('regulations')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching regulations:', error);
+          return;
+        }
+
+        // Transform data to match our interface with default values
+        const transformedRegulations: Regulation[] = (data || []).map(reg => ({
+          ...reg,
+          relevance_score: 4, // Default since this comes from theme_regulations
+          impact_description: 'Regulatory impact assessment pending',
+          criteria_impacts: []
+        }));
+
+        setRegulations(transformedRegulations);
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
     }
-  ];
+
+    fetchRegulations();
+  }, []);
 
   const getImpactColor = (level: string) => {
     switch (level) {
@@ -149,6 +107,27 @@ export default function RegulatoryTracker() {
   });
 
   const jurisdictions = [...new Set(regulations.map(r => r.jurisdiction))];
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col space-y-2">
+          <h1 className="text-3xl font-bold text-foreground">Regulatory Tracker</h1>
+          <p className="text-muted-foreground">Loading regulatory data...</p>
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-muted rounded w-1/2"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -249,8 +228,8 @@ export default function RegulatoryTracker() {
                         {regulation.impact_level.toUpperCase()} IMPACT
                       </Badge>
                       {regulation.relevance_score && (
-                        <span className="text-sm text-muted-foreground">
-                          {regulation.relevance_score}% relevance
+                       <span className="text-sm text-muted-foreground">
+                          {regulation.relevance_score}/5 relevance
                         </span>
                       )}
                     </div>
@@ -296,17 +275,11 @@ export default function RegulatoryTracker() {
                       </div>
                     )}
 
-                    {/* Affected Themes */}
-                    {regulation.affected_themes && regulation.affected_themes.length > 0 && (
-                      <div className="mb-4">
-                        <span className="text-sm font-medium">Affected Themes:</span>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {regulation.affected_themes.map((theme, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {theme}
-                            </Badge>
-                          ))}
-                        </div>
+                    {/* Impact Description */}
+                    {regulation.impact_description && (
+                      <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <span className="text-sm font-medium text-blue-800">Impact on Target Customers:</span>
+                        <div className="text-xs text-blue-700 mt-1">{regulation.impact_description}</div>
                       </div>
                     )}
 
