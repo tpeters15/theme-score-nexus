@@ -272,27 +272,37 @@ const ThemeProfile = () => {
           </TabsList>
 
           {/* Framework Analysis - Primary Tab */}
-          <TabsContent value="framework" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold">Investment Framework Analysis</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Detailed scoring across {theme.categories.length} investment categories
-                </p>
+          <TabsContent value="framework" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-3">
+                <div className="space-y-4">
+                  {theme.categories.map((category) => (
+                    <FrameworkCategoryCard
+                      key={category.id}
+                      category={category}
+                      scores={theme.detailed_scores}
+                      themeId={theme.id}
+                      onScoreUpdate={refreshTheme}
+                    />
+                  ))}
+                </div>
               </div>
-              <ScoreProgressIndicator theme={theme} className="w-80" />
-            </div>
-            
-            <div className="space-y-4">
-              {theme.categories.map((category) => (
-                <FrameworkCategoryCard
-                  key={category.id}
-                  category={category}
-                  scores={theme.detailed_scores}
-                  themeId={theme.id}
-                  onScoreUpdate={refreshTheme}
-                />
-              ))}
+              
+              <div className="lg:col-span-1">
+                <div className="sticky top-6 space-y-4">
+                  <Card>
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg">Analysis Progress</CardTitle>
+                      <CardDescription>
+                        Scoring across {theme.categories.length} categories
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ScoreProgressIndicator theme={theme} />
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
             </div>
           </TabsContent>
 
