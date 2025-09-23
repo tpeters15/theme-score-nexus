@@ -146,11 +146,14 @@ export const useFramework = () => {
   };
 
   const calculateOverallScore = (scores: any[], categories: FrameworkCategoryWithCriteria[]) => {
+    // Only include categories A, B, C for scoring (D and E are qualitative only)
+    const scoringCategories = categories.filter(cat => ['A', 'B', 'C'].includes(cat.code));
+    
     let totalWeightedScore = 0;
     let totalWeight = 0;
     let confidenceMap: { [key: string]: number } = { 'High': 0, 'Medium': 0, 'Low': 0 };
 
-    for (const category of categories) {
+    for (const category of scoringCategories) {
       let categoryScore = 0;
       let categoryTotalCriteriaWeight = 0;
       
