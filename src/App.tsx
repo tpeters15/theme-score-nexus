@@ -5,11 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AppLayout } from "@/components/AppLayout";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Themes from "./pages/Themes";
 import Signals from "./pages/Signals";
 import Research from "./pages/Research";
 import RegulatoryTracker from "./pages/RegulatoryTracker";
+import Auth from "./pages/Auth";
 import ThemeProfile from "./pages/ThemeProfile";
 import NotFound from "./pages/NotFound";
 
@@ -22,18 +25,26 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AppLayout>
+          <AuthProvider>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/themes" element={<Themes />} />
-              <Route path="/regulatory-tracker" element={<RegulatoryTracker />} />
-              <Route path="/signals" element={<Signals />} />
-              <Route path="/research" element={<Research />} />
-              <Route path="/theme/:themeId" element={<ThemeProfile />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/*" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/themes" element={<Themes />} />
+                      <Route path="/regulatory-tracker" element={<RegulatoryTracker />} />
+                      <Route path="/signals" element={<Signals />} />
+                      <Route path="/research" element={<Research />} />
+                      <Route path="/theme/:themeId" element={<ThemeProfile />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
             </Routes>
-          </AppLayout>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
