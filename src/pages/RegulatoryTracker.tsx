@@ -14,11 +14,13 @@ import {
   Clock,
   Building2,
   Globe2,
-  FileText
+  FileText,
+  Link
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import { RegulationThemeLinkModal } from "@/components/RegulationThemeLinkModal";
 import type { Regulation } from "@/types/regulatory";
 
 // Interface removed - now using type from regulatory.ts
@@ -30,67 +32,78 @@ export default function RegulatoryTracker() {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [regulations, setRegulations] = useState<Regulation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRegulation, setSelectedRegulation] = useState<Regulation | null>(null);
+  const [showLinkModal, setShowLinkModal] = useState(false);
 
   // Fetch regulations from database with theme information
-  useEffect(() => {
-    async function fetchRegulations() {
-      try {
-        setLoading(true);
-        
-        // Fetch regulations with theme relationships
-        const { data: regulationsData, error: regulationsError } = await supabase
-          .from('regulations')
-          .select('*')
-          .order('created_at', { ascending: false });
+  const fetchRegulations = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch regulations with theme relationships
+      const { data: regulationsData, error: regulationsError } = await supabase
+        .from('regulations')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-        if (regulationsError) {
-          console.error('Error fetching regulations:', regulationsError);
-          return;
-        }
-
-        // Fetch theme-regulation relationships to get affected themes
-        const { data: themeRegulations, error: themeRegError } = await supabase
-          .from('theme_regulations')
-          .select(`
-            regulation_id,
-            relevance_score,
-            impact_description,
-            criteria_impacts,
-            theme:theme_id (
-              id,
-              name
-            )
-          `);
-
-        if (themeRegError) {
-          console.error('Error fetching theme regulations:', themeRegError);
-        }
-
-        // Transform and combine the data
-        const transformedRegulations: Regulation[] = (regulationsData || []).map(reg => {
-          const themeRels = (themeRegulations || []).filter(tr => tr.regulation_id === reg.id);
-          const affectedThemes = themeRels.map(tr => (tr.theme as any)?.name).filter(Boolean);
-          const maxRelevance = Math.max(...themeRels.map(tr => tr.relevance_score || 0), 0);
-          
-          return {
-            ...reg,
-            relevance_score: maxRelevance || 3,
-            impact_description: themeRels[0]?.impact_description || 'Regulatory impact assessment pending',
-            criteria_impacts: themeRels[0]?.criteria_impacts || [],
-            affected_themes: affectedThemes
-          };
-        });
-
-        setRegulations(transformedRegulations);
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoading(false);
+      if (regulationsError) {
+        console.error('Error fetching regulations:', regulationsError);
+        return;
       }
-    }
 
+      // Fetch theme-regulation relationships to get affected themes
+      const { data: themeRegulations, error: themeRegError } = await supabase
+        .from('theme_regulations')
+        .select(`
+          regulation_id,
+          relevance_score,
+          impact_description,
+          criteria_impacts,
+          theme:theme_id (
+            id,
+            name
+          )
+        `);
+
+      if (themeRegError) {
+        console.error('Error fetching theme regulations:', themeRegError);
+      }
+
+      // Transform and combine the data
+      const transformedRegulations: Regulation[] = (regulationsData || []).map(reg => {
+        const themeRels = (themeRegulations || []).filter(tr => tr.regulation_id === reg.id);
+        const affectedThemes = themeRels.map(tr => (tr.theme as any)?.name).filter(Boolean);
+        const maxRelevance = Math.max(...themeRels.map(tr => tr.relevance_score || 0), 0);
+        
+        return {
+          ...reg,
+          relevance_score: maxRelevance || 3,
+          impact_description: themeRels[0]?.impact_description || 'Regulatory impact assessment pending',
+          criteria_impacts: themeRels[0]?.criteria_impacts || [],
+          affected_themes: affectedThemes
+        };
+      });
+
+      setRegulations(transformedRegulations);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchRegulations();
   }, []);
+
+  const handleLinkToThemes = (regulation: Regulation) => {
+    setSelectedRegulation(regulation);
+    setShowLinkModal(true);
+  };
+
+  const handleLinksUpdated = () => {
+    fetchRegulations(); // Refresh the data
+  };
 
   const getImpactColor = (level: string) => {
     switch (level) {
@@ -352,6 +365,15 @@ export default function RegulatoryTracker() {
 
                   {/* Actions */}
                   <div className="flex flex-col gap-2 ml-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleLinkToThemes(regulation)}
+                      className="gap-2"
+                    >
+                      <Link className="h-3 w-3" />
+                      Link to Themes
+                    </Button>
                     {regulation.source_url && (
                       <Button variant="outline" size="sm">
                         <ExternalLink className="h-3 w-3 mr-1" />
@@ -383,6 +405,19 @@ export default function RegulatoryTracker() {
           </Card>
         )}
       </div>
+
+      {/* Theme Link Modal */}
+      {showLinkModal && selectedRegulation && (
+        <RegulationThemeLinkModal
+          regulation={selectedRegulation}
+          isOpen={showLinkModal}
+          onClose={() => {
+            setShowLinkModal(false);
+            setSelectedRegulation(null);
+          }}
+          onLinksUpdated={handleLinksUpdated}
+        />
+      )}
     </div>
   );
 }
