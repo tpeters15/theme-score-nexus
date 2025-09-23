@@ -21,6 +21,9 @@ export function FrameworkCategoryCard({
   onScoreUpdate 
 }: FrameworkCategoryCardProps) {
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Check if this category should be scored (only A, B, C are scored)
+  const isScoringCategory = ['A', 'B', 'C'].includes(category.code);
 
   const categoryScores = scores.filter(s => 
     category.criteria.some(c => c.id === s.criteria_id)
@@ -72,33 +75,53 @@ export function FrameworkCategoryCard({
                   )}
                 </Button>
                 <div>
-                  <CardTitle className="text-lg">
-                    {category.code}: {category.name}
-                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg">
+                      {category.code}: {category.name}
+                    </CardTitle>
+                    {!isScoringCategory && (
+                      <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                        Qualitative Only
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     {category.description}
                   </p>
                 </div>
               </div>
-              <div className="text-right space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="text-2xl font-bold">
-                    <span className={getScoreColor(avgScore)}>
-                      {avgScore > 0 ? avgScore.toFixed(1) : '--'}
-                    </span>
-                    <span className="text-sm text-muted-foreground">/5</span>
-                  </div>
-                  <Badge 
-                    variant="outline" 
-                    className={getConfidenceColor(scoredCriteria > 0 ? categoryConfidence : null)}
-                  >
-                    {scoredCriteria > 0 ? categoryConfidence : 'No Data'}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {scoredCriteria}/{totalCriteria} criteria scored
-                </p>
-              </div>
+               <div className="text-right space-y-2">
+                 {isScoringCategory ? (
+                   <>
+                     <div className="flex items-center gap-2">
+                       <div className="text-2xl font-bold">
+                         <span className={getScoreColor(avgScore)}>
+                           {avgScore > 0 ? avgScore.toFixed(1) : '--'}
+                         </span>
+                         <span className="text-sm text-muted-foreground">/5</span>
+                       </div>
+                       <Badge 
+                         variant="outline" 
+                         className={getConfidenceColor(scoredCriteria > 0 ? categoryConfidence : null)}
+                       >
+                         {scoredCriteria > 0 ? categoryConfidence : 'No Data'}
+                       </Badge>
+                     </div>
+                     <p className="text-xs text-muted-foreground">
+                       {scoredCriteria}/{totalCriteria} criteria scored
+                     </p>
+                   </>
+                 ) : (
+                   <div className="text-center">
+                     <div className="text-lg font-medium text-muted-foreground">
+                       Qualitative Assessment
+                     </div>
+                     <p className="text-xs text-muted-foreground">
+                       No scoring - analysis only
+                     </p>
+                   </div>
+                 )}
+               </div>
             </div>
           </CardHeader>
         </CollapsibleTrigger>
@@ -126,14 +149,29 @@ export function FrameworkCategoryCard({
                         </p>
                       </div>
                     </div>
-                    <InlineScoreEditor
-                      themeId={themeId}
-                      criteriaId={criteria.id}
-                      currentScore={score?.score}
-                      currentConfidence={score?.confidence}
-                      currentNotes={score?.notes}
-                      onScoreUpdate={onScoreUpdate}
-                    />
+                     {isScoringCategory ? (
+                       <InlineScoreEditor
+                         themeId={themeId}
+                         criteriaId={criteria.id}
+                         currentScore={score?.score}
+                         currentConfidence={score?.confidence}
+                         currentNotes={score?.notes}
+                         onScoreUpdate={onScoreUpdate}
+                       />
+                     ) : (
+                       <div className="p-3 bg-blue-50 rounded border border-blue-200">
+                         <p className="text-sm text-blue-800 font-medium">Qualitative Assessment</p>
+                         <p className="text-xs text-blue-600 mt-1">
+                           This criterion is for qualitative analysis only and does not contribute to the numerical score.
+                         </p>
+                         {score?.notes && (
+                           <div className="mt-2 pt-2 border-t border-blue-200">
+                             <p className="text-xs font-medium text-blue-800">Notes:</p>
+                             <p className="text-xs text-blue-700 mt-1">{score.notes}</p>
+                           </div>
+                         )}
+                       </div>
+                     )}
                   </div>
                 );
               })}

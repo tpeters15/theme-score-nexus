@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ThemeWithScores, Score, Attribute, DEFAULT_ATTRIBUTES, Theme } from '@/types/themes';
+import { Theme, ThemeWithScores } from '@/types/themes';
 import { supabase } from '@/integrations/supabase/client';
+import { FrameworkCategory, FrameworkCriteria, DetailedScore } from '@/types/framework';
 
 async function fetchThemes(): Promise<Theme[]> {
   const { data, error } = await supabase
@@ -18,64 +19,124 @@ async function fetchThemes(): Promise<Theme[]> {
   return data || [];
 }
 
-async function fetchAttributes(): Promise<Attribute[]> {
-  // For now, use default attributes until attributes table is created
-  return DEFAULT_ATTRIBUTES.map((attr, index) => ({
-    id: `attr-${index + 1}`,
-    ...attr,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }));
+async function fetchFrameworkCategories(): Promise<FrameworkCategory[]> {
+  const { data, error } = await supabase
+    .from('framework_categories')
+    .select('*')
+    .order('display_order');
+
+  if (error) {
+    console.error('Error fetching framework categories:', error);
+    return [];
+  }
+
+  return data || [];
 }
 
-async function fetchScores(): Promise<Score[]> {
-  // For now, return empty scores until scores table is created
-  return [];
+async function fetchFrameworkCriteria(): Promise<FrameworkCriteria[]> {
+  const { data, error } = await supabase
+    .from('framework_criteria')
+    .select('*')
+    .order('category_id, display_order');
+
+  if (error) {
+    console.error('Error fetching framework criteria:', error);
+    return [];
+  }
+
+  return data || [];
 }
 
-function calculateThemeScores(themes: Theme[], attributes: Attribute[], scores: Score[]): ThemeWithScores[] {
+async function fetchDetailedScores(): Promise<DetailedScore[]> {
+  const { data, error } = await supabase
+    .from('detailed_scores')
+    .select('*');
+
+  if (error) {
+    console.error('Error fetching detailed scores:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+function calculateThemeFrameworkScores(
+  themes: Theme[], 
+  categories: FrameworkCategory[], 
+  criteria: FrameworkCriteria[], 
+  scores: DetailedScore[]
+): ThemeWithScores[] {
+  // Only categories A, B, C are used for scoring
+  const scoringCategories = categories.filter(cat => ['A', 'B', 'C'].includes(cat.code));
+  const scoringCriteriaIds = new Set(
+    criteria
+      .filter(c => scoringCategories.some(cat => cat.id === c.category_id))
+      .map(c => c.id)
+  );
+
   return themes.map(theme => {
-    const themeScores = scores
-      .filter(score => score.theme_id === theme.id)
-      .map(score => {
-        const attribute = attributes.find(attr => attr.id === score.attribute_id);
-        return attribute ? { ...score, attribute } : null;
-      })
-      .filter(Boolean) as (Score & { attribute: Attribute })[];
+    const themeScores = scores.filter(score => score.theme_id === theme.id);
+    const scoredScoringCriteria = themeScores.filter(score => 
+      score.score !== null && 
+      score.score > 0 && 
+      scoringCriteriaIds.has(score.criteria_id)
+    );
 
-    // If no scores exist, create empty ones for all attributes
-    const allScores = attributes.map(attribute => {
-      const existingScore = themeScores.find(s => s.attribute_id === attribute.id);
-      if (existingScore) return existingScore;
+    let totalWeightedScore = 0;
+    let totalWeight = 0;
+    let confidenceMap: { [key: string]: number } = { 'High': 0, 'Medium': 0, 'Low': 0 };
+
+    for (const category of scoringCategories) {
+      let categoryScore = 0;
+      let categoryTotalCriteriaWeight = 0;
       
-      return {
-        id: `empty-${theme.id}-${attribute.id}`,
-        theme_id: theme.id,
-        attribute_id: attribute.id,
-        score: 0,
-        confidence: 'Low' as const,
-        notes: '',
-        updated_by: '',
-        updated_at: new Date().toISOString(),
-        update_source: 'manual' as const,
-        attribute,
-      };
-    });
+      for (const criterion of criteria.filter(c => c.category_id === category.id)) {
+        const score = themeScores.find(s => s.criteria_id === criterion.id);
+        if (score && score.score) {
+          categoryScore += (score.score * criterion.weight);
+          categoryTotalCriteriaWeight += criterion.weight;
+          
+          // Count confidence levels
+          if (score.confidence) {
+            confidenceMap[score.confidence]++;
+          }
+        }
+      }
 
-    const weightedTotal = allScores.reduce((sum, score) => {
-      return sum + (score.score * score.attribute.weight / 100);
-    }, 0);
+      if (categoryTotalCriteriaWeight > 0) {
+        const categoryWeightedScore = (categoryScore / categoryTotalCriteriaWeight) * (category.weight / 100);
+        totalWeightedScore += categoryWeightedScore;
+        totalWeight += (category.weight / 100);
+      }
+    }
 
-    const scoreCount = allScores.filter(s => s.score > 0).length;
-    const avgConfidence = scoreCount > 0 ? 
-      allScores.filter(s => s.confidence === 'High').length > scoreCount / 2 ? 'High' :
-      allScores.filter(s => s.confidence === 'Medium').length > 0 ? 'Medium' : 'Low' : 'Low';
+    const overall_score = totalWeight > 0 ? Math.round(totalWeightedScore / totalWeight) : 0;
+
+    // Determine overall confidence
+    const totalScoredCriteria = Object.values(confidenceMap).reduce((a, b) => a + b, 0);
+    let overall_confidence: 'High' | 'Medium' | 'Low' = 'Low';
+    
+    if (totalScoredCriteria > 0) {
+      const highPercentage = confidenceMap['High'] / totalScoredCriteria;
+      const lowPercentage = confidenceMap['Low'] / totalScoredCriteria;
+      
+      if (highPercentage >= 0.6) {
+        overall_confidence = 'High';
+      } else if (lowPercentage >= 0.4) {
+        overall_confidence = 'Low';
+      } else {
+        overall_confidence = 'Medium';
+      }
+    }
+
+    // For backward compatibility, create empty scores array to match ThemeWithScores interface
+    const totalScoringCriteria = criteria.filter(c => scoringCriteriaIds.has(c.id)).length;
 
     return {
       ...theme,
-      scores: allScores,
-      weighted_total_score: weightedTotal,
-      overall_confidence: avgConfidence,
+      scores: [], // Empty for backward compatibility - actual scores are in the framework system
+      weighted_total_score: overall_score,
+      overall_confidence,
     };
   });
 }
@@ -88,13 +149,19 @@ export function useThemes() {
     async function loadData() {
       setLoading(true);
       try {
-        const [themesData, attributesData, scoresData] = await Promise.all([
+        const [themesData, categoriesData, criteriaData, scoresData] = await Promise.all([
           fetchThemes(),
-          fetchAttributes(),
-          fetchScores(),
+          fetchFrameworkCategories(),
+          fetchFrameworkCriteria(),
+          fetchDetailedScores(),
         ]);
 
-        const themesWithScores = calculateThemeScores(themesData, attributesData, scoresData);
+        const themesWithScores = calculateThemeFrameworkScores(
+          themesData, 
+          categoriesData, 
+          criteriaData, 
+          scoresData
+        );
         setThemes(themesWithScores);
       } catch (error) {
         console.error('Error loading themes data:', error);
@@ -106,50 +173,32 @@ export function useThemes() {
     loadData();
   }, []);
 
-  const updateThemeScores = async (themeId: string, scoreUpdates: Partial<Score>[]) => {
-    // For now, update scores locally until scores table is created
-    setThemes(prevThemes => 
-      prevThemes.map(theme => {
-        if (theme.id !== themeId) return theme;
+  const refreshThemes = async () => {
+    const [themesData, categoriesData, criteriaData, scoresData] = await Promise.all([
+      fetchThemes(),
+      fetchFrameworkCategories(),
+      fetchFrameworkCriteria(),
+      fetchDetailedScores(),
+    ]);
 
-        const updatedScores = theme.scores.map(score => {
-          const update = scoreUpdates.find(u => u.attribute_id === score.attribute_id);
-          if (!update) return score;
-
-          return {
-            ...score,
-            score: update.score !== undefined ? update.score : score.score,
-            confidence: update.confidence || score.confidence,
-            notes: update.notes !== undefined ? update.notes : score.notes,
-            updated_at: new Date().toISOString(),
-            updated_by: 'user@firm.com',
-            update_source: 'manual' as const,
-          };
-        });
-
-        const weightedTotal = updatedScores.reduce((sum, score) => {
-          return sum + (score.score * score.attribute.weight / 100);
-        }, 0);
-
-        const scoreCount = updatedScores.filter(s => s.score > 0).length;
-        const avgConfidence = scoreCount > 0 ? 
-          updatedScores.filter(s => s.confidence === 'High').length > scoreCount / 2 ? 'High' :
-          updatedScores.filter(s => s.confidence === 'Medium').length > 0 ? 'Medium' : 'Low' : 'Low';
-
-        return {
-          ...theme,
-          scores: updatedScores,
-          weighted_total_score: weightedTotal,
-          overall_confidence: avgConfidence,
-          updated_at: new Date().toISOString(),
-        };
-      })
+    const themesWithScores = calculateThemeFrameworkScores(
+      themesData, 
+      categoriesData, 
+      criteriaData, 
+      scoresData
     );
+    setThemes(themesWithScores);
+  };
+
+  const updateThemeScores = async (themeId: string, scoreUpdates: any[]) => {
+    // Refresh themes after any score updates
+    await refreshThemes();
   };
 
   return {
     themes,
     loading,
     updateThemeScores,
+    refreshThemes,
   };
 }

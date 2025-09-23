@@ -27,8 +27,17 @@ export function ScoreProgressIndicator({ theme, className = "" }: ScoreProgressI
   };
 
   const getOverallProgress = () => {
-    const totalCriteria = theme.categories.reduce((sum, cat) => sum + cat.criteria.length, 0);
-    const scoredCriteria = theme.detailed_scores.filter(score => score.score !== null).length;
+    // Only count categories A, B, C for scoring progress
+    const scoringCategories = theme.categories.filter(cat => ['A', 'B', 'C'].includes(cat.code));
+    const totalCriteria = scoringCategories.reduce((sum, cat) => sum + cat.criteria.length, 0);
+    
+    const scoringCriteriaIds = new Set(
+      scoringCategories.flatMap(cat => cat.criteria.map(c => c.id))
+    );
+    
+    const scoredCriteria = theme.detailed_scores.filter(score => 
+      score.score !== null && scoringCriteriaIds.has(score.criteria_id)
+    ).length;
     
     return {
       completed: scoredCriteria,
@@ -38,7 +47,16 @@ export function ScoreProgressIndicator({ theme, className = "" }: ScoreProgressI
   };
 
   const getConfidenceDistribution = () => {
-    const scoredItems = theme.detailed_scores.filter(score => score.score !== null);
+    // Only count scored items from scoring categories (A, B, C)
+    const scoringCategories = theme.categories.filter(cat => ['A', 'B', 'C'].includes(cat.code));
+    const scoringCriteriaIds = new Set(
+      scoringCategories.flatMap(cat => cat.criteria.map(c => c.id))
+    );
+    
+    const scoredItems = theme.detailed_scores.filter(score => 
+      score.score !== null && scoringCriteriaIds.has(score.criteria_id)
+    );
+    
     const distribution = { High: 0, Medium: 0, Low: 0, Unknown: 0 };
     
     scoredItems.forEach(score => {
@@ -53,7 +71,16 @@ export function ScoreProgressIndicator({ theme, className = "" }: ScoreProgressI
   };
 
   const getScoreDistribution = () => {
-    const scoredItems = theme.detailed_scores.filter(score => score.score !== null);
+    // Only count scored items from scoring categories (A, B, C)
+    const scoringCategories = theme.categories.filter(cat => ['A', 'B', 'C'].includes(cat.code));
+    const scoringCriteriaIds = new Set(
+      scoringCategories.flatMap(cat => cat.criteria.map(c => c.id))
+    );
+    
+    const scoredItems = theme.detailed_scores.filter(score => 
+      score.score !== null && scoringCriteriaIds.has(score.criteria_id)
+    );
+    
     const distribution = { high: 0, medium: 0, low: 0 };
     
     scoredItems.forEach(score => {
