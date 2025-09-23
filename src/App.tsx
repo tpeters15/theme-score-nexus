@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Themes from "./pages/Themes";
 import Signals from "./pages/Signals";
 import Research from "./pages/Research";
+import RegulatoryTracker from "./pages/RegulatoryTracker";
 import ThemeProfile from "./pages/ThemeProfile";
 import NotFound from "./pages/NotFound";
 
@@ -25,6 +26,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/themes" element={<Themes />} />
+              <Route path="/regulatory-tracker" element={<RegulatoryTracker />} />
               <Route path="/signals" element={<Signals />} />
               <Route path="/research" element={<Research />} />
               <Route path="/theme/:themeId" element={<ThemeProfile />} />

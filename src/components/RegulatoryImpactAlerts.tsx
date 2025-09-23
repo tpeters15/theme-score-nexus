@@ -97,8 +97,8 @@ export function RegulatoryImpactAlerts({}: RegulatoryImpactAlertsProps) {
             <AlertTriangle className="h-5 w-5 text-orange-500" />
             Regulatory Impact Alerts
           </CardTitle>
-          <Button variant="outline" size="sm">
-            View All Regulations
+          <Button variant="outline" size="sm" asChild>
+            <a href="/regulatory-tracker">View All Regulations</a>
           </Button>
         </div>
       </CardHeader>
