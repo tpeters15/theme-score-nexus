@@ -65,30 +65,32 @@ export function RegulatoryImpactAlerts() {
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-4">
+    <Card className="border-orange-200/50 bg-gradient-to-br from-orange-50/30 to-red-50/20">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-orange-500" />
-            Regulatory Impact Alerts
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <div className="p-1.5 rounded-lg bg-orange-500/10">
+              <AlertTriangle className="h-4 w-4 text-orange-600" />
+            </div>
+            Regulatory Alerts
           </CardTitle>
-          <Button variant="outline" size="sm" asChild>
-            <a href="/regulatory-tracker">View All Regulations</a>
+          <Button variant="outline" size="sm" asChild className="text-xs h-7">
+            <a href="/regulatory-tracker">View All</a>
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3">
         {regulations.map((regulation) => {
           const daysUntilDeadline = regulation.compliance_deadline ? getDaysUntilDeadline(regulation.compliance_deadline) : null;
           
           return (
             <div
               key={regulation.id}
-              className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+              className="p-3 rounded-lg border bg-card/60 backdrop-blur-sm hover:bg-card/80 transition-all duration-200"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-muted-foreground mt-0.5" />
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-start gap-2">
+                  <Shield className="h-3 w-3 text-muted-foreground mt-1 flex-shrink-0" />
                   <h4 className="font-medium text-sm leading-tight">{regulation.title}</h4>
                 </div>
                 <div className="flex items-center gap-2">
@@ -104,7 +106,7 @@ export function RegulatoryImpactAlerts() {
                 </div>
               </div>
               
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+              <p className="text-xs text-muted-foreground mb-2 line-clamp-2 leading-relaxed">
                 {regulation.description}
               </p>
               

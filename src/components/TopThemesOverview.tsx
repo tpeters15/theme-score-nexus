@@ -71,25 +71,30 @@ export function TopThemesOverview({ themes }: TopThemesOverviewProps) {
   }
 
   return (
-    <Card>
+    <Card className="bg-gradient-to-r from-primary/5 via-primary/3 to-accent/5 border-primary/20">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            High Priority Themes
-          </CardTitle>
-          <Button variant="outline" size="sm" onClick={handleViewAllThemes}>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-primary/10">
+              <Star className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-xl">High Priority Themes</CardTitle>
+              <p className="text-sm text-muted-foreground">Top performing investment opportunities</p>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleViewAllThemes} className="bg-background/60">
             View All Themes
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {topThemes.map((theme, index) => (
-          <div
-            key={theme.id}
-            onClick={() => handleThemeClick(theme.id)}
-            className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer group"
-          >
+            <div
+              key={theme.id}
+              onClick={() => handleThemeClick(theme.id)}
+              className="flex items-center justify-between p-4 rounded-xl border bg-card/80 backdrop-blur-sm hover:bg-card hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer group"
+            >
             <div className="flex items-center gap-4 flex-1">
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
                 {index + 1}

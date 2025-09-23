@@ -1,5 +1,6 @@
 import { TopThemesOverview } from "./TopThemesOverview";
-import { IntelligenceFeed } from "./IntelligenceFeed";
+import { RecentActivityCard } from "./RecentActivityCard";
+import { MarketInsightsCard } from "./MarketInsightsCard";
 import { RegulatoryImpactAlerts } from "./RegulatoryImpactAlerts";
 import { useThemes } from "@/hooks/useThemes";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,24 +25,21 @@ export function ExecutiveDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-6 pt-8 space-y-8">
+    <div className="container mx-auto px-6 pt-6 space-y-6">
       {/* Hero Section - Top Themes Overview */}
-      <div className="w-full">
-        <TopThemesOverview themes={themes} />
-      </div>
+      <TopThemesOverview themes={themes} />
       
       {/* Main Content Grid */}
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Intelligence Feed - Takes 2 columns */}
-        <div className="lg:col-span-2">
-          <IntelligenceFeed themes={themes} />
-        </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Recent Activity */}
+        <RecentActivityCard themes={themes} />
         
-        {/* Regulatory Alerts - Takes 1 column */}
-        <div className="lg:col-span-1">
-          <RegulatoryImpactAlerts />
-        </div>
+        {/* Market Insights */}
+        <MarketInsightsCard />
       </div>
+      
+      {/* Regulatory Alerts - Full Width */}
+      <RegulatoryImpactAlerts />
     </div>
   );
 }
