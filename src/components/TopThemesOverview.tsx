@@ -47,7 +47,7 @@ export function TopThemesOverview({ themes }: TopThemesOverviewProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Top Performing Themes
+            High Priority Themes
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -65,7 +65,7 @@ export function TopThemesOverview({ themes }: TopThemesOverviewProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Top Performing Themes
+            High Priority Themes
           </CardTitle>
           <Button variant="outline" size="sm">
             View All Themes
