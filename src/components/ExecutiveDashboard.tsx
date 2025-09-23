@@ -1,6 +1,6 @@
 import { TopThemesOverview } from "./TopThemesOverview";
 import { RecentActivityCard } from "./RecentActivityCard";
-import { MarketInsightsCard } from "./MarketInsightsCard";
+import { SignalHighlightsCard } from "./MarketInsightsCard";
 import { RegulatoryImpactAlerts } from "./RegulatoryImpactAlerts";
 import { useThemes } from "@/hooks/useThemes";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,7 +35,7 @@ export function ExecutiveDashboard() {
         <RecentActivityCard themes={themes} />
         
         {/* Market Insights */}
-        <MarketInsightsCard />
+        <SignalHighlightsCard />
       </div>
       
       {/* Regulatory Alerts - Full Width */}
