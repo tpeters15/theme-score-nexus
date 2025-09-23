@@ -73,24 +73,26 @@ export const useFramework = () => {
 
       if (themeError) throw themeError;
 
-      // Fetch framework categories with criteria
+      // Fetch framework categories
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('framework_categories')
-        .select(`
-          *,
-          criteria:framework_criteria(*)
-        `)
+        .select('*')
         .order('display_order');
 
       if (categoriesError) throw categoriesError;
 
-      // Fetch detailed scores with criteria
+      // Fetch framework criteria
+      const { data: criteriaData, error: criteriaError } = await supabase
+        .from('framework_criteria')
+        .select('*')
+        .order('category_id, display_order');
+
+      if (criteriaError) throw criteriaError;
+
+      // Fetch detailed scores
       const { data: scoresData, error: scoresError } = await supabase
         .from('detailed_scores')
-        .select(`
-          *,
-          criteria:framework_criteria(*)
-        `)
+        .select('*')
         .eq('theme_id', themeId);
 
       if (scoresError) throw scoresError;
@@ -113,19 +115,25 @@ export const useFramework = () => {
 
       if (runsError) throw runsError;
 
-      // Transform categories data to match our interface
+      // Manually join categories with their criteria
       const categoriesWithCriteria: FrameworkCategoryWithCriteria[] = (categoriesData || []).map(category => ({
         ...category,
-        criteria: category.criteria || []
+        criteria: (criteriaData || []).filter(criterion => criterion.category_id === category.id)
       }));
 
+      // Manually join scores with their criteria
+      const scoresWithCriteria = (scoresData || []).map(score => ({
+        ...score,
+        criteria: (criteriaData || []).find(criterion => criterion.id === score.criteria_id)!
+      })).filter(score => score.criteria); // Filter out scores without matching criteria
+
       // Calculate overall score and confidence
-      const { overall_score, overall_confidence } = calculateOverallScore(scoresData || [], categoriesWithCriteria);
+      const { overall_score, overall_confidence } = calculateOverallScore(scoresWithCriteria, categoriesWithCriteria);
 
       return {
         ...theme,
         categories: categoriesWithCriteria,
-        detailed_scores: scoresData || [],
+        detailed_scores: scoresWithCriteria,
         research_documents: documentsData || [],
         research_runs: runsData || [],
         overall_score,
