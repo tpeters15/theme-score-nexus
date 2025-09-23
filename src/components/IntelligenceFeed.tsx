@@ -113,43 +113,6 @@ export function IntelligenceFeed({ themes }: IntelligenceFeedProps) {
           </CardContent>
         </Card>
 
-        {/* Flagged Themes */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              Requires Attention
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {flaggedThemes.length > 0 ? (
-              flaggedThemes.map((theme) => (
-                <div key={theme.id} className="flex items-center justify-between p-3 rounded-lg border border-destructive/20 bg-destructive/5">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm">{theme.name}</div>
-                    <div className="text-xs text-muted-foreground">{theme.sector}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        Score: {Math.round(theme.weighted_total_score)}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {theme.overall_confidence} Confidence
-                      </Badge>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    <ExternalLink className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <div className="text-sm">All themes performing well</div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
         {/* Market Insights */}
         <Card>
