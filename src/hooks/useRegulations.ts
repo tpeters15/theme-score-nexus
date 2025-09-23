@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Regulation } from '@/components/RegulatoryTable';
+import type { Regulation } from '@/types/regulatory';
 
 export function useRegulations(themeId: string) {
   const [regulations, setRegulations] = useState<Regulation[]>([]);
@@ -19,21 +19,7 @@ export function useRegulations(themeId: string) {
           relevance_score,
           impact_description,
           criteria_impacts,
-          regulation:regulation_id (
-            id,
-            title,
-            description,
-            jurisdiction,
-            regulation_type,
-            status,
-            impact_level,
-            compliance_deadline,
-            effective_date,
-            source_url,
-            analysis_url,
-            regulatory_body,
-            key_provisions
-          )
+          regulation_id
         `)
         .eq('theme_id', themeId)
         .order('relevance_score', { ascending: false });
@@ -42,25 +28,47 @@ export function useRegulations(themeId: string) {
         throw fetchError;
       }
 
+      // Get regulation IDs and fetch the regulation details separately
+      const regulationIds = (data || []).map(item => item.regulation_id);
+      
+      if (regulationIds.length === 0) {
+        setRegulations([]);
+        return;
+      }
+
+      const { data: regulationsData, error: regError } = await supabase
+        .from('regulations')
+        .select('*')
+        .in('id', regulationIds);
+
+      if (regError) {
+        throw regError;
+      }
+
       // Transform the data to match our Regulation interface
-      const transformedRegulations: Regulation[] = (data || []).map((item: any) => ({
-        id: item.regulation.id,
-        title: item.regulation.title,
-        description: item.regulation.description,
-        jurisdiction: item.regulation.jurisdiction,
-        regulation_type: item.regulation.regulation_type,
-        status: item.regulation.status,
-        impact_level: item.regulation.impact_level,
-        compliance_deadline: item.regulation.compliance_deadline,
-        effective_date: item.regulation.effective_date,
-        source_url: item.regulation.source_url,
-        analysis_url: item.regulation.analysis_url,
-        regulatory_body: item.regulation.regulatory_body,
-        key_provisions: item.regulation.key_provisions || [],
-        relevance_score: item.relevance_score,
-        impact_description: item.impact_description,
-        criteria_impacts: item.criteria_impacts || []
-      }));
+      const transformedRegulations: Regulation[] = (data || []).map((themeReg: any) => {
+        const regulation = (regulationsData || []).find(reg => reg.id === themeReg.regulation_id);
+        if (!regulation) return null;
+        
+        return {
+          id: regulation.id,
+          title: regulation.title,
+          description: regulation.description,
+          jurisdiction: regulation.jurisdiction,
+          regulation_type: regulation.regulation_type,
+          status: regulation.status,
+          impact_level: regulation.impact_level,
+          compliance_deadline: regulation.compliance_deadline,
+          effective_date: regulation.effective_date,
+          source_url: regulation.source_url,
+          analysis_url: regulation.analysis_url,
+          regulatory_body: regulation.regulatory_body,
+          key_provisions: regulation.key_provisions || [],
+          relevance_score: themeReg.relevance_score,
+          impact_description: themeReg.impact_description,
+          criteria_impacts: themeReg.criteria_impacts || []
+        };
+      }).filter(Boolean);
 
       setRegulations(transformedRegulations);
     } catch (err) {
