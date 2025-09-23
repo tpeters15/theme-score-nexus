@@ -24,7 +24,7 @@ export function ExecutiveDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-6 space-y-8">
+    <div className="container mx-auto px-6 pt-8 space-y-8">
       {/* Hero Section - Top Themes Overview */}
       <div className="w-full">
         <TopThemesOverview themes={themes} />
