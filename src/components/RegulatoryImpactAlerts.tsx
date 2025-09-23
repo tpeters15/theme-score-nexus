@@ -113,13 +113,18 @@ export function RegulatoryImpactAlerts({}: RegulatoryImpactAlertsProps) {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-blue-500 mt-0.5" />
+                  <Shield className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <h4 className="font-medium text-sm leading-tight">{alert.title}</h4>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className={cn("text-xs", getImpactColor(alert.impact_level))}>
-                    {alert.impact_level.toUpperCase()} IMPACT
-                  </Badge>
+                  <span className={cn(
+                    "text-xs font-medium",
+                    alert.impact_level === "high" ? "text-red-600" : 
+                    alert.impact_level === "medium" ? "text-yellow-600" : "text-green-600"
+                  )}>
+                    {alert.impact_level.toUpperCase()}
+                  </span>
+                  <span className="text-xs text-muted-foreground">•</span>
                   <span className="text-xs text-muted-foreground">{alert.relevance_score}%</span>
                 </div>
               </div>
@@ -133,9 +138,8 @@ export function RegulatoryImpactAlerts({}: RegulatoryImpactAlertsProps) {
                   <span>{alert.jurisdiction}</span>
                   <span>•</span>
                   <span>{alert.regulatory_body}</span>
-                  <Badge variant="outline" className={cn("text-xs", getStatusColor(alert.status))}>
-                    {alert.status.toUpperCase()}
-                  </Badge>
+                  <span>•</span>
+                  <span className="capitalize">{alert.status}</span>
                 </div>
                 
                 {alert.compliance_deadline && (
