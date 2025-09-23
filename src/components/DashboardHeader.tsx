@@ -1,4 +1,5 @@
 import { Building2, Settings, Bell, Search } from "lucide-react";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -7,8 +8,10 @@ export function DashboardHeader() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-6">
         <div className="flex h-16 items-center justify-between">
-          {/* Left spacing */}
-          <div className="w-20"></div>
+          {/* Left side with sidebar trigger */}
+          <div className="flex items-center">
+            <SidebarTrigger className="mr-4" />
+          </div>
           
           {/* Centered logo and description */}
           <div className="flex items-center gap-3">
