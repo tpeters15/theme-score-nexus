@@ -1,78 +1,76 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Signal, ExternalLink, BarChart3, Clock } from "lucide-react";
+import { Signal, ExternalLink, Clock } from "lucide-react";
 import { format } from "date-fns";
+import { useRecentSignals } from "@/hooks/useSignals";
 
 export function SignalHighlightsCard() {
-  // Recent signals based on your actual data structure
-  const recentSignals = [
-    {
-      id: "sig_1758626263287_0",
-      title: "Collision Repair Market Activity",
-      description: "PitchBook alert on collision repair sector developments affecting automotive sustainability themes",
-      source: "PitchBook",
-      timestamp: "2 hours ago",
-      category: "Market Intelligence",
-      relevantThemes: ["Automotive Tech", "Circular Economy"],
-      urgency: "medium" as const
-    },
-    {
-      id: "sig_1758621873680_0",
-      title: "UN Climate Plans NDCs Update",
-      description: "New national climate plans signal increased policy support for renewable energy investments",
-      source: "Climate Change News",
-      timestamp: "4 hours ago", 
-      category: "Policy & Regulation",
-      relevantThemes: ["Energy Transition", "Decarbonisation"],
-      urgency: "high" as const
-    },
-    {
-      id: "sig_1758625303264_0",
-      title: "Hubject EV Charging Expansion",
-      description: "Significant activity in EV charging infrastructure space indicating market acceleration",
-      source: "PitchBook",
-      timestamp: "6 hours ago",
-      category: "Investment Activity", 
-      relevantThemes: ["EV Infrastructure", "Energy Transition"],
-      urgency: "high" as const
-    },
-    {
-      id: "sig_1758621873680_2",
-      title: "UK Net Zero Target Policy Shifts",
-      description: "Lib Dems policy changes on 2045 net zero targets affecting UK climate investment landscape",
-      source: "Politico EU",
-      timestamp: "8 hours ago",
-      category: "Policy & Regulation",
-      relevantThemes: ["Policy Risk", "UK Climate"],
-      urgency: "medium" as const
-    }
-  ];
+  const { data: signals, isLoading: loading } = useRecentSignals(4);
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'Investment Activity': return "bg-blue-50 text-blue-700 border-blue-200";
-      case 'Policy & Regulation': return "bg-purple-50 text-purple-700 border-purple-200";
-      case 'Market Intelligence': return "bg-emerald-50 text-emerald-700 border-emerald-200";
-      default: return "bg-gray-50 text-gray-700 border-gray-200";
+  if (loading) {
+    return (
+      <Card className="bg-gradient-to-br from-card to-muted/20 border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <div className="p-1.5 rounded-lg bg-blue-500/10">
+              <Signal className="h-4 w-4 text-blue-600" />
+            </div>
+            Signal Highlights
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="p-3 rounded-lg border">
+              <div className="h-4 bg-muted rounded mb-2" />
+              <div className="h-3 bg-muted rounded w-3/4 mb-2" />
+              <div className="h-3 bg-muted rounded w-1/2" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Recent signals from the database
+  const recentSignals = signals || [];
+
+  const getCategoryColor = (signal: any) => {
+    // Determine category based on source and content
+    if (signal.source.includes('PitchBook')) {
+      return "bg-blue-50 text-blue-700 border-blue-200";
+    } else if (signal.source.includes('Bloomberg') || signal.source.includes('Financial Times')) {
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    } else if (signal.source.includes('Carbon Brief') || signal.source.includes('Climate')) {
+      return "bg-purple-50 text-purple-700 border-purple-200";
     }
+    return "bg-gray-50 text-gray-700 border-gray-200";
   };
 
   const getSourceColor = (source: string) => {
-    switch (source) {
-      case 'PitchBook': return "bg-orange-100 text-orange-800";
-      case 'Bloomberg': return "bg-blue-100 text-blue-800";
-      case 'Reuters': return "bg-red-100 text-red-800";
+    switch (true) {
+      case source.includes('PitchBook'): return "bg-orange-100 text-orange-800";
+      case source.includes('Bloomberg'): return "bg-blue-100 text-blue-800";
+      case source.includes('Carbon Brief'): return "bg-green-100 text-green-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
 
-  const getUrgencyIndicator = (urgency: string) => {
-    switch (urgency) {
-      case 'high': return "bg-red-500";
-      case 'medium': return "bg-amber-500";
-      default: return "bg-green-500";
-    }
+  const getUrgencyIndicator = (signal: any) => {
+    // Determine urgency based on recency and source type
+    const hoursOld = Math.floor((Date.now() - new Date(signal.created_at).getTime()) / (1000 * 60 * 60));
+    if (hoursOld < 6) return "bg-red-500";
+    if (hoursOld < 24) return "bg-amber-500";
+    return "bg-green-500";
+  };
+
+  const getTimestamp = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    if (diffHours < 1) return "Just now";
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${Math.floor(diffHours / 24)}d ago`;
   };
 
   return (
@@ -92,7 +90,7 @@ export function SignalHighlightsCard() {
             className="relative p-3 rounded-lg border bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-200 group"
           >
             <div className="flex items-start gap-3">
-              <div className={`w-2 h-2 rounded-full mt-2 ${getUrgencyIndicator(signal.urgency)}`} />
+              <div className={`w-2 h-2 rounded-full mt-2 ${getUrgencyIndicator(signal)}`} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="font-medium text-sm leading-snug">{signal.title}</div>
@@ -104,9 +102,10 @@ export function SignalHighlightsCard() {
                   <div className="flex items-center gap-2">
                     <Badge 
                       variant="outline" 
-                      className={`text-xs px-2 py-0.5 h-auto ${getCategoryColor(signal.category)}`}
+                      className={`text-xs px-2 py-0.5 h-auto ${getCategoryColor(signal)}`}
                     >
-                      {signal.category}
+                      {signal.source.includes('PitchBook') ? 'Investment' : 
+                       signal.source.includes('Carbon Brief') ? 'Policy' : 'Market Intel'}
                     </Badge>
                     <Badge 
                       variant="secondary" 
@@ -117,7 +116,7 @@ export function SignalHighlightsCard() {
                   </div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" />
-                    <span>{signal.timestamp}</span>
+                    <span>{getTimestamp(signal.created_at)}</span>
                   </div>
                 </div>
               </div>

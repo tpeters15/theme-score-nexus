@@ -351,6 +351,51 @@ export type Database = {
           },
         ]
       }
+      signals: {
+        Row: {
+          author: string | null
+          created_at: string
+          description: string | null
+          id: string
+          internal_id: string | null
+          signal_id: string
+          source: string
+          title: string
+          topic_id: string | null
+          type: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          author?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          internal_id?: string | null
+          signal_id: string
+          source: string
+          title: string
+          topic_id?: string | null
+          type: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          author?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          internal_id?: string | null
+          signal_id?: string
+          source?: string
+          title?: string
+          topic_id?: string | null
+          type?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       theme_regulations: {
         Row: {
           created_at: string
