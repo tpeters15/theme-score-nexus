@@ -101,8 +101,6 @@ export function RegulatoryImpactAlerts() {
                   )}>
                     {regulation.impact_level?.toUpperCase() || 'UNKNOWN'}
                   </span>
-                  <span className="text-xs text-muted-foreground">•</span>
-                  <span className="text-xs text-muted-foreground">{regulation.relevance_score || 0}%</span>
                 </div>
               </div>
               
@@ -110,31 +108,12 @@ export function RegulatoryImpactAlerts() {
                 {regulation.description}
               </p>
               
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>{regulation.jurisdiction}</span>
-                  <span>•</span>
-                  <span>{regulation.regulatory_body}</span>
-                  <span>•</span>
-                  <span className="capitalize">{regulation.status}</span>
-                </div>
-                
-                {regulation.compliance_deadline && (
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-3 w-3 text-orange-500" />
-                    <span className={cn(
-                      "text-xs font-medium",
-                      daysUntilDeadline && daysUntilDeadline < 90 ? "text-red-600" : "text-muted-foreground"
-                    )}>
-                      {daysUntilDeadline && daysUntilDeadline > 0 
-                        ? `${daysUntilDeadline} days left`
-                        : daysUntilDeadline === 0
-                        ? "Due today"
-                        : "Overdue"
-                      }
-                    </span>
-                  </div>
-                )}
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span>{regulation.jurisdiction}</span>
+                <span>•</span>
+                <span>{regulation.regulatory_body}</span>
+                <span>•</span>
+                <span className="capitalize">{regulation.status}</span>
               </div>
             </div>
           );
