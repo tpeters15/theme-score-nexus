@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useSignals } from "@/hooks/useSignals";
 
-export function Signals() {
+export default function Signals() {
   const { data: signals, isLoading: loading, error } = useSignals();
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState("all");
