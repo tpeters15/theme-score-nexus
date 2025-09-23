@@ -25,6 +25,8 @@ export function ResearchLibrary() {
   const { data: documents, isLoading, error } = useResearchDocuments();
   const [searchQuery, setSearchQuery] = useState("");
   const [pillarFilter, setPillarFilter] = useState("all");
+  const [sectorFilter, setSectorFilter] = useState("all");
+  const [themeFilter, setThemeFilter] = useState("all");
   const [documentTypeFilter, setDocumentTypeFilter] = useState("all");
 
   if (isLoading) {
@@ -63,6 +65,8 @@ export function ResearchLibrary() {
 
   // Get unique values for filters
   const pillars = [...new Set(documents?.map(doc => doc.theme?.pillar).filter(Boolean) || [])];
+  const sectors = [...new Set(documents?.map(doc => doc.theme?.sector).filter(Boolean) || [])];
+  const themes = [...new Set(documents?.map(doc => doc.theme?.name).filter(Boolean) || [])];
   const documentTypes = [...new Set(documents?.map(doc => doc.document_type).filter(Boolean) || [])];
 
   // Filter documents
@@ -73,9 +77,11 @@ export function ResearchLibrary() {
       doc.theme?.name.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesPillar = pillarFilter === "all" || doc.theme?.pillar === pillarFilter;
+    const matchesSector = sectorFilter === "all" || doc.theme?.sector === sectorFilter;
+    const matchesTheme = themeFilter === "all" || doc.theme?.name === themeFilter;
     const matchesType = documentTypeFilter === "all" || doc.document_type === documentTypeFilter;
     
-    return matchesSearch && matchesPillar && matchesType;
+    return matchesSearch && matchesPillar && matchesSector && matchesTheme && matchesType;
   }) || [];
 
   const formatFileSize = (bytes?: number) => {
@@ -83,6 +89,33 @@ export function ResearchLibrary() {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  // Generate consistent theme colors using hash
+  const getThemeColor = (themeName?: string) => {
+    if (!themeName) return "bg-gray-100 text-gray-800 border-gray-200";
+    
+    // Simple hash function to generate consistent colors
+    let hash = 0;
+    for (let i = 0; i < themeName.length; i++) {
+      hash = themeName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    // Define color palettes for different hue ranges
+    const colorPalettes = [
+      "bg-blue-100 text-blue-800 border-blue-200",
+      "bg-green-100 text-green-800 border-green-200", 
+      "bg-purple-100 text-purple-800 border-purple-200",
+      "bg-orange-100 text-orange-800 border-orange-200",
+      "bg-teal-100 text-teal-800 border-teal-200",
+      "bg-indigo-100 text-indigo-800 border-indigo-200",
+      "bg-pink-100 text-pink-800 border-pink-200",
+      "bg-cyan-100 text-cyan-800 border-cyan-200",
+      "bg-emerald-100 text-emerald-800 border-emerald-200",
+      "bg-violet-100 text-violet-800 border-violet-200"
+    ];
+    
+    return colorPalettes[Math.abs(hash) % colorPalettes.length];
   };
 
   const getPillarColor = (pillar?: string) => {
@@ -137,6 +170,28 @@ export function ResearchLibrary() {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={sectorFilter} onValueChange={setSectorFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by sector" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sectors</SelectItem>
+                {sectors.map(sector => (
+                  <SelectItem key={sector} value={sector}>{sector}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={themeFilter} onValueChange={setThemeFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by theme" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Themes</SelectItem>
+                {themes.map(theme => (
+                  <SelectItem key={theme} value={theme}>{theme}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select value={documentTypeFilter} onValueChange={setDocumentTypeFilter}>
               <SelectTrigger className="w-44">
                 <SelectValue placeholder="Filter by type" />
@@ -148,6 +203,25 @@ export function ResearchLibrary() {
                 ))}
               </SelectContent>
             </Select>
+            
+            {/* Clear filters if any are active */}
+            {(pillarFilter !== "all" || sectorFilter !== "all" || themeFilter !== "all" || documentTypeFilter !== "all") && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  setPillarFilter("all");
+                  setSectorFilter("all");
+                  setThemeFilter("all");
+                  setDocumentTypeFilter("all");
+                  setSearchQuery("");
+                }}
+                className="h-9"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Clear Filters
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -188,7 +262,7 @@ export function ResearchLibrary() {
                       {document.theme && (
                         <Badge 
                           variant="outline" 
-                          className={cn("text-xs", getPillarColor(document.theme.pillar))}
+                          className={cn("text-xs", getThemeColor(document.theme.name))}
                         >
                           <Tag className="h-3 w-3 mr-1" />
                           {document.theme.name}
