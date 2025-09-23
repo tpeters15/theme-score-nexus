@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowLeft, FileText, TrendingUp, Users, Calendar, ExternalLink } from "lucide-react";
+import { ArrowLeft, FileText, TrendingUp, Users, Calendar, BarChart3, Upload, Settings, Shield, Target, AlertTriangle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 import { useFramework } from "@/hooks/useFramework";
 import { ThemeWithDetailedScores, ResearchDocument, N8nResearchRun } from "@/types/framework";
 import { PILLAR_COLORS } from "@/types/themes";
@@ -108,109 +109,180 @@ const ThemeProfile = () => {
     return PILLAR_COLORS[pillar as keyof typeof PILLAR_COLORS] || "bg-gray-100 text-gray-800 border-gray-200";
   };
 
+  // Calculate completion percentages for better UX
+  const totalCriteria = theme.detailed_scores.length;
+  const scoredCriteria = theme.detailed_scores.filter(s => s.score !== null).length;
+  const completionRate = totalCriteria > 0 ? Math.round((scoredCriteria / totalCriteria) * 100) : 0;
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/")}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Button>
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={() => setShowFrameworkModal(true)}
-            variant="outline"
-          >
-            View Framework Analysis
-          </Button>
-          <Button
-            onClick={() => setShowBulkScoring(true)}
-          >
-            Bulk Scoring
-          </Button>
+    <div className="min-h-screen bg-background">
+      {/* Professional Header */}
+      <div className="border-b bg-card">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/")}
+                className="gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Themes
+              </Button>
+              <Separator orientation="vertical" className="h-6" />
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-semibold">{theme.name}</h1>
+                <Badge className={getPillarColor(theme.pillar)} variant="secondary">
+                  {theme.pillar}
+                </Badge>
+                <Badge variant="outline">{theme.sector}</Badge>
+              </div>
+            </div>
+            
+            {/* Action Toolbar */}
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setShowFrameworkModal(true)}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Full Analysis
+              </Button>
+              <Button
+                onClick={() => setShowBulkScoring(true)}
+                size="sm"
+                className="gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                Bulk Score
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Theme Header */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold">{theme.name}</h1>
-          <Badge className={getPillarColor(theme.pillar)}>
-            {theme.pillar}
-          </Badge>
-          <Badge variant="outline">{theme.sector}</Badge>
+      <div className="container mx-auto px-6 py-6 space-y-8">
+        {/* Investment Summary Hero */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Primary Investment Score */}
+          <Card className="lg:col-span-1 border-l-4 border-l-primary">
+            <CardContent className="pt-6">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Investment Score</span>
+                  <Badge variant={theme.overall_confidence === 'High' ? 'default' : 
+                                theme.overall_confidence === 'Medium' ? 'secondary' : 'destructive'}>
+                    {theme.overall_confidence}
+                  </Badge>
+                </div>
+                <div className="text-4xl font-bold">
+                  <span className={getScoreColor(theme.overall_score)}>
+                    {theme.overall_score}
+                  </span>
+                  <span className="text-lg text-muted-foreground">/100</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Completion</span>
+                    <span>{completionRate}%</span>
+                  </div>
+                  <Progress value={completionRate} className="h-2" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Key Metrics Grid */}
+          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Target className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">{scoredCriteria}<span className="text-sm text-muted-foreground">/{totalCriteria}</span></div>
+                    <p className="text-sm text-muted-foreground">Criteria Evaluated</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <FileText className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">{theme.research_documents.length}</div>
+                    <p className="text-sm text-muted-foreground">Research Documents</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Shield className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">{regulations.length}</div>
+                    <p className="text-sm text-muted-foreground">Regulatory Items</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-        
+
+        {/* Theme Description */}
         {theme.description && (
-          <p className="text-lg text-muted-foreground">{theme.description}</p>
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-muted-foreground leading-relaxed">{theme.description}</p>
+            </CardContent>
+          </Card>
         )}
 
-        {/* Framework Score Analysis - Main Hero Content */}
-        <div className="grid gap-6">
-          {/* Overview Metrics and Progress */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="text-center">
-                  <CardContent className="pt-6">
-                    <div className="text-3xl font-bold">
-                      <span className={getScoreColor(theme.overall_score)}>
-                        {theme.overall_score}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">Overall Score</p>
-                    <Badge 
-                      variant={theme.overall_confidence === 'High' ? 'default' : 
-                               theme.overall_confidence === 'Medium' ? 'secondary' : 'destructive'}
-                      className="mt-2"
-                    >
-                      {theme.overall_confidence} Confidence
-                    </Badge>
-                  </CardContent>
-                </Card>
-                
-                <Card className="text-center">
-                  <CardContent className="pt-6">
-                    <div className="text-3xl font-bold text-primary">
-                      {theme.categories.length}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">Categories</p>
-                  </CardContent>
-                </Card>
-                
-                <Card className="text-center">
-                  <CardContent className="pt-6">
-                    <div className="text-3xl font-bold text-primary">
-                      {theme.detailed_scores.filter(s => s.score !== null).length}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">Scored Criteria</p>
-                  </CardContent>
-                </Card>
-                
-                <Card className="text-center">
-                  <CardContent className="pt-6">
-                    <div className="text-3xl font-bold text-primary">
-                      {theme.research_documents.length}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">Research Docs</p>
-                  </CardContent>
-                </Card>
+        {/* Main Content Sections */}
+        <Tabs defaultValue="framework" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="framework" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Framework
+            </TabsTrigger>
+            <TabsTrigger value="research" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Research
+            </TabsTrigger>
+            <TabsTrigger value="regulatory" className="gap-2">
+              <Shield className="h-4 w-4" />
+              Regulatory
+            </TabsTrigger>
+            <TabsTrigger value="scope" className="gap-2">
+              <Target className="h-4 w-4" />
+              Scope
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Framework Analysis - Primary Tab */}
+          <TabsContent value="framework" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">Investment Framework Analysis</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Detailed scoring across {theme.categories.length} investment categories
+                </p>
               </div>
+              <ScoreProgressIndicator theme={theme} className="w-80" />
             </div>
-
-            {/* Score Progress */}
-            <div className="lg:col-span-1">
-              <ScoreProgressIndicator theme={theme} />
-            </div>
-          </div>
-
-          {/* Framework Categories with Progressive Disclosure */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold">Framework Analysis</h2>
+            
             <div className="space-y-4">
               {theme.categories.map((category) => (
                 <FrameworkCategoryCard
@@ -222,95 +294,112 @@ const ThemeProfile = () => {
                 />
               ))}
             </div>
-          </div>
-        </div>
-      </div>
+          </TabsContent>
 
-      {/* Contextual Information - Accessible but not center-stage */}
-      <Tabs defaultValue="research" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="research">Research</TabsTrigger>
-          <TabsTrigger value="regulatory">Regulatory</TabsTrigger>
-          <TabsTrigger value="scope">Theme Details</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="research" className="space-y-6">
-          <ThemeFileUpload themeId={themeId!} onUploadComplete={refreshTheme} />
-          
-          <DocumentIntelligence 
-            documents={theme.research_documents}
-            onDocumentSelect={setSelectedDocument}
-          />
-        </TabsContent>
-
-        <TabsContent value="regulatory" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div className="lg:col-span-1">
-              <RegulatorySummaryCard regulations={regulations} />
-            </div>
-            <div className="lg:col-span-3">
-              <RegulatoryTable 
-                regulations={regulations}
-                onRegulationClick={(regulation) => {
-                  // Future: Open regulation detail modal
-                  console.log('Selected regulation:', regulation);
-                }}
-              />
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="scope" className="space-y-6">
-          {(theme.in_scope?.length || theme.out_of_scope?.length) ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {theme.in_scope?.length && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-score-high">In Scope</CardTitle>
-                    <CardDescription>Areas included in this investment theme</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {theme.in_scope.map((item, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-score-high rounded-full mt-2 flex-shrink-0" />
-                          <span className="text-sm">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              )}
+          {/* Research Materials */}
+          <TabsContent value="research" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="lg:col-span-1">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Upload className="h-5 w-5" />
+                    Upload Research
+                  </CardTitle>
+                  <CardDescription>
+                    Add supporting documents and analysis
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ThemeFileUpload themeId={themeId!} onUploadComplete={refreshTheme} />
+                </CardContent>
+              </Card>
               
-              {theme.out_of_scope?.length && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-score-low">Out of Scope</CardTitle>
-                    <CardDescription>Areas explicitly excluded from this theme</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {theme.out_of_scope.map((item, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-score-low rounded-full mt-2 flex-shrink-0" />
-                          <span className="text-sm">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              )}
+              <div className="lg:col-span-2">
+                <DocumentIntelligence 
+                  documents={theme.research_documents}
+                  onDocumentSelect={setSelectedDocument}
+                />
+              </div>
             </div>
-          ) : (
-            <Card>
-              <CardContent className="text-center py-8">
-                <p className="text-muted-foreground">No scope definition available</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+          </TabsContent>
 
-      </Tabs>
+          {/* Regulatory Analysis */}
+          <TabsContent value="regulatory" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-1">
+                <RegulatorySummaryCard regulations={regulations} />
+              </div>
+              <div className="lg:col-span-3">
+                <RegulatoryTable 
+                  regulations={regulations}
+                  onRegulationClick={(regulation) => {
+                    console.log('Selected regulation:', regulation);
+                  }}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Investment Scope */}
+          <TabsContent value="scope" className="space-y-6">
+            {(theme.in_scope?.length || theme.out_of_scope?.length) ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {theme.in_scope?.length && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-green-700 dark:text-green-400 flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5" />
+                        In Scope
+                      </CardTitle>
+                      <CardDescription>Investment areas and opportunities included</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-3">
+                        {theme.in_scope.map((item, index) => (
+                          <li key={index} className="flex items-start gap-3">
+                            <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                            <span className="text-sm">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {theme.out_of_scope?.length && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-red-700 dark:text-red-400 flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5" />
+                        Out of Scope
+                      </CardTitle>
+                      <CardDescription>Areas explicitly excluded from investment</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-3">
+                        {theme.out_of_scope.map((item, index) => (
+                          <li key={index} className="flex items-start gap-3">
+                            <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                            <span className="text-sm">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Scope Defined</h3>
+                  <p className="text-muted-foreground">Investment scope and boundaries have not been defined for this theme.</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* Framework Modal */}
       {showFrameworkModal && (

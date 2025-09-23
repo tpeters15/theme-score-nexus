@@ -215,142 +215,109 @@ export function ThemeFileUpload({ themeId, onUploadComplete }: ThemeFileUploadPr
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Upload className="h-5 w-5" />
-          Upload Research Documents
-        </CardTitle>
-        <CardDescription>
-          Upload PDF reports, research papers, and other documents related to this theme
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Drop Zone */}
-        <div
-          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-            dragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
-          }`}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-        >
-          <Upload className="h-8 w-8 mx-auto mb-4 text-muted-foreground" />
-          <p className="text-sm font-medium mb-2">Drop files here or click to browse</p>
-          <p className="text-xs text-muted-foreground mb-4">
-            Supports PDF, Word, Excel, PowerPoint, and text files up to 20MB
-          </p>
-          <Input
-            type="file"
-            multiple
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
-            onChange={handleFileSelect}
-            className="hidden"
-            id="file-upload"
-          />
-          <Button asChild variant="outline">
-            <label htmlFor="file-upload" className="cursor-pointer">
-              Select Files
-            </label>
-          </Button>
-        </div>
+    <div className="space-y-4">
+      {/* Compact Upload Zone */}
+      <div
+        className={`border border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer hover:border-primary/50 ${
+          dragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
+        }`}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+      >
+        <Upload className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
+        <p className="text-sm font-medium mb-1">Drop files or click to browse</p>
+        <p className="text-xs text-muted-foreground">
+          PDF, Word, Excel, PowerPoint up to 20MB
+        </p>
+        <Input
+          type="file"
+          multiple
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+          onChange={handleFileSelect}
+          className="hidden"
+          id="file-upload"
+        />
+        <Button asChild variant="outline" size="sm" className="mt-2">
+          <label htmlFor="file-upload" className="cursor-pointer">
+            Select Files
+          </label>
+        </Button>
+      </div>
 
-        {/* File List */}
-        {files.length > 0 && (
-          <div className="space-y-4">
-            <h4 className="font-medium">Files to Upload ({files.length})</h4>
-            {files.map((uploadFile, index) => (
-              <Card key={index} className="p-4">
-                <div className="flex items-start gap-4">
-                  <FileText className="h-5 w-5 text-muted-foreground mt-1" />
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{uploadFile.file.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatFileSize(uploadFile.file.size)}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFile(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor={`title-${index}`}>Title</Label>
-                        <Input
-                          id={`title-${index}`}
-                          value={uploadFile.title}
-                          onChange={(e) => updateFile(index, { title: e.target.value })}
-                          placeholder="Document title"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`type-${index}`}>Document Type</Label>
-                        <Select
-                          value={uploadFile.documentType}
-                          onValueChange={(value) => updateFile(index, { documentType: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {DOCUMENT_TYPES.map((type) => (
-                              <SelectItem key={type.value} value={type.value}>
-                                {type.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    
+      {/* File List */}
+      {files.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Files to Upload ({files.length})</span>
+            <Button variant="ghost" size="sm" onClick={() => setFiles([])}>
+              Clear All
+            </Button>
+          </div>
+          
+          {files.map((uploadFile, index) => (
+            <Card key={index} className="p-3">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
                     <div>
-                      <Label htmlFor={`description-${index}`}>Description (Optional)</Label>
-                      <Textarea
-                        id={`description-${index}`}
-                        value={uploadFile.description}
-                        onChange={(e) => updateFile(index, { description: e.target.value })}
-                        placeholder="Brief description of the document content"
-                        rows={2}
-                      />
+                      <p className="text-sm font-medium">{uploadFile.file.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatFileSize(uploadFile.file.size)}
+                      </p>
                     </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeFile(index)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
-              </Card>
-            ))}
-            
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setFiles([])}>
-                Clear All
-              </Button>
-              <Button onClick={uploadFiles} disabled={uploading}>
-                {uploading ? "Uploading..." : `Upload ${files.length} File(s)`}
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Info */}
-        <div className="flex items-start gap-2 p-3 bg-muted/30 rounded-lg">
-          <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5" />
-          <div className="text-xs text-muted-foreground">
-            <p className="font-medium mb-1">Upload Guidelines:</p>
-            <ul className="space-y-1">
-              <li>• Files are automatically associated with this theme</li>
-              <li>• Supported formats: PDF, Word, Excel, PowerPoint, Text, CSV</li>
-              <li>• Maximum file size: 20MB per file</li>
-              <li>• Files are stored securely and accessible to authorized users</li>
-            </ul>
-          </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <Input
+                    value={uploadFile.title}
+                    onChange={(e) => updateFile(index, { title: e.target.value })}
+                    placeholder="Document title"
+                    className="text-sm"
+                  />
+                  <Select
+                    value={uploadFile.documentType}
+                    onValueChange={(value) => updateFile(index, { documentType: value })}
+                  >
+                    <SelectTrigger className="text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DOCUMENT_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Textarea
+                  value={uploadFile.description}
+                  onChange={(e) => updateFile(index, { description: e.target.value })}
+                  placeholder="Brief description (optional)"
+                  rows={2}
+                  className="text-sm"
+                />
+              </div>
+            </Card>
+          ))}
+          
+          <Button onClick={uploadFiles} disabled={uploading} className="w-full">
+            {uploading ? "Uploading..." : `Upload ${files.length} File(s)`}
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }
