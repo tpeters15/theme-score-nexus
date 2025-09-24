@@ -195,15 +195,25 @@ export function useThemes() {
   const updateThemeScores = async (themeId: string, scoreUpdates: any[], keywords?: string[]) => {
     // Update keywords if provided
     if (keywords !== undefined) {
+      console.log('Updating keywords:', keywords);
+      console.log('Keywords type:', Array.isArray(keywords));
+      
+      // Validate keywords are all strings
+      const validKeywords = keywords.filter(k => typeof k === 'string' && k.trim().length > 0);
+      console.log('Valid keywords:', validKeywords);
+      
       const { error } = await supabase
         .from('themes')
-        .update({ keywords: keywords.length > 0 ? keywords : null })
+        .update({ keywords: validKeywords.length > 0 ? validKeywords : null })
         .eq('id', themeId);
       
       if (error) {
         console.error('Error updating theme keywords:', error);
-        throw error;
+        alert(`Failed to save keywords: ${error.message}`);
+        return;
       }
+      
+      console.log('Keywords saved successfully');
     }
     
     // Refresh themes after any score updates
