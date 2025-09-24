@@ -19,12 +19,11 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useSignals, type Signal as SignalType } from "@/hooks/useSignals";
 import { SignalDetailModal } from "@/components/SignalDetailModal";
+import { SignalFilterDemo } from "@/components/ui/signal-filter-demo";
 
 export default function Signals() {
   const { data: signals, isLoading: loading, error } = useSignals();
   const [searchQuery, setSearchQuery] = useState("");
-  const [sourceFilter, setSourceFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
   const [selectedSignal, setSelectedSignal] = useState<SignalType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -75,17 +74,14 @@ export default function Signals() {
   const sources = [...new Set(signals?.map(s => s.source) || [])];
   const types = [...new Set(signals?.map(s => s.type) || [])];
 
-  // Filter signals based on search and filters
+  // Filter signals based on search
   const filteredSignals = signals?.filter(signal => {
     const matchesSearch = !searchQuery || 
       signal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       signal.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       signal.source.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesSource = sourceFilter === "all" || signal.source === sourceFilter;
-    const matchesType = typeFilter === "all" || signal.type === typeFilter;
-    
-    return matchesSearch && matchesSource && matchesType;
+    return matchesSearch;
   }) || [];
 
   const getSourceColor = (source: string) => {
@@ -131,7 +127,7 @@ export default function Signals() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col gap-4">
             <div className="flex-1 min-w-64">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -143,28 +139,9 @@ export default function Signals() {
                 />
               </div>
             </div>
-            <Select value={sourceFilter} onValueChange={setSourceFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by source" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sources</SelectItem>
-                {sources.map(source => (
-                  <SelectItem key={source} value={source}>{source}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {types.map(type => (
-                  <SelectItem key={type} value={type}>{type.replace('_', ' ')}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-4">
+              <SignalFilterDemo />
+            </div>
           </div>
         </CardContent>
       </Card>
