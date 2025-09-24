@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowLeft, FileText, TrendingUp, Users, Calendar, BarChart3, Upload, Settings, Shield, Target, AlertTriangle, CheckCircle, Hash } from "lucide-react";
+import { ArrowLeft, FileText, TrendingUp, Users, Calendar, BarChart3, Upload, Settings, Shield, Target, AlertTriangle, CheckCircle, Hash, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,16 +19,20 @@ import { RegulatoryTable } from "@/components/RegulatoryTable";
 import { RegulatorySummaryCard } from "@/components/RegulatorySummaryCard";
 import { FrameworkCategoryCard } from "@/components/FrameworkCategoryCard";
 import { ThemeKeywords } from "@/components/ThemeKeywords";
+import { ThemeDetailModal } from "@/components/ThemeDetailModal";
 import { useRegulations } from "@/hooks/useRegulations";
+import { useThemes } from "@/hooks/useThemes";
 
 const ThemeProfile = () => {
   const { themeId } = useParams<{ themeId: string }>();
   const navigate = useNavigate();
   const { fetchThemeWithDetailedScores } = useFramework();
   const { regulations, loading: regulationsLoading } = useRegulations(themeId || '');
+  const { updateThemeScores } = useThemes();
   const [theme, setTheme] = useState<ThemeWithDetailedScores | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState<ResearchDocument | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const refreshTheme = async () => {
     if (!themeId) return;
@@ -38,6 +42,16 @@ const ThemeProfile = () => {
       setTheme(themeData);
     } catch (error) {
       console.error("Failed to refresh theme:", error);
+    }
+  };
+
+  const handleSaveTheme = async (themeId: string, scoreUpdates: any[], keywords?: string[]) => {
+    try {
+      await updateThemeScores(themeId, scoreUpdates, keywords);
+      await refreshTheme(); // Refresh the theme data
+      setShowEditModal(false);
+    } catch (error) {
+      console.error("Failed to save theme:", error);
     }
   };
 
@@ -128,13 +142,22 @@ const ThemeProfile = () => {
                 Themes
               </Button>
               <Separator orientation="vertical" className="h-6" />
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-1">
                 <h1 className="text-xl font-semibold">{theme.name}</h1>
                 <Badge className={getPillarColor(theme.pillar)} variant="secondary">
                   {theme.pillar}
                 </Badge>
                 <Badge variant="outline">{theme.sector}</Badge>
               </div>
+              <Button
+                onClick={() => setShowEditModal(true)}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <Edit className="h-4 w-4" />
+                Edit Theme
+              </Button>
             </div>
             
           </div>
@@ -406,6 +429,22 @@ const ThemeProfile = () => {
           document={selectedDocument}
           isOpen={!!selectedDocument}
           onClose={() => setSelectedDocument(null)}
+        />
+      )}
+
+      {/* Theme Edit Modal */}
+      {theme && (
+        <ThemeDetailModal
+          theme={{
+            ...theme,
+            // Convert to expected format for the modal
+            scores: [], // The modal expects the old format but we'll handle this
+            weighted_total_score: theme.overall_score,
+            overall_confidence: theme.overall_confidence
+          }}
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSave={handleSaveTheme}
         />
       )}
     </div>
