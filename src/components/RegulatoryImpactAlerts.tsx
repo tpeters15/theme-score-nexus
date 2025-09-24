@@ -1,4 +1,4 @@
-import { AlertTriangle, Shield, Clock, ExternalLink } from "lucide-react";
+import { AlertTriangle, Shield, Clock, ExternalLink, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,24 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useHighImpactRegulations } from "@/hooks/useHighImpactRegulations";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
+import { RegulatoryDetailModal } from "@/components/RegulatoryDetailModal";
+import { Regulation } from "@/types/regulatory";
 
 export function RegulatoryImpactAlerts() {
   const { regulations, loading, error } = useHighImpactRegulations();
+  const [selectedRegulation, setSelectedRegulation] = useState<(Regulation & { connected_themes?: any[] }) | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = (regulation: Regulation & { connected_themes?: any[] }) => {
+    setSelectedRegulation(regulation);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedRegulation(null);
+  };
 
   const getDaysUntilDeadline = (deadline: string) => {
     const deadlineDate = new Date(deadline);
@@ -86,13 +101,22 @@ export function RegulatoryImpactAlerts() {
           return (
             <div
               key={regulation.id}
-              className="p-3 rounded-lg border bg-card/60 backdrop-blur-sm hover:bg-card/80 transition-all duration-200"
+              className="p-3 rounded-lg border bg-card/60 backdrop-blur-sm hover:bg-card/80 transition-all duration-200 cursor-pointer group"
+              onClick={() => openModal(regulation)}
             >
               <div className="flex items-start justify-between mb-2">
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2 flex-1">
                   <Shield className="h-3 w-3 text-muted-foreground mt-1 flex-shrink-0" />
                   <h4 className="font-medium text-sm leading-tight">{regulation.title}</h4>
                 </div>
+                <button
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground ml-2"
+                  onClick={(e) => { e.stopPropagation(); openModal(regulation); }}
+                  aria-label="View details"
+                  type="button"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
               </div>
               
               <p className="text-xs text-muted-foreground mb-2 line-clamp-2 leading-relaxed">
@@ -123,6 +147,11 @@ export function RegulatoryImpactAlerts() {
           );
         })}
         
+        <RegulatoryDetailModal 
+          regulation={selectedRegulation}
+          isOpen={isModalOpen}
+          onClose={closeModal}
+        />
       </CardContent>
     </Card>
   );
