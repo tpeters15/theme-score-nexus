@@ -12,17 +12,31 @@ import {
   Filter, 
   Clock,
   Globe,
-  Building2
+  Building2,
+  Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { useSignals } from "@/hooks/useSignals";
+import { useSignals, type Signal as SignalType } from "@/hooks/useSignals";
+import { SignalDetailModal } from "@/components/SignalDetailModal";
 
 export default function Signals() {
   const { data: signals, isLoading: loading, error } = useSignals();
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [selectedSignal, setSelectedSignal] = useState<SignalType | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleSignalClick = (signal: SignalType) => {
+    setSelectedSignal(signal);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedSignal(null);
+  };
 
   if (loading) {
     return (
@@ -166,23 +180,46 @@ export default function Signals() {
           </Card>
         ) : (
           filteredSignals.map((signal) => (
-            <Card key={signal.id} className="hover:shadow-md transition-shadow">
+            <Card 
+              key={signal.id} 
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => handleSignalClick(signal)}
+            >
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="font-semibold text-lg leading-tight">{signal.title}</h3>
-                      {signal.url && (
-                        <Button variant="ghost" size="sm" className="h-auto p-1" asChild>
-                          <a href={signal.url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
+                      <div className="flex items-center gap-1 ml-auto">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-auto p-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSignalClick(signal);
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
                         </Button>
-                      )}
+                        {signal.url && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-auto p-1" 
+                            asChild
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <a href={signal.url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     
                     {signal.description && (
-                      <p className="text-muted-foreground text-sm leading-relaxed mb-3">
+                      <p className="text-muted-foreground text-sm leading-relaxed mb-3 line-clamp-2">
                         {signal.description}
                       </p>
                     )}
@@ -223,6 +260,12 @@ export default function Signals() {
           ))
         )}
       </div>
+
+      <SignalDetailModal 
+        signal={selectedSignal}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 }
