@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { RegulationThemeLinkModal } from "@/components/RegulationThemeLinkModal";
+import { RegulatoryDetailModal } from "@/components/RegulatoryDetailModal";
 import { RegulatoryTable } from "@/components/RegulatoryTable";
 import type { Regulation } from "@/types/regulatory";
 
@@ -40,6 +41,7 @@ export default function RegulatoryTracker() {
   const [loading, setLoading] = useState(true);
   const [selectedRegulation, setSelectedRegulation] = useState<Regulation | null>(null);
   const [showLinkModal, setShowLinkModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [selectedTheme, setSelectedTheme] = useState("all");
   const [themes, setThemes] = useState<{id: string; name: string}[]>([]);
@@ -133,6 +135,11 @@ export default function RegulatoryTracker() {
   const handleLinkToThemes = (regulation: Regulation) => {
     setSelectedRegulation(regulation);
     setShowLinkModal(true);
+  };
+
+  const handleViewDetails = (regulation: Regulation) => {
+    setSelectedRegulation(regulation);
+    setShowDetailModal(true);
   };
 
   const handleLinksUpdated = () => {
@@ -349,7 +356,7 @@ export default function RegulatoryTracker() {
               getDaysUntilDeadline(regulation.compliance_deadline) : null;
             
             return (
-              <Card key={regulation.id} className="hover:shadow-md transition-shadow">
+              <Card key={regulation.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleViewDetails(regulation)}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -399,7 +406,10 @@ export default function RegulatoryTracker() {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => handleLinkToThemes(regulation)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleLinkToThemes(regulation);
+                              }}
                               className="text-xs"
                             >
                               <Link className="h-3 w-3 mr-1" />
@@ -439,7 +449,10 @@ export default function RegulatoryTracker() {
                             <Button 
                               variant="ghost" 
                               size="sm"
-                              onClick={() => handleLinkToThemes(regulation)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleLinkToThemes(regulation);
+                              }}
                               className="text-xs"
                             >
                               <Link className="h-3 w-3 mr-1" />
@@ -447,7 +460,15 @@ export default function RegulatoryTracker() {
                             </Button>
                           )}
                           {regulation.source_url && (
-                            <Button variant="ghost" size="sm" className="text-xs">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(regulation.source_url, '_blank');
+                              }}
+                            >
                               <ExternalLink className="h-3 w-3 mr-1" />
                               Source
                             </Button>
@@ -485,6 +506,18 @@ export default function RegulatoryTracker() {
             setSelectedRegulation(null);
           }}
           onLinksUpdated={handleLinksUpdated}
+        />
+      )}
+
+      {/* Regulatory Detail Modal */}
+      {showDetailModal && selectedRegulation && (
+        <RegulatoryDetailModal
+          regulation={selectedRegulation}
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedRegulation(null);
+          }}
         />
       )}
     </div>
