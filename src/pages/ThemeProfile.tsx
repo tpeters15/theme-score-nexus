@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowLeft, FileText, TrendingUp, Users, Calendar, BarChart3, Upload, Settings, Shield, Target, AlertTriangle, CheckCircle } from "lucide-react";
+import { ArrowLeft, FileText, TrendingUp, Users, Calendar, BarChart3, Upload, Settings, Shield, Target, AlertTriangle, CheckCircle, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ import { ScoreProgressIndicator } from "@/components/ScoreProgressIndicator";
 import { RegulatoryTable } from "@/components/RegulatoryTable";
 import { RegulatorySummaryCard } from "@/components/RegulatorySummaryCard";
 import { FrameworkCategoryCard } from "@/components/FrameworkCategoryCard";
+import { ThemeKeywords } from "@/components/ThemeKeywords";
 import { useRegulations } from "@/hooks/useRegulations";
 
 const ThemeProfile = () => {
@@ -248,7 +249,7 @@ const ThemeProfile = () => {
 
         {/* Main Content Sections */}
         <Tabs defaultValue="framework" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="framework" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               Framework
@@ -260,6 +261,10 @@ const ThemeProfile = () => {
             <TabsTrigger value="regulatory" className="gap-2">
               <Shield className="h-4 w-4" />
               Regulatory
+            </TabsTrigger>
+            <TabsTrigger value="keywords" className="gap-2">
+              <Hash className="h-4 w-4" />
+              Keywords
             </TabsTrigger>
             <TabsTrigger value="scope" className="gap-2">
               <Target className="h-4 w-4" />
@@ -348,6 +353,14 @@ const ThemeProfile = () => {
                 />
               </div>
             </div>
+          </TabsContent>
+
+          {/* Keywords Tab */}
+          <TabsContent value="keywords" className="space-y-6">
+            <ThemeKeywords 
+              keywords={theme.keywords || []} 
+              themeName={theme.name}
+            />
           </TabsContent>
 
           {/* Investment Scope */}

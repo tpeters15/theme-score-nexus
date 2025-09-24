@@ -6,6 +6,7 @@ export interface Theme {
   description?: string;
   in_scope?: string[];
   out_of_scope?: string[];
+  keywords?: string[];
   created_at: string;
   updated_at: string;
 }
