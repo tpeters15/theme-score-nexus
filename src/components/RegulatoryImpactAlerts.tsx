@@ -128,8 +128,6 @@ export function RegulatoryImpactAlerts() {
                   <span>{regulation.jurisdiction}</span>
                   <span>•</span>
                   <span>{regulation.regulatory_body}</span>
-                  <span>•</span>
-                  <span className="capitalize">{regulation.status}</span>
                   {(regulation as any).connected_themes?.length > 0 && (
                     <>
                       <span>•</span>
