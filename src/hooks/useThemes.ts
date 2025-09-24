@@ -197,11 +197,12 @@ export function useThemes() {
     if (keywords !== undefined) {
       const { error } = await supabase
         .from('themes')
-        .update({ keywords })
+        .update({ keywords: keywords.length > 0 ? keywords : null })
         .eq('id', themeId);
       
       if (error) {
         console.error('Error updating theme keywords:', error);
+        throw error;
       }
     }
     
