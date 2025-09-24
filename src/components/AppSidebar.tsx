@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Home, Target, Zap, FileText, Settings, Shield } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, Link } from "react-router-dom";
 
 import {
   Sidebar,
@@ -42,7 +42,11 @@ export function AppSidebar() {
     >
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>M/T Intelligence</SidebarGroupLabel>
+          <SidebarGroupLabel>
+            <Link to="/" className="hover:opacity-80 transition-opacity">
+              M/T Intelligence
+            </Link>
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (

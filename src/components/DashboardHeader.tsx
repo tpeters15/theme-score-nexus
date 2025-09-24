@@ -2,6 +2,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { LogOut, Building2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,7 +31,7 @@ export function DashboardHeader() {
           {/* Left side with sidebar trigger and logo */}
           <div className="flex items-center gap-4">
             <SidebarTrigger />
-            <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="p-1.5 bg-primary rounded-md">
                 <Building2 className="h-5 w-5 text-primary-foreground" />
               </div>
@@ -38,7 +39,7 @@ export function DashboardHeader() {
                 <h1 className="text-lg font-semibold text-foreground">M/T Intelligence</h1>
                 <p className="text-xs text-muted-foreground">Investment Research Platform</p>
               </div>
-            </div>
+            </Link>
           </div>
           
           {/* User Menu */}
