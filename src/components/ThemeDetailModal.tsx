@@ -8,27 +8,38 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { ThemeWithScores, Score, Attribute } from "@/types/themes";
 import { Badge } from "@/components/ui/badge";
-import { Clock, User, Save, History, Plus, X, Hash } from "lucide-react";
+import { Clock, User, Save, History, Plus, X, Hash, FileText, CheckCircle, AlertTriangle } from "lucide-react";
 
 interface ThemeDetailModalProps {
   theme: ThemeWithScores | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (themeId: string, scores: Partial<Score>[], keywords?: string[]) => void;
+  onSave: (themeId: string, scores: Partial<Score>[], keywords?: string[], description?: string, inScope?: string[], outOfScope?: string[]) => void;
 }
 
 export function ThemeDetailModal({ theme, isOpen, onClose, onSave }: ThemeDetailModalProps) {
   const [scores, setScores] = useState<Record<string, Partial<Score>>>({});
   const [keywords, setKeywords] = useState<string[]>([]);
+  const [description, setDescription] = useState("");
+  const [inScope, setInScope] = useState<string[]>([]);
+  const [outOfScope, setOutOfScope] = useState<string[]>([]);
   const [newKeyword, setNewKeyword] = useState("");
+  const [newInScope, setNewInScope] = useState("");
+  const [newOutOfScope, setNewOutOfScope] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  // Initialize keywords when theme changes
+  // Initialize all fields when theme changes
   useEffect(() => {
-    if (theme?.keywords) {
-      setKeywords([...theme.keywords]);
+    if (theme) {
+      setKeywords(theme.keywords ? [...theme.keywords] : []);
+      setDescription(theme.description || "");
+      setInScope(theme.in_scope ? [...theme.in_scope] : []);
+      setOutOfScope(theme.out_of_scope ? [...theme.out_of_scope] : []);
     } else {
       setKeywords([]);
+      setDescription("");
+      setInScope([]);
+      setOutOfScope([]);
     }
   }, [theme]);
 
@@ -52,7 +63,7 @@ export function ThemeDetailModal({ theme, isOpen, onClose, onSave }: ThemeDetail
       score.score !== undefined || score.confidence || score.notes
     );
     
-    await onSave(theme.id, scoreUpdates, keywords);
+    await onSave(theme.id, scoreUpdates, keywords, description, inScope, outOfScope);
     setIsSaving(false);
     setScores({});
   };
@@ -68,10 +79,46 @@ export function ThemeDetailModal({ theme, isOpen, onClose, onSave }: ThemeDetail
     setKeywords(keywords.filter((_, i) => i !== index));
   };
 
+  const addInScope = () => {
+    if (newInScope.trim() && !inScope.includes(newInScope.trim())) {
+      setInScope([...inScope, newInScope.trim()]);
+      setNewInScope("");
+    }
+  };
+
+  const removeInScope = (index: number) => {
+    setInScope(inScope.filter((_, i) => i !== index));
+  };
+
+  const addOutOfScope = () => {
+    if (newOutOfScope.trim() && !outOfScope.includes(newOutOfScope.trim())) {
+      setOutOfScope([...outOfScope, newOutOfScope.trim()]);
+      setNewOutOfScope("");
+    }
+  };
+
+  const removeOutOfScope = (index: number) => {
+    setOutOfScope(outOfScope.filter((_, i) => i !== index));
+  };
+
   const handleKeywordKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       addKeyword();
+    }
+  };
+
+  const handleInScopeKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addInScope();
+    }
+  };
+
+  const handleOutOfScopeKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addOutOfScope();
     }
   };
 
@@ -250,6 +297,139 @@ export function ThemeDetailModal({ theme, isOpen, onClose, onSave }: ThemeDetail
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {keywords.length} keyword{keywords.length !== 1 ? 's' : ''} • Click × to remove
+                </p>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Description Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold text-foreground">Description</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Provide a detailed description of this investment theme.
+            </p>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter theme description..."
+              rows={4}
+            />
+          </div>
+
+          <Separator />
+
+          {/* In Scope Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <h3 className="text-lg font-semibold text-foreground">In Scope</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Define what is included in this investment theme.
+            </p>
+            
+            <div className="flex gap-2">
+              <Input
+                value={newInScope}
+                onChange={(e) => setNewInScope(e.target.value)}
+                onKeyPress={handleInScopeKeyPress}
+                placeholder="Enter scope item..."
+                className="flex-1"
+              />
+              <Button 
+                onClick={addInScope}
+                size="sm"
+                disabled={!newInScope.trim() || inScope.includes(newInScope.trim())}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {inScope.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {inScope.map((item, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="flex items-center gap-1 pr-1 bg-green-100 text-green-800 border-green-200"
+                    >
+                      {item}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={() => removeInScope(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {inScope.length} item{inScope.length !== 1 ? 's' : ''} in scope • Click × to remove
+                </p>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Out of Scope Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <h3 className="text-lg font-semibold text-foreground">Out of Scope</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Define what is excluded from this investment theme.
+            </p>
+            
+            <div className="flex gap-2">
+              <Input
+                value={newOutOfScope}
+                onChange={(e) => setNewOutOfScope(e.target.value)}
+                onKeyPress={handleOutOfScopeKeyPress}
+                placeholder="Enter exclusion item..."
+                className="flex-1"
+              />
+              <Button 
+                onClick={addOutOfScope}
+                size="sm"
+                disabled={!newOutOfScope.trim() || outOfScope.includes(newOutOfScope.trim())}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {outOfScope.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {outOfScope.map((item, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="flex items-center gap-1 pr-1 bg-red-100 text-red-800 border-red-200"
+                    >
+                      {item}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={() => removeOutOfScope(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {outOfScope.length} item{outOfScope.length !== 1 ? 's' : ''} out of scope • Click × to remove
                 </p>
               </div>
             )}

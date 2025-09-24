@@ -45,9 +45,9 @@ const ThemeProfile = () => {
     }
   };
 
-  const handleSaveTheme = async (themeId: string, scoreUpdates: any[], keywords?: string[]) => {
+  const handleSaveTheme = async (themeId: string, scoreUpdates: any[], keywords?: string[], description?: string, inScope?: string[], outOfScope?: string[]) => {
     try {
-      await updateThemeScores(themeId, scoreUpdates, keywords);
+      await updateThemeScores(themeId, scoreUpdates, keywords, description, inScope, outOfScope);
       await refreshTheme(); // Refresh the theme data
       setShowEditModal(false);
     } catch (error) {

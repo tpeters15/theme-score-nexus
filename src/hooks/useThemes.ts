@@ -192,31 +192,47 @@ export function useThemes() {
     setThemes(themesWithScores);
   };
 
-  const updateThemeScores = async (themeId: string, scoreUpdates: any[], keywords?: string[]) => {
-    // Update keywords if provided
+  const updateThemeScores = async (themeId: string, scoreUpdates: any[], keywords?: string[], description?: string, inScope?: string[], outOfScope?: string[]) => {
+    // Prepare theme updates
+    const themeUpdates: any = {};
+    
     if (keywords !== undefined) {
       console.log('Updating keywords:', keywords);
-      console.log('Keywords type:', Array.isArray(keywords));
-      
-      // Validate keywords are all strings
       const validKeywords = keywords.filter(k => typeof k === 'string' && k.trim().length > 0);
-      console.log('Valid keywords:', validKeywords);
-      
+      themeUpdates.keywords = validKeywords.length > 0 ? validKeywords : null;
+    }
+    
+    if (description !== undefined) {
+      themeUpdates.description = description.trim() || null;
+    }
+    
+    if (inScope !== undefined) {
+      const validInScope = inScope.filter(item => typeof item === 'string' && item.trim().length > 0);
+      themeUpdates.in_scope = validInScope.length > 0 ? validInScope : null;
+    }
+    
+    if (outOfScope !== undefined) {
+      const validOutOfScope = outOfScope.filter(item => typeof item === 'string' && item.trim().length > 0);
+      themeUpdates.out_of_scope = validOutOfScope.length > 0 ? validOutOfScope : null;
+    }
+    
+    // Update theme fields if any changes
+    if (Object.keys(themeUpdates).length > 0) {
       const { error } = await supabase
         .from('themes')
-        .update({ keywords: validKeywords.length > 0 ? validKeywords : null })
+        .update(themeUpdates)
         .eq('id', themeId);
       
       if (error) {
-        console.error('Error updating theme keywords:', error);
-        alert(`Failed to save keywords: ${error.message}`);
+        console.error('Error updating theme:', error);
+        alert(`Failed to save theme: ${error.message}`);
         return;
       }
       
-      console.log('Keywords saved successfully');
+      console.log('Theme updated successfully');
     }
     
-    // Refresh themes after any score updates
+    // Refresh themes after any updates
     await refreshThemes();
   };
 
