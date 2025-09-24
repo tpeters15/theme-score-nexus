@@ -10,12 +10,10 @@ import { Progress } from "@/components/ui/progress";
 import { useFramework } from "@/hooks/useFramework";
 import { ThemeWithDetailedScores, ResearchDocument, N8nResearchRun } from "@/types/framework";
 import { PILLAR_COLORS } from "@/types/themes";
-import { DetailedFrameworkModal } from "@/components/DetailedFrameworkModal";
 import { ThemeFileUpload } from "@/components/ThemeFileUpload";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { DocumentIntelligence } from "@/components/DocumentIntelligence";
 import { InlineScoreEditor } from "@/components/InlineScoreEditor";
-import { BulkScoringModal } from "@/components/BulkScoringModal";
 import { ScoreProgressIndicator } from "@/components/ScoreProgressIndicator";
 import { RegulatoryTable } from "@/components/RegulatoryTable";
 import { RegulatorySummaryCard } from "@/components/RegulatorySummaryCard";
@@ -30,9 +28,7 @@ const ThemeProfile = () => {
   const { regulations, loading: regulationsLoading } = useRegulations(themeId || '');
   const [theme, setTheme] = useState<ThemeWithDetailedScores | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showFrameworkModal, setShowFrameworkModal] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<ResearchDocument | null>(null);
-  const [showBulkScoring, setShowBulkScoring] = useState(false);
 
   const refreshTheme = async () => {
     if (!themeId) return;
@@ -141,26 +137,6 @@ const ThemeProfile = () => {
               </div>
             </div>
             
-            {/* Action Toolbar */}
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={() => setShowFrameworkModal(true)}
-                variant="outline"
-                size="sm"
-                className="gap-2"
-              >
-                <BarChart3 className="h-4 w-4" />
-                Full Analysis
-              </Button>
-              <Button
-                onClick={() => setShowBulkScoring(true)}
-                size="sm"
-                className="gap-2"
-              >
-                <Settings className="h-4 w-4" />
-                Bulk Score
-              </Button>
-            </div>
           </div>
         </div>
       </div>
@@ -424,23 +400,6 @@ const ThemeProfile = () => {
         </Tabs>
       </div>
 
-      {/* Framework Modal */}
-      {showFrameworkModal && (
-        <DetailedFrameworkModal
-          theme={theme}
-          isOpen={showFrameworkModal}
-          onClose={() => setShowFrameworkModal(false)}
-        />
-      )}
-
-      {showBulkScoring && (
-        <BulkScoringModal
-          theme={theme}
-          isOpen={showBulkScoring}
-          onClose={() => setShowBulkScoring(false)}
-          onScoringComplete={refreshTheme}
-        />
-      )}
 
       {selectedDocument && (
         <DocumentViewer
