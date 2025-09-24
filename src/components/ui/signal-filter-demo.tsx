@@ -30,24 +30,28 @@ import {
   filterViewToFilterOptions,
 } from "@/components/ui/filters";
 
-export function SignalFilterDemo() {
+interface SignalFilterDemoProps {
+  filters: Filter[];
+  onFiltersChange: (filters: Filter[]) => void;
+}
+
+export function SignalFilterDemo({ filters, onFiltersChange }: SignalFilterDemoProps) {
   const [open, setOpen] = React.useState(false);
   const [selectedView, setSelectedView] = React.useState<FilterType | null>(
     null
   );
   const [commandInput, setCommandInput] = React.useState("");
   const commandInputRef = React.useRef<HTMLInputElement>(null);
-  const [filters, setFilters] = React.useState<Filter[]>([]);
 
   return (
     <div className="flex gap-2 flex-wrap">
-      <Filters filters={filters} setFilters={setFilters} />
+      <Filters filters={filters} setFilters={onFiltersChange} />
       {filters.filter((filter) => filter.value?.length > 0).length > 0 && (
         <Button
           variant="outline"
           size="sm"
           className="transition group h-6 text-xs items-center rounded-sm"
-          onClick={() => setFilters([])}
+          onClick={() => onFiltersChange([])}
         >
           Clear
         </Button>
@@ -102,8 +106,8 @@ export function SignalFilterDemo() {
                           key={filter.name}
                           value={filter.name}
                           onSelect={(currentValue) => {
-                            setFilters((prev) => [
-                              ...prev,
+                            onFiltersChange([
+                              ...filters,
                               {
                                 id: nanoid(),
                                 type: selectedView,

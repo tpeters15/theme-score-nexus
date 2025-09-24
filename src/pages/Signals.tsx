@@ -26,6 +26,7 @@ export default function Signals() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSignal, setSelectedSignal] = useState<SignalType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filters, setFilters] = useState<any[]>([]);
 
   const handleSignalClick = (signal: SignalType) => {
     setSelectedSignal(signal);
@@ -74,14 +75,36 @@ export default function Signals() {
   const sources = [...new Set(signals?.map(s => s.source) || [])];
   const types = [...new Set(signals?.map(s => s.type) || [])];
 
-  // Filter signals based on search
+  // Filter signals based on search and filters
   const filteredSignals = signals?.filter(signal => {
     const matchesSearch = !searchQuery || 
       signal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       signal.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       signal.source.toLowerCase().includes(searchQuery.toLowerCase());
     
-    return matchesSearch;
+    // Apply active filters
+    const matchesFilters = filters.length === 0 || filters.every(filter => {
+      if (!filter.value || filter.value.length === 0) return true;
+      
+      switch (filter.type) {
+        case 'Source':
+          return filter.value.some((val: string) => 
+            signal.source.toLowerCase().includes(val.toLowerCase())
+          );
+        case 'Type':
+          return filter.value.some((val: string) => 
+            signal.type.toLowerCase().includes(val.toLowerCase())
+          );
+        case 'Author':
+          return filter.value.some((val: string) => 
+            signal.author?.toLowerCase().includes(val.toLowerCase())
+          );
+        default:
+          return true;
+      }
+    });
+    
+    return matchesSearch && matchesFilters;
   }) || [];
 
   const getSourceColor = (source: string) => {
@@ -140,7 +163,7 @@ export default function Signals() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <SignalFilterDemo />
+              <SignalFilterDemo filters={filters} onFiltersChange={setFilters} />
             </div>
           </div>
         </CardContent>
