@@ -19,7 +19,8 @@ import {
   Link,
   Grid3X3,
   Table2,
-  Download
+  Download,
+  Target
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -342,133 +343,109 @@ export default function RegulatoryTracker() {
             return (
               <Card key={regulation.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Shield className="h-5 w-5 text-blue-600" />
-                        <h3 className="font-semibold text-lg">{regulation.title}</h3>
-                        <Badge variant="outline" className={cn("text-xs", getImpactColor(regulation.impact_level))}>
-                          {regulation.impact_level.toUpperCase()} IMPACT
-                        </Badge>
-                        {regulation.relevance_score && (
-                         <span className="text-sm text-muted-foreground">
-                            {regulation.relevance_score}/5 relevance
-                          </span>
-                        )}
-                      </div>
-                      
-                      <p className="text-muted-foreground mb-4">
-                        {regulation.description}
-                      </p>
-                      
-                      {/* Metadata */}
-                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-4">
-                        <div className="flex items-center gap-2">
-                          <Globe2 className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            <span className="font-medium">Jurisdiction:</span> {regulation.jurisdiction}
-                          </span>
+                      {/* Header with title and status */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Shield className="h-5 w-5 text-primary" />
+                            <h3 className="font-semibold text-lg text-foreground">{regulation.title}</h3>
+                          </div>
+                          <p className="text-muted-foreground text-sm line-clamp-2">
+                            {regulation.description}
+                          </p>
                         </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            <span className="font-medium">Regulatory Body:</span> {regulation.regulatory_body}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className={cn("text-xs", getStatusColor(regulation.status))}>
+                        <div className="flex flex-col gap-2 ml-4">
+                          <Badge variant="outline" className={cn("text-xs whitespace-nowrap", getStatusColor(regulation.status))}>
                             {regulation.status.toUpperCase()}
+                          </Badge>
+                          <Badge variant="outline" className={cn("text-xs whitespace-nowrap", getImpactColor(regulation.impact_level))}>
+                            {regulation.impact_level.toUpperCase()}
                           </Badge>
                         </div>
                       </div>
 
-                      {/* Key Provisions */}
-                      {regulation.key_provisions && regulation.key_provisions.length > 0 && (
-                        <div className="mb-4">
-                          <span className="text-sm font-medium">Key Provisions:</span>
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {regulation.key_provisions.map((provision, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {provision}
-                              </Badge>
-                            ))}
+                      {/* Linked Themes - Most Important Information */}
+                      {regulation.affected_themes && regulation.affected_themes.length > 0 ? (
+                        <div className="mb-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Target className="h-4 w-4 text-primary" />
+                            <span className="text-sm font-medium text-primary">Investment Themes</span>
                           </div>
-                        </div>
-                      )}
-
-                      {/* Impact Description */}
-                      {regulation.impact_description && (
-                        <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                          <span className="text-sm font-medium text-blue-800">Impact on Target Customers:</span>
-                          <div className="text-xs text-blue-700 mt-1">{regulation.impact_description}</div>
-                        </div>
-                      )}
-
-                      {/* Affected Themes */}
-                      {regulation.affected_themes && regulation.affected_themes.length > 0 && (
-                        <div className="mb-4">
-                          <span className="text-sm font-medium">Affected Investment Themes:</span>
-                          <div className="flex flex-wrap gap-2 mt-1">
+                          <div className="flex flex-wrap gap-2">
                             {regulation.affected_themes.map((theme, index) => (
-                              <Badge key={index} variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                              <Badge key={index} variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
                                 {theme}
                               </Badge>
                             ))}
                           </div>
                         </div>
+                      ) : (
+                        <div className="mb-4 p-3 bg-muted/50 rounded-lg border border-muted">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Target className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">No themes linked</span>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleLinkToThemes(regulation)}
+                              className="text-xs"
+                            >
+                              <Link className="h-3 w-3 mr-1" />
+                              Link Themes
+                            </Button>
+                          </div>
+                        </div>
                       )}
 
-                      {/* Dates and Deadline */}
-                      <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                        {regulation.effective_date && (
+                      {/* Essential details in a clean row */}
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-4 text-muted-foreground">
                           <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>Effective: {format(new Date(regulation.effective_date), 'MMM d, yyyy')}</span>
+                            <Globe2 className="h-3 w-3" />
+                            <span>{regulation.jurisdiction}</span>
                           </div>
-                        )}
+                          <div className="flex items-center gap-1">
+                            <Building2 className="h-3 w-3" />
+                            <span>{regulation.regulatory_body}</span>
+                          </div>
+                          {regulation.compliance_deadline && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3 text-orange-500" />
+                              <span className={cn(
+                                "font-medium",
+                                getDaysUntilDeadline(regulation.compliance_deadline) < 90 ? "text-red-600" : "text-muted-foreground"
+                              )}>
+                                {format(new Date(regulation.compliance_deadline), 'MMM d, yyyy')}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                         
-                        {regulation.compliance_deadline && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3 text-orange-500" />
-                            <span className={cn(
-                              "font-medium",
-                              daysUntilDeadline && daysUntilDeadline < 90 ? "text-red-600" : "text-muted-foreground"
-                            )}>
-                              Deadline: {format(new Date(regulation.compliance_deadline), 'MMM d, yyyy')}
-                              {daysUntilDeadline && daysUntilDeadline > 0 && (
-                                <span className="ml-1">({daysUntilDeadline} days left)</span>
-                              )}
-                            </span>
-                          </div>
-                        )}
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-2">
+                          {regulation.affected_themes && regulation.affected_themes.length > 0 && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleLinkToThemes(regulation)}
+                              className="text-xs"
+                            >
+                              <Link className="h-3 w-3 mr-1" />
+                              Edit Links
+                            </Button>
+                          )}
+                          {regulation.source_url && (
+                            <Button variant="ghost" size="sm" className="text-xs">
+                              <ExternalLink className="h-3 w-3 mr-1" />
+                              Source
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-col gap-2 ml-4">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleLinkToThemes(regulation)}
-                        className="gap-2"
-                      >
-                        <Link className="h-3 w-3" />
-                        Link to Themes
-                      </Button>
-                      {regulation.source_url && (
-                        <Button variant="outline" size="sm">
-                          <ExternalLink className="h-3 w-3 mr-1" />
-                          Source
-                        </Button>
-                      )}
-                      {regulation.analysis_url && (
-                        <Button variant="outline" size="sm">
-                          <FileText className="h-3 w-3 mr-1" />
-                          Analysis
-                        </Button>
-                      )}
                     </div>
                   </div>
                 </CardContent>
