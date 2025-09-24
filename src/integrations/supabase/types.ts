@@ -435,6 +435,7 @@ export type Database = {
           description: string | null
           id: string
           in_scope: string[] | null
+          keywords: string[] | null
           name: string
           out_of_scope: string[] | null
           pillar: string
@@ -446,6 +447,7 @@ export type Database = {
           description?: string | null
           id?: string
           in_scope?: string[] | null
+          keywords?: string[] | null
           name: string
           out_of_scope?: string[] | null
           pillar: string
@@ -457,6 +459,7 @@ export type Database = {
           description?: string | null
           id?: string
           in_scope?: string[] | null
+          keywords?: string[] | null
           name?: string
           out_of_scope?: string[] | null
           pillar?: string
