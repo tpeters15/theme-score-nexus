@@ -17,7 +17,6 @@ export function useHighImpactRegulations() {
         .from('regulations')
         .select('*')
         .eq('impact_level', 'high')
-        .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(5);
 
