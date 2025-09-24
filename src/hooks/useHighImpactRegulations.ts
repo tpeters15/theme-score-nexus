@@ -13,7 +13,7 @@ export function useHighImpactRegulations() {
       setError(null);
 
       // Fetch high-impact regulations
-      const { data, error: fetchError } = await supabase
+      const { data: regs, error: fetchError } = await supabase
         .from('regulations')
         .select('*')
         .eq('impact_level', 'high')
@@ -25,23 +25,25 @@ export function useHighImpactRegulations() {
         throw fetchError;
       }
 
+      // Preload themes to avoid FK join (FK not present yet)
+      const { data: allThemes } = await supabase
+        .from('themes')
+        .select('id, name, pillar');
+
+      const themeById = new Map((allThemes || []).map(t => [t.id, t]));
+
       // For each regulation, get the theme connections and highest relevance score
       const regulationsWithRelevance = await Promise.all(
-        (data || []).map(async (reg) => {
+        (regs || []).map(async (reg) => {
           const { data: themeRegData } = await supabase
             .from('theme_regulations')
-            .select(`
-              relevance_score, 
-              impact_description, 
-              criteria_impacts,
-              themes!theme_regulations_theme_id_fkey (
-                id,
-                name,
-                pillar
-              )
-            `)
+            .select('theme_id, relevance_score, impact_description, criteria_impacts')
             .eq('regulation_id', reg.id)
             .order('relevance_score', { ascending: false });
+
+          const connected_themes = (themeRegData || [])
+            .map(tr => themeById.get(tr.theme_id))
+            .filter(Boolean);
 
           return {
             id: reg.id,
@@ -60,7 +62,7 @@ export function useHighImpactRegulations() {
             relevance_score: themeRegData?.[0]?.relevance_score || 0,
             impact_description: themeRegData?.[0]?.impact_description || reg.description,
             criteria_impacts: themeRegData?.[0]?.criteria_impacts || [],
-            connected_themes: themeRegData?.map(tr => tr.themes).filter(Boolean) || []
+            connected_themes
           } as Regulation & { connected_themes: any[] };
         })
       );

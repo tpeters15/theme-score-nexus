@@ -1,12 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Signal, ExternalLink, Clock } from "lucide-react";
+import { Signal, ExternalLink, Clock, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { useRecentSignals } from "@/hooks/useSignals";
+import { useState } from "react";
+import type { Signal as SignalType } from "@/hooks/useSignals";
+import { SignalDetailModal } from "@/components/SignalDetailModal";
 
 export function SignalHighlightsCard() {
   const { data: signals, isLoading: loading } = useRecentSignals(4);
+  const [selectedSignal, setSelectedSignal] = useState<SignalType | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = (signal: SignalType) => { setSelectedSignal(signal); setIsModalOpen(true); };
+  const closeModal = () => { setIsModalOpen(false); setSelectedSignal(null); };
 
   if (loading) {
     return (
@@ -87,15 +95,24 @@ export function SignalHighlightsCard() {
         {recentSignals.map((signal) => (
           <div
             key={signal.id}
-            className="relative p-3 rounded-lg border bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-200 group"
+            className="relative p-3 rounded-lg border bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-200 group cursor-pointer"
+            onClick={() => openModal(signal)}
           >
             <div className="flex items-start gap-3">
               <div className={`w-2 h-2 rounded-full mt-2 ${getUrgencyIndicator(signal)}`} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="font-medium text-sm leading-snug">{signal.title}</div>
+                  <button
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground"
+                    onClick={(e) => { e.stopPropagation(); openModal(signal); }}
+                    aria-label="View details"
+                    type="button"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
                 </div>
-                <div className="text-xs text-muted-foreground mb-2 leading-relaxed">
+                <div className="text-xs text-muted-foreground mb-2 leading-relaxed line-clamp-2">
                   {signal.description}
                 </div>
                 <div className="flex items-center justify-between flex-wrap gap-2">
@@ -130,6 +147,8 @@ export function SignalHighlightsCard() {
             <ExternalLink className="h-3 w-3 ml-1" />
           </a>
         </Button>
+        
+        <SignalDetailModal signal={selectedSignal} isOpen={isModalOpen} onClose={closeModal} />
       </CardContent>
     </Card>
   );

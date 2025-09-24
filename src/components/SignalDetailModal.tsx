@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,11 +11,13 @@ import {
   User, 
   Hash,
   Globe,
-  FileText
+  FileText,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Signal } from "@/hooks/useSignals";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SignalDetailModalProps {
   signal: Signal | null;
