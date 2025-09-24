@@ -157,70 +157,29 @@ export function ScoreProgressIndicator({ theme, className = "" }: ScoreProgressI
         </CardContent>
       </Card>
 
-      {/* Score Quality Indicators */}
+      {/* Score Distribution - Simplified */}
       {overall.completed > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Confidence Distribution */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Confidence Levels</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {Object.entries(confidence).map(([level, count]) => {
-                if (count === 0) return null;
-                const percentage = overall.completed > 0 ? (count / overall.completed) * 100 : 0;
-                const colorClass = level === 'High' ? 'bg-score-high' : 
-                                 level === 'Medium' ? 'bg-score-medium' : 
-                                 level === 'Low' ? 'bg-score-low' : 'bg-muted';
-                
-                return (
-                  <div key={level} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${colorClass}`} />
-                      <span className="text-sm">{level}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">{count}</span>
-                      <span className="text-xs text-muted-foreground">
-                        ({percentage.toFixed(0)}%)
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
-
-          {/* Score Distribution */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Score Distribution</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-score-high" />
-                  <span className="text-sm">High (4-5)</span>
-                </div>
-                <span className="text-sm font-medium">{scoreDistribution.high}</span>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Score Distribution</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center">
+                <div className="text-lg font-bold text-score-high">{scoreDistribution.high}</div>
+                <div className="text-xs text-muted-foreground">High (4-5)</div>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-score-medium" />
-                  <span className="text-sm">Medium (3-4)</span>
-                </div>
-                <span className="text-sm font-medium">{scoreDistribution.medium}</span>
+              <div className="text-center">
+                <div className="text-lg font-bold text-score-medium">{scoreDistribution.medium}</div>
+                <div className="text-xs text-muted-foreground">Medium (3)</div>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-score-low" />
-                  <span className="text-sm">Low (1-3)</span>
-                </div>
-                <span className="text-sm font-medium">{scoreDistribution.low}</span>
+              <div className="text-center">
+                <div className="text-lg font-bold text-score-low">{scoreDistribution.low}</div>
+                <div className="text-xs text-muted-foreground">Low (1-2)</div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

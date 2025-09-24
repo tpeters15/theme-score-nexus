@@ -173,10 +173,6 @@ const ThemeProfile = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-muted-foreground">Investment Score</span>
-                  <Badge variant={theme.overall_confidence === 'High' ? 'default' : 
-                                theme.overall_confidence === 'Medium' ? 'secondary' : 'destructive'}>
-                    {theme.overall_confidence}
-                  </Badge>
                 </div>
                 <div className="text-4xl font-bold">
                   <span className={getScoreColor(theme.overall_score)}>
