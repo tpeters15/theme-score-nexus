@@ -72,25 +72,25 @@ export default function RegulatoryTracker() {
         return;
       }
 
-      // Fetch theme-regulation relationships to get affected themes
+      // Fetch theme-regulation relationships using manual join to avoid foreign key issues
       const { data: themeRegulations, error: themeRegError } = await supabase
         .from('theme_regulations')
-        .select(`
-          regulation_id,
-          relevance_score,
-          impact_description,
-          criteria_impacts,
-          theme_id,
-          themes (
-            id,
-            name
-          )
-        `);
+        .select('regulation_id, relevance_score, impact_description, criteria_impacts, theme_id')
+        .order('relevance_score', { ascending: false });
 
       if (themeRegError) {
         console.error('Error fetching theme regulations:', themeRegError);
       } else {
         console.log('Theme regulations data:', themeRegulations);
+      }
+
+      // Fetch themes separately
+      const { data: allThemes, error: themesError2 } = await supabase
+        .from('themes')
+        .select('id, name');
+
+      if (themesError2) {
+        console.error('Error fetching themes for relationships:', themesError2);
       }
 
       // Transform and combine the data
@@ -99,8 +99,8 @@ export default function RegulatoryTracker() {
         console.log(`Regulation ${reg.title} has ${themeRels.length} theme relationships:`, themeRels);
         
         const affectedThemes = themeRels.map(tr => {
-          const theme = tr.themes;
-          console.log('Theme data:', theme);
+          const theme = (allThemes || []).find(t => t.id === tr.theme_id);
+          console.log('Found theme:', theme);
           return theme?.name;
         }).filter(Boolean);
         
