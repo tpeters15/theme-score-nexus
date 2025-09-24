@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,18 +8,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { ThemeWithScores, Score, Attribute } from "@/types/themes";
 import { Badge } from "@/components/ui/badge";
-import { Clock, User, Save, History } from "lucide-react";
+import { Clock, User, Save, History, Plus, X, Hash } from "lucide-react";
 
 interface ThemeDetailModalProps {
   theme: ThemeWithScores | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (themeId: string, scores: Partial<Score>[]) => void;
+  onSave: (themeId: string, scores: Partial<Score>[], keywords?: string[]) => void;
 }
 
 export function ThemeDetailModal({ theme, isOpen, onClose, onSave }: ThemeDetailModalProps) {
   const [scores, setScores] = useState<Record<string, Partial<Score>>>({});
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [newKeyword, setNewKeyword] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  // Initialize keywords when theme changes
+  useEffect(() => {
+    if (theme?.keywords) {
+      setKeywords([...theme.keywords]);
+    } else {
+      setKeywords([]);
+    }
+  }, [theme]);
 
   if (!theme) return null;
 
@@ -41,9 +52,27 @@ export function ThemeDetailModal({ theme, isOpen, onClose, onSave }: ThemeDetail
       score.score !== undefined || score.confidence || score.notes
     );
     
-    await onSave(theme.id, scoreUpdates);
+    await onSave(theme.id, scoreUpdates, keywords);
     setIsSaving(false);
     setScores({});
+  };
+
+  const addKeyword = () => {
+    if (newKeyword.trim() && !keywords.includes(newKeyword.trim())) {
+      setKeywords([...keywords, newKeyword.trim()]);
+      setNewKeyword("");
+    }
+  };
+
+  const removeKeyword = (index: number) => {
+    setKeywords(keywords.filter((_, i) => i !== index));
+  };
+
+  const handleKeywordKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addKeyword();
+    }
   };
 
   const getScoreValue = (attributeId: string, field: keyof Score) => {
@@ -167,6 +196,63 @@ export function ThemeDetailModal({ theme, isOpen, onClose, onSave }: ThemeDetail
               <History className="h-4 w-4 mr-2" />
               View Score History
             </Button>
+          </div>
+
+          <Separator />
+
+          {/* Keywords Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Hash className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold text-foreground">Research Keywords</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Add keywords for searching platforms like PitchBook, Crunchbase, etc.
+            </p>
+            
+            <div className="flex gap-2">
+              <Input
+                value={newKeyword}
+                onChange={(e) => setNewKeyword(e.target.value)}
+                onKeyPress={handleKeywordKeyPress}
+                placeholder="Enter keyword or phrase..."
+                className="flex-1"
+              />
+              <Button 
+                onClick={addKeyword}
+                size="sm"
+                disabled={!newKeyword.trim() || keywords.includes(newKeyword.trim())}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {keywords.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {keywords.map((keyword, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="flex items-center gap-1 pr-1"
+                    >
+                      {keyword}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={() => removeKeyword(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {keywords.length} keyword{keywords.length !== 1 ? 's' : ''} • Click × to remove
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-3">

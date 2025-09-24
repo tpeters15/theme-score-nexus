@@ -50,8 +50,8 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
     return matchesSearch && matchesPillar && matchesSector;
   });
 
-  const handleSaveScores = async (themeId: string, scores: Partial<Score>[]) => {
-    await updateThemeScores(themeId, scores);
+  const handleSaveScores = async (themeId: string, scores: Partial<Score>[], keywords?: string[]) => {
+    await updateThemeScores(themeId, scores, keywords);
     setSelectedTheme(null);
   };
 

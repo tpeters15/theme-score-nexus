@@ -192,7 +192,19 @@ export function useThemes() {
     setThemes(themesWithScores);
   };
 
-  const updateThemeScores = async (themeId: string, scoreUpdates: any[]) => {
+  const updateThemeScores = async (themeId: string, scoreUpdates: any[], keywords?: string[]) => {
+    // Update keywords if provided
+    if (keywords !== undefined) {
+      const { error } = await supabase
+        .from('themes')
+        .update({ keywords })
+        .eq('id', themeId);
+      
+      if (error) {
+        console.error('Error updating theme keywords:', error);
+      }
+    }
+    
     // Refresh themes after any score updates
     await refreshThemes();
   };
