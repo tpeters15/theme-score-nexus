@@ -81,7 +81,7 @@ export default function RegulatoryTracker() {
           impact_description,
           criteria_impacts,
           theme_id,
-          themes!theme_id (
+          themes (
             id,
             name
           )
@@ -89,15 +89,23 @@ export default function RegulatoryTracker() {
 
       if (themeRegError) {
         console.error('Error fetching theme regulations:', themeRegError);
+      } else {
+        console.log('Theme regulations data:', themeRegulations);
       }
 
       // Transform and combine the data
       const transformedRegulations: Regulation[] = (regulationsData || []).map(reg => {
         const themeRels = (themeRegulations || []).filter(tr => tr.regulation_id === reg.id);
+        console.log(`Regulation ${reg.title} has ${themeRels.length} theme relationships:`, themeRels);
+        
         const affectedThemes = themeRels.map(tr => {
-          const theme = tr.themes as any;
+          const theme = tr.themes;
+          console.log('Theme data:', theme);
           return theme?.name;
         }).filter(Boolean);
+        
+        console.log(`Affected themes for ${reg.title}:`, affectedThemes);
+        
         const maxRelevance = Math.max(...themeRels.map(tr => tr.relevance_score || 0), 0);
         
         return {
