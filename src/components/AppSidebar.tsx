@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, Target, Zap, FileText, Settings, Shield } from "lucide-react";
+import { Home, Target, Zap, FileText, Settings, Shield, Radar } from "lucide-react";
 import { NavLink, useLocation, Link } from "react-router-dom";
 
 import {
@@ -20,6 +20,7 @@ const mainItems = [
   { title: "Regulatory Tracker", url: "/regulatory-tracker", icon: Shield },
   { title: "Signals", url: "/signals", icon: Zap },
   { title: "Research", url: "/research", icon: FileText },
+  { title: "Source Monitors", url: "/source-monitors", icon: Radar },
 ];
 
 export function AppSidebar() {

@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      content_snapshots: {
+        Row: {
+          checked_at: string | null
+          content_hash: string
+          discovered_urls: Json | null
+          id: string
+          source_monitor_id: string | null
+        }
+        Insert: {
+          checked_at?: string | null
+          content_hash: string
+          discovered_urls?: Json | null
+          id?: string
+          source_monitor_id?: string | null
+        }
+        Update: {
+          checked_at?: string | null
+          content_hash?: string
+          discovered_urls?: Json | null
+          id?: string
+          source_monitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_snapshots_source_monitor_id_fkey"
+            columns: ["source_monitor_id"]
+            isOneToOne: false
+            referencedRelation: "source_monitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       detailed_scores: {
         Row: {
           ai_research_data: Json | null
@@ -353,11 +385,16 @@ export type Database = {
       }
       signals: {
         Row: {
+          analysis_priority: number | null
           author: string | null
           created_at: string
           description: string | null
+          document_url: string | null
+          file_path: string | null
           id: string
           internal_id: string | null
+          processing_status: string | null
+          raw_content: string | null
           signal_id: string
           source: string
           title: string
@@ -367,11 +404,16 @@ export type Database = {
           url: string | null
         }
         Insert: {
+          analysis_priority?: number | null
           author?: string | null
           created_at?: string
           description?: string | null
+          document_url?: string | null
+          file_path?: string | null
           id?: string
           internal_id?: string | null
+          processing_status?: string | null
+          raw_content?: string | null
           signal_id: string
           source: string
           title: string
@@ -381,11 +423,16 @@ export type Database = {
           url?: string | null
         }
         Update: {
+          analysis_priority?: number | null
           author?: string | null
           created_at?: string
           description?: string | null
+          document_url?: string | null
+          file_path?: string | null
           id?: string
           internal_id?: string | null
+          processing_status?: string | null
+          raw_content?: string | null
           signal_id?: string
           source?: string
           title?: string
@@ -393,6 +440,45 @@ export type Database = {
           type?: string
           updated_at?: string
           url?: string | null
+        }
+        Relationships: []
+      }
+      source_monitors: {
+        Row: {
+          base_url: string
+          check_frequency: string
+          created_at: string | null
+          id: string
+          last_checked_at: string | null
+          scraping_config: Json | null
+          source_name: string
+          source_type: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          base_url: string
+          check_frequency?: string
+          created_at?: string | null
+          id?: string
+          last_checked_at?: string | null
+          scraping_config?: Json | null
+          source_name: string
+          source_type?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          base_url?: string
+          check_frequency?: string
+          created_at?: string | null
+          id?: string
+          last_checked_at?: string | null
+          scraping_config?: Json | null
+          source_name?: string
+          source_type?: string
+          status?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

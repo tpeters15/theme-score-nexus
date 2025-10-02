@@ -12,6 +12,7 @@ import Themes from "./pages/Themes";
 import Signals from "./pages/Signals";
 import Research from "./pages/Research";
 import RegulatoryTracker from "./pages/RegulatoryTracker";
+import SourceMonitors from "./pages/SourceMonitors";
 import Auth from "./pages/Auth";
 import ThemeProfile from "./pages/ThemeProfile";
 import NotFound from "./pages/NotFound";
@@ -37,6 +38,7 @@ const App = () => (
                       <Route path="/regulatory-tracker" element={<RegulatoryTracker />} />
                       <Route path="/signals" element={<Signals />} />
                       <Route path="/research" element={<Research />} />
+                      <Route path="/source-monitors" element={<SourceMonitors />} />
                       <Route path="/theme/:themeId" element={<ThemeProfile />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
