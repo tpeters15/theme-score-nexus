@@ -394,6 +394,7 @@ export type Database = {
           id: string
           internal_id: string | null
           processing_status: string | null
+          publication_date: string | null
           raw_content: string | null
           signal_id: string
           source: string
@@ -413,6 +414,7 @@ export type Database = {
           id?: string
           internal_id?: string | null
           processing_status?: string | null
+          publication_date?: string | null
           raw_content?: string | null
           signal_id: string
           source: string
@@ -432,6 +434,7 @@ export type Database = {
           id?: string
           internal_id?: string | null
           processing_status?: string | null
+          publication_date?: string | null
           raw_content?: string | null
           signal_id?: string
           source?: string

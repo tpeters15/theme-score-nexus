@@ -123,19 +123,36 @@ serve(async (req) => {
           .limit(1)
           .single();
 
-        // Extract titles and URLs together
-        const discoveredUrls: Array<{ url: string; title: string }> = [];
+        // Extract titles, URLs, and dates together
+        const discoveredUrls: Array<{ url: string; title: string; date?: string }> = [];
         
         for (const url of relevantLinks) {
-          // Try to find title in markdown by looking for the URL
+          // Try to find title and date in markdown by looking for the URL
           const urlIndex = markdown.indexOf(url);
           let title = "Untitled";
+          let publicationDate: string | undefined;
           
           if (urlIndex !== -1) {
             // Look backwards for a heading or link text
-            const beforeUrl = markdown.slice(Math.max(0, urlIndex - 200), urlIndex);
+            const beforeUrl = markdown.slice(Math.max(0, urlIndex - 300), urlIndex);
             const headingMatch = beforeUrl.match(/#+\s+([^\n]+)$/);
             const linkTextMatch = beforeUrl.match(/\[([^\]]+)\]\([^\)]*$/);
+            
+            // Look for dates near the URL (various formats: "1 January 2025", "Jan 2025", "01/01/2025")
+            const datePatterns = [
+              /(\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4})/i,
+              /(\d{4}-\d{2}-\d{2})/,
+              /(\d{1,2}\/\d{1,2}\/\d{4})/,
+              /((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})/i,
+            ];
+            
+            for (const pattern of datePatterns) {
+              const dateMatch = beforeUrl.match(pattern);
+              if (dateMatch) {
+                publicationDate = dateMatch[1];
+                break;
+              }
+            }
             
             if (linkTextMatch) {
               title = linkTextMatch[1].trim();
@@ -148,7 +165,7 @@ serve(async (req) => {
             }
           }
 
-          discoveredUrls.push({ url, title });
+          discoveredUrls.push({ url, title, date: publicationDate });
         }
 
         // Get previous URLs to find new ones
@@ -168,6 +185,19 @@ serve(async (req) => {
           const signalType = urlData.url.includes("/reports/") ? "report" : "news";
           const priority = signalType === "report" ? 10 : 5;
           
+          // Parse date if available
+          let parsedDate: string | undefined;
+          if (urlData.date) {
+            try {
+              const date = new Date(urlData.date);
+              if (!isNaN(date.getTime())) {
+                parsedDate = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+              }
+            } catch (e) {
+              console.log(`Could not parse date: ${urlData.date}`);
+            }
+          }
+          
           const { error: signalError } = await supabase
             .from("signals")
             .insert({
@@ -179,6 +209,7 @@ serve(async (req) => {
               document_url: urlData.url,
               processing_status: "discovered",
               analysis_priority: priority,
+              publication_date: parsedDate,
               description: `Automatically discovered from ${monitor.source_name}`,
             });
 
