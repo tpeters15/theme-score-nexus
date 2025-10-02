@@ -116,21 +116,25 @@ export function DiscoveredSignals() {
                             </Badge>
                           </div>
                           
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                            <span className="font-medium">{signal.source}</span>
+                          <div className="flex items-center gap-3 text-xs flex-wrap">
+                            <span className="font-medium text-muted-foreground">{signal.source}</span>
                             
                             {signal.publication_date && (
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1 text-foreground">
                                 <Calendar className="h-3 w-3" />
-                                {format(new Date(signal.publication_date), "MMM d, yyyy")}
+                                <span className="font-medium">
+                                  {format(new Date(signal.publication_date), "MMM d, yyyy")}
+                                </span>
                               </div>
                             )}
                             
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 text-muted-foreground">
                               <Clock className="h-3 w-3" />
-                              {formatDistanceToNow(new Date(signal.created_at), {
-                                addSuffix: true,
-                              })}
+                              <span className="text-xs">
+                                Added {formatDistanceToNow(new Date(signal.created_at), {
+                                  addSuffix: true,
+                                })}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -140,7 +144,8 @@ export function DiscoveredSignals() {
                             href={signal.document_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="shrink-0 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="shrink-0 p-2 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                            title="Open in new tab"
                           >
                             <ExternalLink className="h-4 w-4" />
                           </a>
