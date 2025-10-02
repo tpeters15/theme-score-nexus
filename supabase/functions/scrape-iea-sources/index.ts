@@ -20,6 +20,14 @@ interface SourceMonitor {
   last_checked_at: string | null;
 }
 
+interface FirecrawlResponse {
+  success: boolean;
+  data?: {
+    markdown?: string;
+    links?: string[];
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -28,9 +36,15 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const firecrawlApiKey = Deno.env.get("FIRECRAWL_API_KEY");
+    
+    if (!firecrawlApiKey) {
+      throw new Error("FIRECRAWL_API_KEY not configured. Please add it to edge function secrets.");
+    }
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log("Starting IEA source scraping...");
+    console.log("Starting IEA source scraping with Firecrawl...");
 
     // Get active source monitors
     const { data: monitors, error: monitorsError } = await supabase
@@ -48,16 +62,54 @@ serve(async (req) => {
     const results = [];
 
     for (const monitor of monitors as SourceMonitor[]) {
-      console.log(`Scraping ${monitor.source_name}...`);
+      console.log(`Scraping ${monitor.source_name} with Firecrawl...`);
 
       try {
-        // Fetch the page content
-        const response = await fetch(monitor.base_url);
-        const html = await response.text();
+        // Use Firecrawl to scrape the page (handles JavaScript rendering)
+        const firecrawlResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${firecrawlApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: monitor.base_url,
+            formats: ["markdown", "links"],
+          }),
+        });
 
-        // Create a simple hash of the content
+        if (!firecrawlResponse.ok) {
+          const errorText = await firecrawlResponse.text();
+          console.error(`Firecrawl error for ${monitor.source_name}:`, errorText);
+          throw new Error(`Firecrawl API error: ${firecrawlResponse.status}`);
+        }
+
+        const firecrawlData: FirecrawlResponse = await firecrawlResponse.json();
+        console.log(`Firecrawl returned data for ${monitor.source_name}`);
+
+        if (!firecrawlData.success || !firecrawlData.data) {
+          throw new Error("Firecrawl did not return successful data");
+        }
+
+        // Extract links and markdown from Firecrawl response
+        const allLinks = firecrawlData.data.links || [];
+        const markdown = firecrawlData.data.markdown || "";
+        
+        // Filter for relevant IEA links (reports or news)
+        const isReportMonitor = monitor.base_url.includes("type=report");
+        const relevantLinks = allLinks.filter((link: string) => {
+          if (isReportMonitor) {
+            return link.includes("/reports/") && link.includes("iea.org");
+          } else {
+            return link.includes("/news/") && link.includes("iea.org");
+          }
+        });
+
+        console.log(`Found ${relevantLinks.length} relevant links for ${monitor.source_name}`);
+
+        // Create content hash from markdown for change detection
         const encoder = new TextEncoder();
-        const data = encoder.encode(html);
+        const data = encoder.encode(markdown);
         const hashBuffer = await crypto.subtle.digest("SHA-256", data);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const contentHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -71,39 +123,65 @@ serve(async (req) => {
           .limit(1)
           .single();
 
-        // Extract URLs from the page (simple regex-based extraction)
-        const urls = extractUrls(html, monitor.base_url);
+        // Extract titles and URLs together
+        const discoveredUrls: Array<{ url: string; title: string }> = [];
+        
+        for (const url of relevantLinks) {
+          // Try to find title in markdown by looking for the URL
+          const urlIndex = markdown.indexOf(url);
+          let title = "Untitled";
+          
+          if (urlIndex !== -1) {
+            // Look backwards for a heading or link text
+            const beforeUrl = markdown.slice(Math.max(0, urlIndex - 200), urlIndex);
+            const headingMatch = beforeUrl.match(/#+\s+([^\n]+)$/);
+            const linkTextMatch = beforeUrl.match(/\[([^\]]+)\]\([^\)]*$/);
+            
+            if (linkTextMatch) {
+              title = linkTextMatch[1].trim();
+            } else if (headingMatch) {
+              title = headingMatch[1].trim();
+            } else {
+              // Extract from URL as fallback
+              const urlParts = url.split("/").filter(p => p);
+              title = urlParts[urlParts.length - 1].replace(/-/g, " ").replace(/\.\w+$/, "");
+            }
+          }
 
-        let newUrls = urls;
-        if (lastSnapshot) {
-          const lastUrls = lastSnapshot.discovered_urls as string[];
-          newUrls = urls.filter(url => !lastUrls.includes(url));
+          discoveredUrls.push({ url, title });
         }
+
+        // Get previous URLs to find new ones
+        const previousUrls = lastSnapshot?.discovered_urls || [];
+        const previousUrlSet = new Set(
+          Array.isArray(previousUrls) 
+            ? previousUrls.map((u: any) => typeof u === 'string' ? u : u.url)
+            : []
+        );
+        const newUrls = discoveredUrls.filter(u => !previousUrlSet.has(u.url));
 
         console.log(`Found ${newUrls.length} new URLs for ${monitor.source_name}`);
 
-        // Create new signals for each new URL
-        for (const url of newUrls) {
-          const title = extractTitle(html, url) || `New ${monitor.source_name} item`;
-          
+        // Create signals for new URLs
+        for (const urlData of newUrls) {
           const { error: signalError } = await supabase
             .from("signals")
             .insert({
               signal_id: `iea-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              title,
+              title: urlData.title,
               source: monitor.source_name,
-              type: monitor.source_name.includes("Report") ? "report" : "news",
-              url,
-              document_url: url,
+              type: isReportMonitor ? "report" : "news",
+              url: urlData.url,
+              document_url: urlData.url,
               processing_status: "discovered",
-              analysis_priority: monitor.source_name.includes("Report") ? 10 : 5,
+              analysis_priority: isReportMonitor ? 10 : 5,
               description: `Automatically discovered from ${monitor.source_name}`,
             });
 
           if (signalError) {
-            console.error(`Error creating signal for ${url}:`, signalError);
+            console.error(`Error creating signal for ${urlData.url}:`, signalError);
           } else {
-            console.log(`Created signal for: ${title}`);
+            console.log(`Created signal for: ${urlData.title}`);
           }
         }
 
@@ -113,7 +191,7 @@ serve(async (req) => {
           .insert({
             source_monitor_id: monitor.id,
             content_hash: contentHash,
-            discovered_urls: urls,
+            discovered_urls: discoveredUrls,
           });
 
         if (snapshotError) {
@@ -129,7 +207,7 @@ serve(async (req) => {
         results.push({
           monitor: monitor.source_name,
           newUrls: newUrls.length,
-          totalUrls: urls.length,
+          totalUrls: discoveredUrls.length,
         });
 
       } catch (error) {
@@ -165,35 +243,3 @@ serve(async (req) => {
   }
 });
 
-function extractUrls(html: string, baseUrl: string): string[] {
-  const urls: string[] = [];
-  const domain = new URL(baseUrl).origin;
-  
-  // Extract report URLs
-  const reportMatches = html.matchAll(/href="(\/reports\/[^"]+)"/g);
-  for (const match of reportMatches) {
-    urls.push(`${domain}${match[1]}`);
-  }
-  
-  // Extract news URLs
-  const newsMatches = html.matchAll(/href="(\/news\/[^"]+)"/g);
-  for (const match of newsMatches) {
-    urls.push(`${domain}${match[1]}`);
-  }
-  
-  // Remove duplicates
-  return [...new Set(urls)];
-}
-
-function extractTitle(html: string, url: string): string | null {
-  // Try to find title near the URL link
-  const urlEscaped = url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const pattern = new RegExp(`<a[^>]*href="${urlEscaped}"[^>]*>([^<]+)</a>`, 'i');
-  const match = html.match(pattern);
-  
-  if (match && match[1]) {
-    return match[1].trim();
-  }
-  
-  return null;
-}
