@@ -164,17 +164,21 @@ serve(async (req) => {
 
         // Create signals for new URLs
         for (const urlData of newUrls) {
+          // Determine type based on actual URL, not monitor type
+          const signalType = urlData.url.includes("/reports/") ? "report" : "news";
+          const priority = signalType === "report" ? 10 : 5;
+          
           const { error: signalError } = await supabase
             .from("signals")
             .insert({
               signal_id: `iea-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               title: urlData.title,
               source: monitor.source_name,
-              type: isReportMonitor ? "report" : "news",
+              type: signalType,
               url: urlData.url,
               document_url: urlData.url,
               processing_status: "discovered",
-              analysis_priority: isReportMonitor ? 10 : 5,
+              analysis_priority: priority,
               description: `Automatically discovered from ${monitor.source_name}`,
             });
 
