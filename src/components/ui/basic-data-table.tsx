@@ -408,7 +408,7 @@ export function DataTable<T extends Record<string, any>>({
                 })}
               </tr>
             </thead>{" "}
-            <tbody className="bg-card">
+            <tbody className="bg-card" style={{ minHeight: '500px' }}>
               {paginatedData.length === 0 ? (
                 <tr>
                   <td
@@ -417,9 +417,8 @@ export function DataTable<T extends Record<string, any>>({
                       "text-center text-muted-foreground bg-card",
                       compact ? "px-4 py-12" : "px-6 py-16",
                     )}
-                    style={{ height: '400px' }}
                   >
-                    <div className="flex flex-col items-center justify-center space-y-2 h-full">
+                    <div className="flex flex-col items-center justify-center space-y-2" style={{ minHeight: '500px' }}>
                       <div className="text-4xl">📊</div>
                       <div className="font-medium">{emptyMessage}</div>
                     </div>
