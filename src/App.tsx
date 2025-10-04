@@ -16,6 +16,7 @@ import SourceMonitors from "./pages/SourceMonitors";
 import Classifier from "./pages/Classifier";
 import Auth from "./pages/Auth";
 import ThemeProfile from "./pages/ThemeProfile";
+import SourceProfile from "./pages/SourceProfile";
 import TaxonomyManagement from "./pages/TaxonomyManagement";
 import NotFound from "./pages/NotFound";
 
@@ -41,6 +42,7 @@ const App = () => (
                       <Route path="/signals" element={<Signals />} />
                       <Route path="/research" element={<Research />} />
                       <Route path="/source-monitors" element={<SourceMonitors />} />
+                      <Route path="/source/:sourceId" element={<SourceProfile />} />
                       <Route path="/classifier" element={<Classifier />} />
                       <Route path="/taxonomy" element={<TaxonomyManagement />} />
                       <Route path="/theme/:themeId" element={<ThemeProfile />} />

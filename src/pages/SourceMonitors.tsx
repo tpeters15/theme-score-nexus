@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -250,7 +251,12 @@ export default function SourceMonitors() {
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p className="font-medium">{source.source_name}</p>
+                      <Link
+                        to={`/source/${source.id}`}
+                        className="font-medium hover:underline"
+                      >
+                        {source.source_name}
+                      </Link>
                       <p className="text-sm text-muted-foreground truncate max-w-xs">
                         {source.base_url || source.feed_url || source.api_endpoint}
                       </p>
