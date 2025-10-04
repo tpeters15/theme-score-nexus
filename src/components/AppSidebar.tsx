@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, Target, Zap, FileText, Settings, Shield, Radar, ListChecks } from "lucide-react";
+import { Home, Target, Zap, FileText, Settings, Shield, Radar, ListChecks, Database } from "lucide-react";
 import { NavLink, useLocation, Link } from "react-router-dom";
 
 import {
@@ -22,6 +22,10 @@ const mainItems = [
   { title: "Research", url: "/research", icon: FileText },
   { title: "Source Monitors", url: "/source-monitors", icon: Radar },
   { title: "Batch Classifier", url: "/batch-classifier", icon: ListChecks },
+];
+
+const adminItems = [
+  { title: "Taxonomy", url: "/taxonomy", icon: Database },
 ];
 
 export function AppSidebar() {
@@ -55,6 +59,26 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end={item.url === "/"} className={getNavCls}>
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {open && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs text-muted-foreground">
+            Admin
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {adminItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={item.url} className={getNavCls}>
                       <item.icon className="mr-2 h-4 w-4" />
                       {open && <span>{item.title}</span>}
                     </NavLink>

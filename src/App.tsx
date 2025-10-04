@@ -16,6 +16,7 @@ import SourceMonitors from "./pages/SourceMonitors";
 import BatchClassifier from "./pages/BatchClassifier";
 import Auth from "./pages/Auth";
 import ThemeProfile from "./pages/ThemeProfile";
+import TaxonomyManagement from "./pages/TaxonomyManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
                       <Route path="/research" element={<Research />} />
                       <Route path="/source-monitors" element={<SourceMonitors />} />
                       <Route path="/batch-classifier" element={<BatchClassifier />} />
+                      <Route path="/taxonomy" element={<TaxonomyManagement />} />
                       <Route path="/theme/:themeId" element={<ThemeProfile />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
