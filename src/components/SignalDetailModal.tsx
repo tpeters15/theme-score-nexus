@@ -16,17 +16,19 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import type { Signal } from "@/hooks/useSignals";
-import { supabase } from "@/integrations/supabase/client";
+import type { ProcessedSignal } from "@/hooks/useProcessedSignals";
 
 interface SignalDetailModalProps {
-  signal: Signal | null;
+  signal: ProcessedSignal | null;
   isOpen: boolean;
   onClose: () => void;
 }
 
 export function SignalDetailModal({ signal, isOpen, onClose }: SignalDetailModalProps) {
   if (!signal) return null;
+
+  const rawSignal = signal.raw_signal;
+  if (!rawSignal) return null;
 
   const getSourceColor = (source: string) => {
     switch (source) {
@@ -51,7 +53,7 @@ export function SignalDetailModal({ signal, isOpen, onClose }: SignalDetailModal
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle className="text-xl pr-6">{signal.title}</DialogTitle>
+          <DialogTitle className="text-xl pr-6">{rawSignal.title}</DialogTitle>
         </DialogHeader>
         
         <ScrollArea className="max-h-[70vh]">
@@ -61,22 +63,22 @@ export function SignalDetailModal({ signal, isOpen, onClose }: SignalDetailModal
               <div className="flex items-center flex-wrap gap-2">
                 <Badge 
                   variant="outline" 
-                  className={cn("text-xs", getSourceColor(signal.source))}
+                  className={cn("text-xs", getSourceColor(rawSignal.source))}
                 >
                   <Building2 className="h-3 w-3 mr-1" />
-                  {signal.source}
+                  {rawSignal.source}
                 </Badge>
                 <Badge 
                   variant="outline" 
-                  className={cn("text-xs", getTypeColor(signal.type))}
+                  className={cn("text-xs", getTypeColor(signal.signal_type_classified || ""))}
                 >
                   <FileText className="h-3 w-3 mr-1" />
-                  {signal.type.replace('_', ' ')}
+                  {signal.signal_type_classified?.replace('_', ' ') || "Unclassified"}
                 </Badge>
-                {signal.author && (
+                {rawSignal.author && (
                   <Badge variant="secondary" className="text-xs">
                     <User className="h-3 w-3 mr-1" />
-                    {signal.author}
+                    {rawSignal.author}
                   </Badge>
                 )}
               </div>
@@ -84,26 +86,24 @@ export function SignalDetailModal({ signal, isOpen, onClose }: SignalDetailModal
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Created:</span>
-                  <span>{format(new Date(signal.created_at), 'MMM dd, yyyy HH:mm')}</span>
+                  <span className="text-muted-foreground">Scraped:</span>
+                  <span>{format(new Date(rawSignal.scraped_date), 'MMM dd, yyyy HH:mm')}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Processed:</span>
+                  <span>{format(new Date(signal.processed_timestamp), 'MMM dd, yyyy HH:mm')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Hash className="h-4 w-4 text-muted-foreground" />
                   <span className="text-muted-foreground">Signal ID:</span>
-                  <code className="text-xs bg-muted px-1 py-0.5 rounded">{signal.signal_id}</code>
+                  <code className="text-xs bg-muted px-1 py-0.5 rounded">{rawSignal.signal_id}</code>
                 </div>
-                {signal.internal_id && (
+                {signal.countries && signal.countries.length > 0 && (
                   <div className="flex items-center gap-2">
-                    <Hash className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Internal ID:</span>
-                    <code className="text-xs bg-muted px-1 py-0.5 rounded">{signal.internal_id}</code>
-                  </div>
-                )}
-                {signal.topic_id && (
-                  <div className="flex items-center gap-2">
-                    <Hash className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Topic ID:</span>
-                    <code className="text-xs bg-muted px-1 py-0.5 rounded">{signal.topic_id}</code>
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Countries:</span>
+                    <span>{signal.countries.join(', ')}</span>
                   </div>
                 )}
               </div>
@@ -112,24 +112,36 @@ export function SignalDetailModal({ signal, isOpen, onClose }: SignalDetailModal
             <Separator />
 
             {/* Description Section */}
-            {signal.description && (
+            {(signal.content_snippet || rawSignal.description) && (
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold">Description</h3>
                 <div className="prose prose-sm max-w-none">
                   <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                    {signal.description}
+                    {signal.content_snippet || rawSignal.description}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Analysis Section */}
+            {signal.memo_analysis && (
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold">Analysis</h3>
+                <div className="prose prose-sm max-w-none">
+                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {signal.memo_analysis}
                   </p>
                 </div>
               </div>
             )}
 
             {/* Original Source Link */}
-            {signal.url && (
+            {rawSignal.url && (
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold">Source</h3>
                 <Button asChild variant="outline" className="w-fit">
                   <a 
-                    href={signal.url} 
+                    href={rawSignal.url} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex items-center gap-2"
@@ -146,13 +158,19 @@ export function SignalDetailModal({ signal, isOpen, onClose }: SignalDetailModal
             <div className="space-y-3">
               <h3 className="text-lg font-semibold">Timeline</h3>
               <div className="space-y-2 text-sm">
+                {rawSignal.publication_date && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Published:</span>
+                    <span>{format(new Date(rawSignal.publication_date), 'EEEE, MMMM dd, yyyy')}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Created:</span>
-                  <span>{format(new Date(signal.created_at), 'EEEE, MMMM dd, yyyy \'at\' HH:mm')}</span>
+                  <span className="text-muted-foreground">Scraped:</span>
+                  <span>{format(new Date(rawSignal.scraped_date), 'EEEE, MMMM dd, yyyy \'at\' HH:mm')}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Last Updated:</span>
-                  <span>{format(new Date(signal.updated_at), 'EEEE, MMMM dd, yyyy \'at\' HH:mm')}</span>
+                  <span className="text-muted-foreground">Processed:</span>
+                  <span>{format(new Date(signal.processed_timestamp), 'EEEE, MMMM dd, yyyy \'at\' HH:mm')}</span>
                 </div>
               </div>
             </div>

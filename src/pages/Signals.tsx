@@ -17,18 +17,18 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { useSignals, type Signal as SignalType } from "@/hooks/useSignals";
+import { useProcessedSignals, type ProcessedSignal } from "@/hooks/useProcessedSignals";
 import { SignalDetailModal } from "@/components/SignalDetailModal";
 import { SignalFilterDemo } from "@/components/ui/signal-filter-demo";
 
 export default function Signals() {
-  const { data: signals, isLoading: loading, error } = useSignals();
+  const { data: processedSignals, isLoading: loading, error } = useProcessedSignals();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSignal, setSelectedSignal] = useState<SignalType | null>(null);
+  const [selectedSignal, setSelectedSignal] = useState<ProcessedSignal | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filters, setFilters] = useState<any[]>([]);
 
-  const handleSignalClick = (signal: SignalType) => {
+  const handleSignalClick = (signal: ProcessedSignal) => {
     setSelectedSignal(signal);
     setIsModalOpen(true);
   };
@@ -72,15 +72,16 @@ export default function Signals() {
   }
 
   // Get unique sources and types for filters
-  const sources = [...new Set(signals?.map(s => s.source) || [])];
-  const types = [...new Set(signals?.map(s => s.type) || [])];
+  const sources = [...new Set(processedSignals?.map(s => s.raw_signal?.source || "") || [])];
+  const types = [...new Set(processedSignals?.map(s => s.signal_type_classified || "") || [])];
 
   // Filter signals based on search and filters
-  const filteredSignals = signals?.filter(signal => {
+  const filteredSignals = processedSignals?.filter(signal => {
     const matchesSearch = !searchQuery || 
-      signal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      signal.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      signal.source.toLowerCase().includes(searchQuery.toLowerCase());
+      signal.raw_signal?.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      signal.content_snippet?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      signal.raw_signal?.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      signal.raw_signal?.source.toLowerCase().includes(searchQuery.toLowerCase());
     
     // Apply active filters
     const matchesFilters = filters.length === 0 || filters.every(filter => {
@@ -89,15 +90,15 @@ export default function Signals() {
       switch (filter.type) {
         case 'Source':
           return filter.value.some((val: string) => 
-            signal.source.toLowerCase().includes(val.toLowerCase())
+            signal.raw_signal?.source.toLowerCase().includes(val.toLowerCase())
           );
         case 'Type':
           return filter.value.some((val: string) => 
-            signal.type.toLowerCase().includes(val.toLowerCase())
+            signal.signal_type_classified?.toLowerCase().includes(val.toLowerCase())
           );
         case 'Author':
           return filter.value.some((val: string) => 
-            signal.author?.toLowerCase().includes(val.toLowerCase())
+            signal.raw_signal?.author?.toLowerCase().includes(val.toLowerCase())
           );
         default:
           return true;
@@ -143,7 +144,7 @@ export default function Signals() {
         </div>
         <div className="text-right text-sm text-muted-foreground">
           <div>{filteredSignals.length} signals</div>
-          <div>Last updated: {signals?.[0] ? format(new Date(signals[0].created_at), 'MMM dd, HH:mm') : '-'}</div>
+          <div>Last updated: {processedSignals?.[0] ? format(new Date(processedSignals[0].processed_timestamp), 'MMM dd, HH:mm') : '-'}</div>
         </div>
       </div>
 
@@ -189,7 +190,7 @@ export default function Signals() {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-lg leading-tight">{signal.title}</h3>
+                      <h3 className="font-semibold text-lg leading-tight">{signal.raw_signal?.title || "Untitled"}</h3>
                       <div className="flex items-center gap-1 ml-auto">
                         <Button 
                           variant="ghost" 
@@ -202,7 +203,7 @@ export default function Signals() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {signal.url && (
+                        {signal.raw_signal?.url && (
                           <Button 
                             variant="ghost" 
                             size="sm" 
@@ -210,7 +211,7 @@ export default function Signals() {
                             asChild
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <a href={signal.url} target="_blank" rel="noopener noreferrer">
+                            <a href={signal.raw_signal.url} target="_blank" rel="noopener noreferrer">
                               <ExternalLink className="h-4 w-4" />
                             </a>
                           </Button>
@@ -218,29 +219,29 @@ export default function Signals() {
                       </div>
                     </div>
                     
-                    {signal.description && (
+                    {(signal.content_snippet || signal.raw_signal?.description) && (
                       <p className="text-muted-foreground text-sm leading-relaxed mb-3 line-clamp-2">
-                        {signal.description}
+                        {signal.content_snippet || signal.raw_signal?.description}
                       </p>
                     )}
 
                     <div className="flex items-center flex-wrap gap-2 mb-3">
                       <Badge 
                         variant="outline" 
-                        className={cn("text-xs", getSourceColor(signal.source))}
+                        className={cn("text-xs", getSourceColor(signal.raw_signal?.source || ""))}
                       >
                         <Building2 className="h-3 w-3 mr-1" />
-                        {signal.source}
+                        {signal.raw_signal?.source}
                       </Badge>
                       <Badge 
                         variant="outline" 
-                        className={cn("text-xs", getTypeColor(signal.type))}
+                        className={cn("text-xs", getTypeColor(signal.signal_type_classified || ""))}
                       >
-                        {signal.type.replace('_', ' ')}
+                        {signal.signal_type_classified?.replace('_', ' ') || "Unclassified"}
                       </Badge>
-                      {signal.author && (
+                      {signal.raw_signal?.author && (
                         <Badge variant="secondary" className="text-xs">
-                          {signal.author}
+                          {signal.raw_signal.author}
                         </Badge>
                       )}
                     </div>
@@ -248,10 +249,10 @@ export default function Signals() {
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        <span>{format(new Date(signal.created_at), 'MMM dd, yyyy HH:mm')}</span>
+                        <span>{format(new Date(signal.raw_signal?.scraped_date || signal.processed_timestamp), 'MMM dd, yyyy HH:mm')}</span>
                       </div>
                       <span>•</span>
-                      <span>ID: {signal.signal_id}</span>
+                      <span>ID: {signal.raw_signal?.signal_id}</span>
                     </div>
                   </div>
                 </div>

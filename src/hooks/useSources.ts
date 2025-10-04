@@ -1,48 +1,54 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export interface SourceMonitor {
+export interface Source {
   id: string;
   source_name: string;
   source_type: string;
-  base_url: string;
-  scraping_config: Record<string, any>;
-  check_frequency: string;
-  last_checked_at: string | null;
   status: string;
+  base_url?: string;
+  feed_url?: string;
+  api_endpoint?: string;
+  field_mappings?: Record<string, any>;
+  scraping_config?: Record<string, any>;
+  check_frequency: string;
+  last_checked_at?: string;
+  last_success_at?: string;
+  error_message?: string;
   created_at: string;
   updated_at: string;
+  created_by?: string;
 }
 
-export function useSourceMonitors() {
+export function useSources() {
   return useQuery({
-    queryKey: ["source-monitors"],
+    queryKey: ["sources"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("source_monitors")
+        .from("sources")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as SourceMonitor[];
+      return data as Source[];
     },
   });
 }
 
-export function useToggleMonitorStatus() {
+export function useToggleSourceStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase
-        .from("source_monitors")
+        .from("sources")
         .update({ status })
         .eq("id", id);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["source-monitors"] });
+      queryClient.invalidateQueries({ queryKey: ["sources"] });
     },
   });
 }

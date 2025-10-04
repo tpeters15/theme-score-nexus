@@ -1,58 +1,48 @@
+import { useRawSignals } from "@/hooks/useRawSignals";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, Calendar, Clock, Search } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { ExternalLink, Search, FileText } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function DiscoveredSignals() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
-  const { data: signals, isLoading } = useQuery({
-    queryKey: ["discovered-signals"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("signals")
-        .select("*")
-        .eq("processing_status", "discovered")
-        .order("publication_date", { ascending: false, nullsFirst: false })
-        .order("created_at", { ascending: false });
+  const { data: signals, isLoading } = useRawSignals();
 
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Filter signals based on search and active tab
   const filteredSignals = signals?.filter((signal) => {
-    const matchesSearch = signal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         signal.source.toLowerCase().includes(searchQuery.toLowerCase());
-    
+    const matchesSearch =
+      searchQuery === "" ||
+      signal.title.toLowerCase().includes(searchQuery.toLowerCase());
+
     if (activeTab === "all") return matchesSearch;
-    if (activeTab === "reports") return matchesSearch && signal.type === "report";
-    if (activeTab === "news") return matchesSearch && signal.type === "news";
+    if (activeTab === "reports") return matchesSearch && signal.source_type === "report";
+    if (activeTab === "news") return matchesSearch && signal.source_type === "news";
     return matchesSearch && signal.source === activeTab;
   });
 
-  // Get unique sources for tabs
-  const sources = [...new Set(signals?.map(s => s.source) || [])];
-  const reportCount = signals?.filter(s => s.type === "report").length || 0;
-  const newsCount = signals?.filter(s => s.type === "news").length || 0;
+  const allCount = signals?.length || 0;
+  const reportsCount = signals?.filter((s) => s.source_type === "report").length || 0;
+  const newsCount = signals?.filter((s) => s.source_type === "news").length || 0;
+  const sources = Array.from(new Set(signals?.map((s) => s.source) || []));
 
   if (isLoading) {
     return (
-      <Card className="h-full">
+      <Card>
         <CardHeader>
-          <CardTitle>Discovered Signals</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Raw Signals
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full" />
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -60,107 +50,73 @@ export function DiscoveredSignals() {
   }
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          Discovered Signals
-          <Badge variant="secondary">{signals?.length || 0}</Badge>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          Raw Signals
         </CardTitle>
-        <div className="relative mt-4">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search signals..."
+            placeholder="Search raw signals..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
+            className="pl-10"
           />
         </div>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-hidden">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Math.min(sources.length + 3, 5)}, 1fr)` }}>
-            <TabsTrigger value="all">
-              All <Badge variant="secondary" className="ml-1">{signals?.length || 0}</Badge>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="w-full">
+            <TabsTrigger value="all" className="flex-1">
+              All ({allCount})
             </TabsTrigger>
-            <TabsTrigger value="reports">
-              Reports <Badge variant="secondary" className="ml-1">{reportCount}</Badge>
+            <TabsTrigger value="reports" className="flex-1">
+              Reports ({reportsCount})
             </TabsTrigger>
-            <TabsTrigger value="news">
-              News <Badge variant="secondary" className="ml-1">{newsCount}</Badge>
+            <TabsTrigger value="news" className="flex-1">
+              News ({newsCount})
             </TabsTrigger>
-            {sources.slice(0, 2).map(source => (
-              <TabsTrigger key={source} value={source} className="truncate">
-                {source.replace("IEA ", "")}
-              </TabsTrigger>
-            ))}
           </TabsList>
 
-          <ScrollArea className="flex-1 mt-4">
-            <TabsContent value={activeTab} className="mt-0">
-              {filteredSignals && filteredSignals.length > 0 ? (
-                <div className="space-y-3 pb-4">
-                  {filteredSignals.map((signal) => (
-                    <div
-                      key={signal.id}
-                      className="group p-3 rounded-lg border bg-card hover:bg-accent/50 transition-all"
+          <TabsContent value={activeTab} className="space-y-3 mt-4">
+            {filteredSignals && filteredSignals.length > 0 ? (
+              filteredSignals.slice(0, 10).map((signal) => (
+                <div
+                  key={signal.id}
+                  className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                >
+                  <div className="font-medium text-sm mb-1 line-clamp-2">
+                    {signal.title}
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <Badge variant="outline">{signal.source_type || "Unknown"}</Badge>
+                    <Badge variant="secondary">{signal.source}</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(signal.publication_date || signal.scraped_date).toLocaleDateString()}
+                    </span>
+                  </div>
+                  {(signal.document_url || signal.url) && (
+                    <a
+                      href={signal.document_url || signal.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline flex items-center gap-1"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0 space-y-2">
-                          <div className="flex items-start gap-2">
-                            <h4 className="font-medium text-sm line-clamp-2 flex-1">{signal.title}</h4>
-                            <Badge 
-                              variant={signal.type === "report" ? "default" : "secondary"} 
-                              className="text-xs shrink-0"
-                            >
-                              {signal.type}
-                            </Badge>
-                          </div>
-                          
-                          <div className="flex items-center gap-3 text-xs flex-wrap">
-                            <span className="font-medium text-muted-foreground">{signal.source}</span>
-                            
-                            {signal.publication_date && (
-                              <div className="flex items-center gap-1 text-foreground">
-                                <Calendar className="h-3 w-3" />
-                                <span className="font-medium">
-                                  {format(new Date(signal.publication_date), "MMM d, yyyy")}
-                                </span>
-                              </div>
-                            )}
-                            
-                            <div className="flex items-center gap-1 text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              <span className="text-xs">
-                                Added {formatDistanceToNow(new Date(signal.created_at), {
-                                  addSuffix: true,
-                                })}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {signal.document_url && (
-                          <a
-                            href={signal.document_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0 p-2 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                            title="Open in new tab"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                      <ExternalLink className="h-4 w-4" />
+                      View Document
+                    </a>
+                  )}
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-12">
-                  {searchQuery ? "No signals match your search" : "No discovered signals yet"}
-                </p>
-              )}
-            </TabsContent>
-          </ScrollArea>
+              ))
+            ) : (
+              <div className="text-center text-muted-foreground py-8">
+                {searchQuery ? "No signals match your search" : "No raw signals yet"}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>

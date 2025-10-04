@@ -1,15 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useSourceMonitors, useToggleMonitorStatus, useTriggerScrape } from "@/hooks/useSourceMonitors";
+import { useSources, useToggleSourceStatus, useTriggerScrape } from "@/hooks/useSources";
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, RefreshCw, ExternalLink, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { DiscoveredSignals } from "@/components/DiscoveredSignals";
 
 export default function SourceMonitors() {
-  const { data: monitors, isLoading } = useSourceMonitors();
-  const toggleStatus = useToggleMonitorStatus();
+  const { data: sources, isLoading } = useSources();
+  const toggleStatus = useToggleSourceStatus();
   const triggerScrape = useTriggerScrape();
   const { toast } = useToast();
 
@@ -91,36 +91,36 @@ export default function SourceMonitors() {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
-            {monitors?.map((monitor) => (
-          <Card key={monitor.id}>
+            {sources?.map((source) => (
+          <Card key={source.id}>
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
                   <CardTitle className="flex items-center gap-2">
-                    {monitor.source_name}
-                    <Badge variant={monitor.status === "active" ? "default" : "secondary"}>
-                      {monitor.status}
+                    {source.source_name}
+                    <Badge variant={source.status === "active" ? "default" : "secondary"}>
+                      {source.status}
                     </Badge>
                   </CardTitle>
                   <CardDescription className="flex items-center gap-1">
                     <ExternalLink className="h-3 w-3" />
                     <a 
-                      href={monitor.base_url} 
+                      href={source.base_url || source.feed_url || source.api_endpoint} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="hover:underline"
                     >
-                      {monitor.base_url}
+                      {source.base_url || source.feed_url || source.api_endpoint}
                     </a>
                   </CardDescription>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleToggleStatus(monitor.id, monitor.status)}
+                  onClick={() => handleToggleStatus(source.id, source.status)}
                   disabled={toggleStatus.isPending}
                 >
-                  {monitor.status === "active" ? (
+                  {source.status === "active" ? (
                     <Pause className="h-4 w-4" />
                   ) : (
                     <Play className="h-4 w-4" />
@@ -132,20 +132,20 @@ export default function SourceMonitors() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">Check Frequency</p>
-                  <p className="font-medium capitalize">{monitor.check_frequency}</p>
+                  <p className="font-medium capitalize">{source.check_frequency}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Source Type</p>
-                  <p className="font-medium uppercase">{monitor.source_type}</p>
+                  <p className="font-medium uppercase">{source.source_type}</p>
                 </div>
               </div>
               
-              {monitor.last_checked_at && (
+              {source.last_checked_at && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
                   <span>
                     Last checked{" "}
-                    {formatDistanceToNow(new Date(monitor.last_checked_at), {
+                    {formatDistanceToNow(new Date(source.last_checked_at), {
                       addSuffix: true,
                     })}
                   </span>
@@ -156,7 +156,7 @@ export default function SourceMonitors() {
             ))}
           </div>
 
-          {monitors?.length === 0 && (
+          {sources?.length === 0 && (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <p className="text-muted-foreground">No source monitors configured</p>
