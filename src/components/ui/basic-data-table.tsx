@@ -269,6 +269,7 @@ export function DataTable<T extends Record<string, any>>({
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={(e) => e.stopPropagation()}
                               className={cn(
                                 "h-6 w-6 p-0",
                                 columnFilters[String(column.key)]?.length > 0 && "text-primary"
@@ -278,18 +279,21 @@ export function DataTable<T extends Record<string, any>>({
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent 
-                            className="w-56 p-0 bg-popover z-50" 
+                            className="w-56 p-0 bg-popover border border-border z-50" 
                             align="start"
-                            onClick={(e) => e.stopPropagation()}
+                            onOpenAutoFocus={(e) => e.preventDefault()}
                           >
-                            <div className="p-3 border-b border-border">
+                            <div className="p-3 border-b border-border bg-popover">
                               <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium">Filter by {column.header}</span>
                                 {columnFilters[String(column.key)]?.length > 0 && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => clearColumnFilter(String(column.key))}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      clearColumnFilter(String(column.key));
+                                    }}
                                     className="h-6 px-2 text-xs"
                                   >
                                     Clear
@@ -297,22 +301,29 @@ export function DataTable<T extends Record<string, any>>({
                                 )}
                               </div>
                             </div>
-                            <div className="max-h-64 overflow-y-auto p-2">
-                              {getUniqueColumnValues(column.key).map((value) => (
-                                <div
-                                  key={value}
-                                  className="flex items-center space-x-2 px-2 py-2 hover:bg-accent rounded-md cursor-pointer"
-                                  onClick={() => toggleColumnFilter(String(column.key), value)}
-                                >
-                                  <Checkbox
-                                    checked={columnFilters[String(column.key)]?.includes(value) || false}
-                                    onCheckedChange={() => toggleColumnFilter(String(column.key), value)}
-                                  />
-                                  <label className="text-sm cursor-pointer flex-1">
-                                    {value}
-                                  </label>
-                                </div>
-                              ))}
+                            <div className="max-h-64 overflow-y-auto p-2 bg-popover">
+                              {getUniqueColumnValues(column.key).map((value) => {
+                                const isChecked = columnFilters[String(column.key)]?.includes(value) || false;
+                                return (
+                                  <div
+                                    key={value}
+                                    className="flex items-center space-x-2 px-2 py-2 hover:bg-accent rounded-md cursor-pointer"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleColumnFilter(String(column.key), value);
+                                    }}
+                                  >
+                                    <Checkbox
+                                      checked={isChecked}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="pointer-events-none"
+                                    />
+                                    <label className="text-sm cursor-pointer flex-1 select-none">
+                                      {value}
+                                    </label>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </PopoverContent>
                         </Popover>
