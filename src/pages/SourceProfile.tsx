@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useSources, useToggleSourceStatus } from "@/hooks/useSources";
+import { useSources, useToggleSourceStatus, useTriggerSourceScrape } from "@/hooks/useSources";
 import { useRawSignals } from "@/hooks/useRawSignals";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ExternalLink, Play, Pause, RefreshCw, Clock, Zap, TrendingUp } from "lucide-react";
@@ -15,6 +15,7 @@ export default function SourceProfile() {
   const { data: sources } = useSources();
   const { data: allSignals } = useRawSignals();
   const toggleStatus = useToggleSourceStatus();
+  const triggerScrape = useTriggerSourceScrape();
   const { toast } = useToast();
   const [selectedPeriod, setSelectedPeriod] = useState<"7d" | "30d" | "all">("30d");
 
@@ -60,6 +61,30 @@ export default function SourceProfile() {
       toast({
         title: "Error",
         description: "Failed to update source status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCheckNow = async () => {
+    if (!source) return;
+    
+    try {
+      toast({
+        title: "Checking source...",
+        description: "This may take a moment",
+      });
+      
+      await triggerScrape.mutateAsync(source.source_name);
+      
+      toast({
+        title: "Check complete",
+        description: "New signals have been added",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to check source",
         variant: "destructive",
       });
     }
@@ -129,8 +154,8 @@ export default function SourceProfile() {
               </>
             )}
           </Button>
-          <Button>
-            <RefreshCw className="mr-2 h-4 w-4" />
+          <Button onClick={handleCheckNow} disabled={triggerScrape.isPending}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${triggerScrape.isPending ? 'animate-spin' : ''}`} />
             Check Now
           </Button>
         </div>

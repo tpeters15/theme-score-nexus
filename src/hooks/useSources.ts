@@ -63,3 +63,24 @@ export function useTriggerScrape() {
     },
   });
 }
+
+export function useTriggerSourceScrape() {
+  return useMutation({
+    mutationFn: async (sourceName: string) => {
+      let functionName = '';
+      
+      if (sourceName === 'Carbon Brief Daily') {
+        functionName = 'scrape-carbon-brief';
+      } else if (sourceName === 'IEA News') {
+        functionName = 'scrape-iea-sources';
+      } else {
+        throw new Error(`No scraper configured for source: ${sourceName}`);
+      }
+
+      const { data, error } = await supabase.functions.invoke(functionName);
+
+      if (error) throw error;
+      return data;
+    },
+  });
+}

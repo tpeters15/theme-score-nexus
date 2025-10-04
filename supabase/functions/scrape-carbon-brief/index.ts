@@ -24,71 +24,63 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    console.log('Starting Carbon Brief Daily scrape...')
+    console.log('Starting Carbon Brief articles scrape...')
 
-    // Fetch the Carbon Brief Daily page
-    const response = await fetch('https://www.carbonbrief.org/daily-brief')
+    // Fetch the Carbon Brief main articles page
+    const response = await fetch('https://www.carbonbrief.org/category/articles/')
     const html = await response.text()
     
-    console.log('Fetched Carbon Brief page, extracting content...')
+    console.log('Fetched Carbon Brief articles page, extracting content...')
 
     // Parse HTML with cheerio
     const $ = cheerio.load(html)
     
-    // Extract date
-    const dateText = $('.dateInput').text().trim()
-    let publishedDate = new Date().toISOString()
-    if (dateText) {
-      // Convert "31.07.2025" format to ISO date
-      const dateParts = dateText.split('.')
-      if (dateParts.length === 3) {
-        const [day, month, year] = dateParts
-        publishedDate = new Date(`${year}-${month}-${day}`).toISOString()
-      }
-    }
-
-    // Extract articles
     const articles: CarbonBriefArticle[] = []
-    const headlines: string[] = []
-    const contents: string[] = []
-    const sources: string[] = []
-    const urls: string[] = []
 
-    $('.dailystory .storyheading').each((i, el) => {
-      headlines.push($(el).text().trim())
-    })
-
-    $('.dailystory .storycont').each((i, el) => {
-      contents.push($(el).text().trim())
-    })
-
-    $('.dailystory .storycredits').each((i, el) => {
-      sources.push($(el).text().trim())
-    })
-
-    $('.dailystory .storycredits a').each((i, el) => {
-      urls.push($(el).attr('href') || '')
-    })
-
-    console.log(`Extracted ${headlines.length} headlines, ${contents.length} content blocks, ${urls.length} URLs`)
-
-    // Process articles
-    for (let i = 0; i < headlines.length; i++) {
-      const content = contents[i] || ''
+    // Extract articles from the main articles feed
+    $('.post').each((index, element) => {
+      const $post = $(element)
       
-      // Skip items without substantial content
-      if (content.length < 100) continue
-
-      const article: CarbonBriefArticle = {
-        title: headlines[i] || '',
-        url: urls[i] || '',
-        content: content.trim(),
-        author: sources[i]?.split(' Read Article')[0] || 'Carbon Brief',
-        publishedAt: publishedDate,
+      // Get title and URL
+      const $titleLink = $post.find('h2.entry-title a, h3.entry-title a')
+      const title = $titleLink.text().trim()
+      const url = $titleLink.attr('href') || ''
+      
+      // Get excerpt/description
+      const description = $post.find('.entry-summary p, .entry-content p').first().text().trim()
+      
+      // Get author
+      const author = $post.find('.author a, .by-author a').text().trim() || 'Carbon Brief'
+      
+      // Get published date
+      const dateText = $post.find('time.entry-date, .published').attr('datetime') || 
+                       $post.find('.entry-date').text().trim()
+      let publishedDate = new Date().toISOString()
+      if (dateText) {
+        try {
+          publishedDate = new Date(dateText).toISOString()
+        } catch (e) {
+          console.log('Could not parse date:', dateText)
+        }
+      }
+      
+      // Skip if essential data is missing
+      if (!title || !url || description.length < 50) {
+        console.log('Skipping article with insufficient data:', title)
+        return
       }
 
-      articles.push(article)
-    }
+      // Only include Carbon Brief's own articles (not external links)
+      if (url.includes('carbonbrief.org')) {
+        articles.push({
+          title,
+          url,
+          content: description,
+          author,
+          publishedAt: publishedDate,
+        })
+      }
+    })
 
     console.log(`Processing ${articles.length} valid articles...`)
 
