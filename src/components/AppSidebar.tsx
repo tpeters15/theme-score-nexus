@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Home, Target, Zap, FileText, Settings, Shield, Radar, ListChecks, Database } from "lucide-react";
 import { NavLink, useLocation, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 import {
   Sidebar,
@@ -59,8 +61,25 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end={item.url === "/"} className={getNavCls}>
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {open && <span>{item.title}</span>}
+                      <motion.div
+                        whileHover={!open ? { scale: 1.1, y: -2 } : {}}
+                        whileTap={!open ? { scale: 0.95 } : {}}
+                        className="relative group flex items-center w-full"
+                      >
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {open && <span>{item.title}</span>}
+                        {!open && (
+                          <span className={cn(
+                            "absolute left-12 px-2 py-1 rounded text-xs",
+                            "bg-popover text-popover-foreground border border-border",
+                            "opacity-0 group-hover:opacity-100",
+                            "transition-opacity whitespace-nowrap pointer-events-none",
+                            "shadow-lg z-50"
+                          )}>
+                            {item.title}
+                          </span>
+                        )}
+                      </motion.div>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -79,8 +98,25 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={getNavCls}>
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {open && <span>{item.title}</span>}
+                      <motion.div
+                        whileHover={!open ? { scale: 1.1, y: -2 } : {}}
+                        whileTap={!open ? { scale: 0.95 } : {}}
+                        className="relative group flex items-center w-full"
+                      >
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {open && <span>{item.title}</span>}
+                        {!open && (
+                          <span className={cn(
+                            "absolute left-12 px-2 py-1 rounded text-xs",
+                            "bg-popover text-popover-foreground border border-border",
+                            "opacity-0 group-hover:opacity-100",
+                            "transition-opacity whitespace-nowrap pointer-events-none",
+                            "shadow-lg z-50"
+                          )}>
+                            {item.title}
+                          </span>
+                        )}
+                      </motion.div>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
