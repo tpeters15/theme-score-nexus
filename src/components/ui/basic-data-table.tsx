@@ -14,6 +14,7 @@ export type DataTableColumn<T> = {
   filterable?: boolean;
   render?: (value: any, row: T) => React.ReactNode;
   width?: string;
+  getFilterValue?: (row: T) => string;
 };
 
 export type DataTableProps<T> = {
@@ -60,8 +61,13 @@ export function DataTable<T extends Record<string, any>>({
   );
 
   // Get unique values for each filterable column
-  const getUniqueColumnValues = (key: keyof T): string[] => {
-    const values = data.map(row => String(row[key] || '')).filter(Boolean);
+  const getUniqueColumnValues = (column: DataTableColumn<T>): string[] => {
+    const values = data.map(row => {
+      if (column.getFilterValue) {
+        return column.getFilterValue(row);
+      }
+      return String(row[column.key] || '');
+    }).filter(Boolean);
     return Array.from(new Set(values)).sort();
   };
 
@@ -82,8 +88,14 @@ export function DataTable<T extends Record<string, any>>({
     // Column filters (multiselect)
     Object.entries(columnFilters).forEach(([key, selectedValues]) => {
       if (selectedValues && selectedValues.length > 0) {
+        const column = columns.find(col => String(col.key) === key);
         filtered = filtered.filter((row) => {
-          const rowValue = String(row[key as keyof T] || '');
+          let rowValue: string;
+          if (column?.getFilterValue) {
+            rowValue = column.getFilterValue(row);
+          } else {
+            rowValue = String(row[key as keyof T] || '');
+          }
           return selectedValues.includes(rowValue);
         });
       }
@@ -302,7 +314,7 @@ export function DataTable<T extends Record<string, any>>({
                               </div>
                             </div>
                             <div className="max-h-64 overflow-y-auto p-2 bg-popover">
-                              {getUniqueColumnValues(column.key).map((value) => {
+                              {getUniqueColumnValues(column).map((value) => {
                                 const isChecked = columnFilters[String(column.key)]?.includes(value) || false;
                                 return (
                                   <div
