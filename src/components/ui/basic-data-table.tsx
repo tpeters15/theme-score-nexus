@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { ChevronUp, ChevronDown, Search, Filter, X } from "lucide-react";
+import { ChevronUp, ChevronDown, Search, Filter, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 export type DataTableColumn<T> = {
   key: keyof T;
@@ -56,9 +58,8 @@ export function DataTable<T extends Record<string, any>>({
     direction: "asc" | "desc";
   }>({ key: null, direction: "asc" });
   const [currentPage, setCurrentPage] = useState(1);
-  const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>(
-    {},
-  );
+  const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>({});
+  const [filterSearch, setFilterSearch] = useState<Record<string, string>>({});
 
   // Get unique values for each filterable column
   const getUniqueColumnValues = (column: DataTableColumn<T>): string[] => {
@@ -162,6 +163,24 @@ export function DataTable<T extends Record<string, any>>({
       return newFilters;
     });
   };
+
+  const setColumnFilterSearch = (key: string, value: string) => {
+    setFilterSearch((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const getFilteredColumnValues = (column: DataTableColumn<T>) => {
+    const allValues = getUniqueColumnValues(column);
+    const searchTerm = filterSearch[String(column.key)]?.toLowerCase() || '';
+    
+    if (!searchTerm) return allValues;
+    
+    return allValues.filter(value => 
+      value.toLowerCase().includes(searchTerm)
+    );
+  };
   if (loading) {
     return (
       <div className={cn("w-full bg-card rounded-2xl ", className)}>
@@ -231,118 +250,162 @@ export function DataTable<T extends Record<string, any>>({
             <thead className="bg-muted/30">
               <tr>
                 {" "}
-                {columns.map((column) => (
-                  <th
-                    key={String(column.key)}
-                    className={cn(
-                      "text-left font-medium text-muted-foreground bg-muted/30",
-                      compact ? "px-4 py-3" : "px-6 py-4",
-                      column.width && `w-[${column.width}]`,
-                    )}
-                    style={column.width ? { width: column.width } : undefined}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div 
-                        className={cn(
-                          "flex items-center gap-2",
-                          column.sortable && "cursor-pointer hover:text-foreground transition-colors"
-                        )}
-                        onClick={() => column.sortable && handleSort(column.key)}
-                      >
-                        <span className="text-sm font-semibold">
-                          {column.header}
-                        </span>
-                        {column.sortable && (
-                          <div className="flex flex-col">
-                            <ChevronUp
-                              className={cn(
-                                "h-3 w-3",
-                                sortConfig.key === column.key &&
-                                  sortConfig.direction === "asc"
-                                  ? "text-primary"
-                                  : "text-muted-foreground/40",
-                              )}
-                            />
-                            <ChevronDown
-                              className={cn(
-                                "h-3 w-3 -mt-1",
-                                sortConfig.key === column.key &&
-                                  sortConfig.direction === "desc"
-                                  ? "text-primary"
-                                  : "text-muted-foreground/40",
-                              )}
-                            />
-                          </div>
-                        )}
-                      </div>
-                      {column.filterable && (
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => e.stopPropagation()}
-                              className={cn(
-                                "h-6 w-6 p-0",
-                                columnFilters[String(column.key)]?.length > 0 && "text-primary"
-                              )}
-                            >
-                              <Filter className="h-3 w-3" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent 
-                            className="w-56 p-0 bg-popover border border-border z-50" 
-                            align="start"
-                            onOpenAutoFocus={(e) => e.preventDefault()}
-                          >
-                            <div className="p-3 border-b border-border bg-popover">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">Filter by {column.header}</span>
-                                {columnFilters[String(column.key)]?.length > 0 && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      clearColumnFilter(String(column.key));
-                                    }}
-                                    className="h-6 px-2 text-xs"
+                {columns.map((column) => {
+                  const activeFilterCount = columnFilters[String(column.key)]?.length || 0;
+                  
+                  return (
+                    <th
+                      key={String(column.key)}
+                      className={cn(
+                        "text-left font-medium bg-muted/30",
+                        compact ? "px-4 py-3" : "px-6 py-4",
+                      )}
+                      style={column.width ? { width: column.width } : undefined}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div 
+                          className={cn(
+                            "flex items-center gap-2 min-w-0 flex-1",
+                            column.sortable && "cursor-pointer hover:text-foreground transition-colors group"
+                          )}
+                          onClick={() => column.sortable && handleSort(column.key)}
+                        >
+                          <span className="text-sm font-semibold text-muted-foreground group-hover:text-foreground transition-colors truncate">
+                            {column.header}
+                          </span>
+                          {column.sortable && (
+                            <div className="flex flex-col flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
+                              <ChevronUp
+                                className={cn(
+                                  "h-3.5 w-3.5 -mb-1",
+                                  sortConfig.key === column.key &&
+                                    sortConfig.direction === "asc"
+                                    ? "text-primary opacity-100"
+                                    : "text-muted-foreground",
+                                )}
+                              />
+                              <ChevronDown
+                                className={cn(
+                                  "h-3.5 w-3.5",
+                                  sortConfig.key === column.key &&
+                                    sortConfig.direction === "desc"
+                                    ? "text-primary opacity-100"
+                                    : "text-muted-foreground",
+                                )}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        {column.filterable && (
+                          <Popover onOpenChange={(open) => {
+                            if (!open) {
+                              setColumnFilterSearch(String(column.key), '');
+                            }
+                          }}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => e.stopPropagation()}
+                                className={cn(
+                                  "h-7 w-7 p-0 flex-shrink-0 relative",
+                                  activeFilterCount > 0 ? "text-primary hover:text-primary" : "text-muted-foreground hover:text-foreground"
+                                )}
+                              >
+                                <Filter className="h-3.5 w-3.5" />
+                                {activeFilterCount > 0 && (
+                                  <Badge 
+                                    variant="default" 
+                                    className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] font-semibold"
                                   >
-                                    Clear
-                                  </Button>
+                                    {activeFilterCount}
+                                  </Badge>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent 
+                              className="w-64 p-0 bg-popover border border-border shadow-lg z-50" 
+                              align="start"
+                              onOpenAutoFocus={(e) => e.preventDefault()}
+                            >
+                              <div className="p-3 border-b border-border bg-muted/30">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-semibold text-foreground">Filter</span>
+                                  {activeFilterCount > 0 && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        clearColumnFilter(String(column.key));
+                                      }}
+                                      className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                                    >
+                                      Clear all
+                                    </Button>
+                                  )}
+                                </div>
+                                <div className="relative">
+                                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                                  <Input
+                                    placeholder="Search..."
+                                    value={filterSearch[String(column.key)] || ''}
+                                    onChange={(e) => setColumnFilterSearch(String(column.key), e.target.value)}
+                                    className="h-8 pl-8 text-xs bg-background"
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                </div>
+                              </div>
+                              <div className="max-h-64 overflow-y-auto p-1">
+                                {getFilteredColumnValues(column).length === 0 ? (
+                                  <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                                    No options found
+                                  </div>
+                                ) : (
+                                  getFilteredColumnValues(column).map((value) => {
+                                    const isChecked = columnFilters[String(column.key)]?.includes(value) || false;
+                                    return (
+                                      <div
+                                        key={value}
+                                        className={cn(
+                                          "flex items-center gap-2.5 px-2.5 py-2 rounded-md cursor-pointer transition-colors",
+                                          isChecked ? "bg-primary/10" : "hover:bg-accent"
+                                        )}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleColumnFilter(String(column.key), value);
+                                        }}
+                                      >
+                                        <div className={cn(
+                                          "h-4 w-4 rounded border flex items-center justify-center flex-shrink-0 transition-all",
+                                          isChecked 
+                                            ? "bg-primary border-primary" 
+                                            : "border-input bg-background"
+                                        )}>
+                                          {isChecked && <Check className="h-3 w-3 text-primary-foreground" />}
+                                        </div>
+                                        <span className="text-sm flex-1 truncate">
+                                          {value}
+                                        </span>
+                                      </div>
+                                    );
+                                  })
                                 )}
                               </div>
-                            </div>
-                            <div className="max-h-64 overflow-y-auto p-2 bg-popover">
-                              {getUniqueColumnValues(column).map((value) => {
-                                const isChecked = columnFilters[String(column.key)]?.includes(value) || false;
-                                return (
-                                  <div
-                                    key={value}
-                                    className="flex items-center space-x-2 px-2 py-2 hover:bg-accent rounded-md cursor-pointer"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      toggleColumnFilter(String(column.key), value);
-                                    }}
-                                  >
-                                    <Checkbox
-                                      checked={isChecked}
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="pointer-events-none"
-                                    />
-                                    <label className="text-sm cursor-pointer flex-1 select-none">
-                                      {value}
-                                    </label>
+                              {activeFilterCount > 0 && (
+                                <div className="p-2 border-t border-border bg-muted/30">
+                                  <div className="text-xs text-muted-foreground px-1">
+                                    {activeFilterCount} selected
                                   </div>
-                                );
-                              })}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      )}
-                    </div>
-                  </th>
-                ))}
+                                </div>
+                              )}
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      </div>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>{" "}
             <tbody className="bg-card">
