@@ -457,56 +457,84 @@ export function DataTable<T extends Record<string, any>>({
         </div>
       </div>
       {/* Pagination */}
-      {showPagination && totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-card border-t border-border">
-          <div className="text-sm text-muted-foreground order-2 sm:order-1">
+      {showPagination && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-card border-t border-border min-h-[56px]">
+          <div className="text-sm text-muted-foreground order-2 sm:order-1 whitespace-nowrap">
             Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
             {Math.min(currentPage * itemsPerPage, sortedData.length)} of{" "}
             {sortedData.length} results
           </div>
           <div className="flex items-center gap-2 order-1 sm:order-2">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-2 text-sm border border-input rounded-2xl hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Previous
-            </button>
-            <div className="hidden sm:flex items-center gap-1">
-              {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
-                const pageNumber =
-                  currentPage <= 3
-                    ? i + 1
-                    : currentPage >= totalPages - 2
-                      ? totalPages - 4 + i
-                      : currentPage - 2 + i;
+            {totalPages > 1 ? (
+              <>
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 text-sm border border-input rounded-2xl hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                <div className="hidden sm:flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
+                    const pageNumber =
+                      currentPage <= 3
+                        ? i + 1
+                        : currentPage >= totalPages - 2
+                          ? totalPages - 4 + i
+                          : currentPage - 2 + i;
 
-                if (pageNumber < 1 || pageNumber > totalPages) return null;
+                    if (pageNumber < 1 || pageNumber > totalPages) return null;
 
-                return (
-                  <button
-                    key={pageNumber}
-                    onClick={() => setCurrentPage(pageNumber)}
-                    className={cn(
-                      "px-3 py-2 text-sm border border-input rounded-2xl hover:bg-muted transition-colors",
-                      currentPage === pageNumber &&
-                        "bg-primary text-primary-foreground border-primary hover:bg-primary/90",
-                    )}
-                  >
-                    {pageNumber}
-                  </button>
-                );
-              })}
-            </div>
-            <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              className="px-3 py-2 text-sm border border-input rounded-2xl hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Next
-            </button>
+                    return (
+                      <button
+                        key={pageNumber}
+                        onClick={() => setCurrentPage(pageNumber)}
+                        className={cn(
+                          "px-3 py-2 text-sm border border-input rounded-2xl hover:bg-muted transition-colors",
+                          currentPage === pageNumber &&
+                            "bg-primary text-primary-foreground border-primary hover:bg-primary/90",
+                        )}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 text-sm border border-input rounded-2xl hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2 invisible">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled
+                  className="px-3 py-2 text-sm border border-input rounded-2xl"
+                >
+                  Previous
+                </button>
+                <div className="hidden sm:flex items-center gap-1">
+                  {Array.from({ length: 1 }).map((_, i) => (
+                    <button key={i} className="px-3 py-2 text-sm border border-input rounded-2xl">
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage((prev) => prev)}
+                  disabled
+                  className="px-3 py-2 text-sm border border-input rounded-2xl"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
