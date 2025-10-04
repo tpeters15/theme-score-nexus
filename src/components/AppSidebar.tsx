@@ -46,6 +46,7 @@ export function AppSidebar() {
     <Sidebar
       className={!open ? "w-14" : "w-60"}
       collapsible="icon"
+      style={{ overflow: 'visible' }}
     >
       <SidebarContent>
         <SidebarGroup>
@@ -63,7 +64,7 @@ export function AppSidebar() {
                       <item.icon className={open ? "mr-2 h-4 w-4" : "h-6 w-6 transition-transform group-hover:scale-110 -translate-y-0 group-hover:-translate-y-0.5"} />
                       {open && <span>{item.title}</span>}
                       {!open && (
-                        <span className="absolute left-full ml-2 px-3 py-2 rounded-lg text-sm bg-popover text-popover-foreground border border-border opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg z-50">
+                        <span className="absolute left-full ml-4 px-3 py-1.5 rounded-md text-sm font-medium bg-popover text-popover-foreground border border-border opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 whitespace-nowrap pointer-events-none shadow-xl z-[100]">
                           {item.title}
                         </span>
                       )}
@@ -88,7 +89,7 @@ export function AppSidebar() {
                       <item.icon className={open ? "mr-2 h-4 w-4" : "h-6 w-6 transition-transform group-hover:scale-110 -translate-y-0 group-hover:-translate-y-0.5"} />
                       {open && <span>{item.title}</span>}
                       {!open && (
-                        <span className="absolute left-full ml-2 px-3 py-2 rounded-lg text-sm bg-popover text-popover-foreground border border-border opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg z-50">
+                        <span className="absolute left-full ml-4 px-3 py-1.5 rounded-md text-sm font-medium bg-popover text-popover-foreground border border-border opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 whitespace-nowrap pointer-events-none shadow-xl z-[100]">
                           {item.title}
                         </span>
                       )}
