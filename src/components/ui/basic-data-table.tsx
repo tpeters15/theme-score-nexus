@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { ChevronUp, ChevronDown, Search, Filter } from "lucide-react";
+import { ChevronUp, ChevronDown, Search, Filter, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export type DataTableColumn<T> = {
   key: keyof T;
@@ -52,9 +55,15 @@ export function DataTable<T extends Record<string, any>>({
     direction: "asc" | "desc";
   }>({ key: null, direction: "asc" });
   const [currentPage, setCurrentPage] = useState(1);
-  const [columnFilters, setColumnFilters] = useState<Record<string, string>>(
+  const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>(
     {},
   );
+
+  // Get unique values for each filterable column
+  const getUniqueColumnValues = (key: keyof T): string[] => {
+    const values = data.map(row => String(row[key] || '')).filter(Boolean);
+    return Array.from(new Set(values)).sort();
+  };
 
   // Filter data based on search and column filters
   const filteredData = useMemo(() => {
@@ -70,15 +79,12 @@ export function DataTable<T extends Record<string, any>>({
       );
     }
 
-    // Column filters
-    Object.entries(columnFilters).forEach(([key, value]) => {
-      if (value) {
+    // Column filters (multiselect)
+    Object.entries(columnFilters).forEach(([key, selectedValues]) => {
+      if (selectedValues && selectedValues.length > 0) {
         filtered = filtered.filter((row) => {
-          const rowValue = row[key as keyof T];
-          return rowValue
-            ?.toString()
-            .toLowerCase()
-            .includes(value.toLowerCase());
+          const rowValue = String(row[key as keyof T] || '');
+          return selectedValues.includes(rowValue);
         });
       }
     });
@@ -122,11 +128,18 @@ export function DataTable<T extends Record<string, any>>({
     }));
   };
 
-  const handleColumnFilter = (key: string, value: string) => {
-    setColumnFilters((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+  const toggleColumnFilter = (key: string, value: string) => {
+    setColumnFilters((prev) => {
+      const current = prev[key] || [];
+      const updated = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      
+      return {
+        ...prev,
+        [key]: updated.length > 0 ? updated : [],
+      };
+    });
     setCurrentPage(1);
   };
 
@@ -212,16 +225,18 @@ export function DataTable<T extends Record<string, any>>({
                     className={cn(
                       "text-left font-medium text-muted-foreground bg-muted/30",
                       compact ? "px-4 py-3" : "px-6 py-4",
-                      column.sortable &&
-                        "cursor-pointer hover:bg-muted/50 transition-colors",
                       column.width && `w-[${column.width}]`,
                     )}
-                    onClick={() => column.sortable && handleSort(column.key)}
                     style={column.width ? { width: column.width } : undefined}
                   >
-                    <div className="flex items-center justify-between">
-                      {" "}
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div 
+                        className={cn(
+                          "flex items-center gap-2",
+                          column.sortable && "cursor-pointer hover:text-foreground transition-colors"
+                        )}
+                        onClick={() => column.sortable && handleSort(column.key)}
+                      >
                         <span className="text-sm font-semibold">
                           {column.header}
                         </span>
@@ -249,40 +264,60 @@ export function DataTable<T extends Record<string, any>>({
                         )}
                       </div>
                       {column.filterable && (
-                        <div className="relative">
-                          <Filter className="h-3 w-3 text-muted-foreground/50" />
-                        </div>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={cn(
+                                "h-6 w-6 p-0",
+                                columnFilters[String(column.key)]?.length > 0 && "text-primary"
+                              )}
+                            >
+                              <Filter className="h-3 w-3" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent 
+                            className="w-56 p-0 bg-popover z-50" 
+                            align="start"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="p-3 border-b border-border">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">Filter by {column.header}</span>
+                                {columnFilters[String(column.key)]?.length > 0 && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => clearColumnFilter(String(column.key))}
+                                    className="h-6 px-2 text-xs"
+                                  >
+                                    Clear
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            <div className="max-h-64 overflow-y-auto p-2">
+                              {getUniqueColumnValues(column.key).map((value) => (
+                                <div
+                                  key={value}
+                                  className="flex items-center space-x-2 px-2 py-2 hover:bg-accent rounded-md cursor-pointer"
+                                  onClick={() => toggleColumnFilter(String(column.key), value)}
+                                >
+                                  <Checkbox
+                                    checked={columnFilters[String(column.key)]?.includes(value) || false}
+                                    onCheckedChange={() => toggleColumnFilter(String(column.key), value)}
+                                  />
+                                  <label className="text-sm cursor-pointer flex-1">
+                                    {value}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       )}
                     </div>
-                    {/* Column Filter */}
-                    {column.filterable && (
-                      <div className="mt-3">
-                        <input
-                          type="text"
-                          placeholder="Filter..."
-                          value={columnFilters[String(column.key)] || ""}
-                          onChange={(e) =>
-                            handleColumnFilter(
-                              String(column.key),
-                              e.target.value,
-                            )
-                          }
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-full px-3 py-1.5 text-xs border border-input rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-ring transition-all"
-                        />
-                        {columnFilters[String(column.key)] && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              clearColumnFilter(String(column.key));
-                            }}
-                            className="absolute right-2 top-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    )}
                   </th>
                 ))}
               </tr>
