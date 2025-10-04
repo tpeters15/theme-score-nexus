@@ -587,6 +587,190 @@ export type Database = {
         }
         Relationships: []
       }
+      taxonomy_business_models: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      taxonomy_pillars: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_order: number
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_order: number
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      taxonomy_sectors: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_order: number
+          id: string
+          name: string
+          pillar_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_order: number
+          id?: string
+          name: string
+          pillar_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          name?: string
+          pillar_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxonomy_sectors_pillar_id_fkey"
+            columns: ["pillar_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_pillars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taxonomy_theme_business_models: {
+        Row: {
+          business_model_id: string
+          created_at: string | null
+          id: string
+          theme_id: string
+        }
+        Insert: {
+          business_model_id: string
+          created_at?: string | null
+          id?: string
+          theme_id: string
+        }
+        Update: {
+          business_model_id?: string
+          created_at?: string | null
+          id?: string
+          theme_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxonomy_theme_business_models_business_model_id_fkey"
+            columns: ["business_model_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_business_models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taxonomy_theme_business_models_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taxonomy_themes: {
+        Row: {
+          common_edge_cases: string | null
+          created_at: string | null
+          description: string | null
+          example_companies: string[] | null
+          id: string
+          impact: string | null
+          in_scope: string[] | null
+          is_active: boolean
+          key_identifiers: string[] | null
+          name: string
+          out_of_scope: string[] | null
+          sector_id: string
+          updated_at: string | null
+          version: number
+        }
+        Insert: {
+          common_edge_cases?: string | null
+          created_at?: string | null
+          description?: string | null
+          example_companies?: string[] | null
+          id?: string
+          impact?: string | null
+          in_scope?: string[] | null
+          is_active?: boolean
+          key_identifiers?: string[] | null
+          name: string
+          out_of_scope?: string[] | null
+          sector_id: string
+          updated_at?: string | null
+          version?: number
+        }
+        Update: {
+          common_edge_cases?: string | null
+          created_at?: string | null
+          description?: string | null
+          example_companies?: string[] | null
+          id?: string
+          impact?: string | null
+          in_scope?: string[] | null
+          is_active?: boolean
+          key_identifiers?: string[] | null
+          name?: string
+          out_of_scope?: string[] | null
+          sector_id?: string
+          updated_at?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxonomy_themes_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       theme_regulations: {
         Row: {
           created_at: string
@@ -685,6 +869,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_taxonomy_json: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
