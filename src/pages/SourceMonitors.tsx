@@ -1,40 +1,101 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useSources, useToggleSourceStatus, useTriggerScrape } from "@/hooks/useSources";
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, RefreshCw, ExternalLink, Clock } from "lucide-react";
+import { Play, Pause, RefreshCw, Plus, Activity, CheckCircle2, Clock, Search } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { DiscoveredSignals } from "@/components/DiscoveredSignals";
+import { AddSourceDialog } from "@/components/sources/AddSourceDialog";
+import { SourceStats } from "@/components/sources/SourceStats";
 
 export default function SourceMonitors() {
-  const { data: sources, isLoading } = useSources();
+  const { data: sources = [], isLoading } = useSources();
   const toggleStatus = useToggleSourceStatus();
   const triggerScrape = useTriggerScrape();
   const { toast } = useToast();
 
-  const handleToggleStatus = async (id: string, currentStatus: string) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [selectedSources, setSelectedSources] = useState<string[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  // Filter sources
+  const filteredSources = sources.filter((source) => {
+    const matchesSearch = source.source_name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === "all" || source.status === statusFilter;
+    const matchesType = typeFilter === "all" || source.source_type === typeFilter;
+    return matchesSearch && matchesStatus && matchesType;
+  });
+
+  const handleToggleSource = (sourceId: string) => {
+    setSelectedSources((prev) =>
+      prev.includes(sourceId)
+        ? prev.filter((id) => id !== sourceId)
+        : [...prev, sourceId]
+    );
+  };
+
+  const handleToggleAll = () => {
+    if (selectedSources.length === filteredSources.length) {
+      setSelectedSources([]);
+    } else {
+      setSelectedSources(filteredSources.map((s) => s.id));
+    }
+  };
+
+  const handleBulkAction = async (action: "activate" | "pause") => {
+    const newStatus = action === "activate" ? "active" : "paused";
+    
+    for (const sourceId of selectedSources) {
+      try {
+        await toggleStatus.mutateAsync({ id: sourceId, status: newStatus });
+      } catch (error) {
+        console.error(`Failed to update source ${sourceId}:`, error);
+      }
+    }
+    
+    toast({
+      title: "Bulk action completed",
+      description: `${selectedSources.length} sources ${action}d`,
+    });
+    setSelectedSources([]);
+  };
+
+  const handleCheckNow = async (sourceId: string, sourceName: string) => {
     try {
-      const newStatus = currentStatus === "active" ? "paused" : "active";
-      await toggleStatus.mutateAsync({ id, status: newStatus });
       toast({
-        title: "Status updated",
-        description: `Monitor ${newStatus === "active" ? "activated" : "paused"}`,
+        title: "Starting scrape",
+        description: `Checking ${sourceName}...`,
+      });
+      
+      // TODO: Call edge function for single source scrape
+      // For now, trigger global scrape
+      await triggerScrape.mutateAsync();
+      
+      toast({
+        title: "Scrape complete",
+        description: `${sourceName} has been checked`,
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update monitor status",
+        description: "Failed to check source",
         variant: "destructive",
       });
     }
   };
 
-  const handleTriggerScrape = async () => {
+  const handleRunAll = async () => {
     try {
       toast({
         title: "Starting scrape",
-        description: "Checking for new publications...",
+        description: "Checking all active sources...",
       });
       const result = await triggerScrape.mutateAsync();
       toast({
@@ -60,115 +121,209 @@ export default function SourceMonitors() {
     );
   }
 
+  const activeCount = sources.filter((s) => s.status === "active").length;
+  const uniqueTypes = [...new Set(sources.map((s) => s.source_type))];
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Source Monitors</h1>
           <p className="text-muted-foreground mt-1">
-            Automated monitoring of external intelligence sources
+            Manage automated intelligence collection from external sources
           </p>
         </div>
-        <Button
-          onClick={handleTriggerScrape}
-          disabled={triggerScrape.isPending}
-          size="lg"
-        >
-          {triggerScrape.isPending ? (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              Scraping...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Run Now
-            </>
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleRunAll} disabled={triggerScrape.isPending} variant="outline">
+            {triggerScrape.isPending ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Running...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Run All
+              </>
+            )}
+          </Button>
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Source
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            {sources?.map((source) => (
-          <Card key={source.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="flex items-center gap-2">
-                    {source.source_name}
+      <SourceStats sources={sources} />
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search sources..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {uniqueTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type.toUpperCase()}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedSources.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {selectedSources.length} selected
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAction("activate")}
+                >
+                  <Play className="h-4 w-4 mr-1" />
+                  Activate
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAction("pause")}
+                >
+                  <Pause className="h-4 w-4 mr-1" />
+                  Pause
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedSources.length === filteredSources.length && filteredSources.length > 0}
+                    onCheckedChange={handleToggleAll}
+                  />
+                </TableHead>
+                <TableHead>Source</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Frequency</TableHead>
+                <TableHead>Last Checked</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredSources.map((source) => (
+                <TableRow key={source.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedSources.includes(source.id)}
+                      onCheckedChange={() => handleToggleSource(source.id)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{source.source_name}</p>
+                      <p className="text-sm text-muted-foreground truncate max-w-xs">
+                        {source.base_url || source.feed_url || source.api_endpoint}
+                      </p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{source.source_type.toUpperCase()}</Badge>
+                  </TableCell>
+                  <TableCell>
                     <Badge variant={source.status === "active" ? "default" : "secondary"}>
                       {source.status}
                     </Badge>
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-1">
-                    <ExternalLink className="h-3 w-3" />
-                    <a 
-                      href={source.base_url || source.feed_url || source.api_endpoint} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="hover:underline"
-                    >
-                      {source.base_url || source.feed_url || source.api_endpoint}
-                    </a>
-                  </CardDescription>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleToggleStatus(source.id, source.status)}
-                  disabled={toggleStatus.isPending}
-                >
-                  {source.status === "active" ? (
-                    <Pause className="h-4 w-4" />
-                  ) : (
-                    <Play className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Check Frequency</p>
-                  <p className="font-medium capitalize">{source.check_frequency}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Source Type</p>
-                  <p className="font-medium uppercase">{source.source_type}</p>
-                </div>
-              </div>
-              
-              {source.last_checked_at && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  <span>
-                    Last checked{" "}
-                    {formatDistanceToNow(new Date(source.last_checked_at), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-            ))}
-          </div>
+                  </TableCell>
+                  <TableCell className="capitalize">{source.check_frequency}</TableCell>
+                  <TableCell>
+                    {source.last_checked_at ? (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        {formatDistanceToNow(new Date(source.last_checked_at), {
+                          addSuffix: true,
+                        })}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Never</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleCheckNow(source.id, source.source_name)}
+                        disabled={triggerScrape.isPending}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => toggleStatus.mutate({
+                          id: source.id,
+                          status: source.status === "active" ? "paused" : "active"
+                        })}
+                      >
+                        {source.status === "active" ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
-          {sources?.length === 0 && (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground">No source monitors configured</p>
-              </CardContent>
-            </Card>
+          {filteredSources.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                {searchQuery || statusFilter !== "all" || typeFilter !== "all"
+                  ? "No sources match your filters"
+                  : "No sources configured yet"}
+              </p>
+            </div>
           )}
-        </div>
+        </CardContent>
+      </Card>
 
-        <div>
-          <DiscoveredSignals />
-        </div>
-      </div>
+      <AddSourceDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+      />
     </div>
   );
 }
