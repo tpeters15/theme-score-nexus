@@ -116,38 +116,6 @@ export type Database = {
         }
         Relationships: []
       }
-      content_snapshots: {
-        Row: {
-          checked_at: string | null
-          content_hash: string
-          discovered_urls: Json | null
-          id: string
-          source_monitor_id: string | null
-        }
-        Insert: {
-          checked_at?: string | null
-          content_hash: string
-          discovered_urls?: Json | null
-          id?: string
-          source_monitor_id?: string | null
-        }
-        Update: {
-          checked_at?: string | null
-          content_hash?: string
-          discovered_urls?: Json | null
-          id?: string
-          source_monitor_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "content_snapshots_source_monitor_id_fkey"
-            columns: ["source_monitor_id"]
-            isOneToOne: false
-            referencedRelation: "source_monitors"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       detailed_scores: {
         Row: {
           ai_research_data: Json | null
@@ -397,6 +365,81 @@ export type Database = {
           },
         ]
       }
+      processed_signals: {
+        Row: {
+          analysis_priority: number | null
+          content_length: number | null
+          content_snippet: string | null
+          countries: string[] | null
+          credibility_score: number | null
+          days_old_when_processed: number | null
+          extracted_deal_size: string | null
+          has_pitchbook_data: boolean | null
+          id: string
+          memo_analysis: string | null
+          memo_published_at: string | null
+          memo_section: string | null
+          processed_by: string | null
+          processed_timestamp: string | null
+          raw_signal_id: string
+          signal_type_classified: string | null
+          week_processed: string | null
+        }
+        Insert: {
+          analysis_priority?: number | null
+          content_length?: number | null
+          content_snippet?: string | null
+          countries?: string[] | null
+          credibility_score?: number | null
+          days_old_when_processed?: number | null
+          extracted_deal_size?: string | null
+          has_pitchbook_data?: boolean | null
+          id?: string
+          memo_analysis?: string | null
+          memo_published_at?: string | null
+          memo_section?: string | null
+          processed_by?: string | null
+          processed_timestamp?: string | null
+          raw_signal_id: string
+          signal_type_classified?: string | null
+          week_processed?: string | null
+        }
+        Update: {
+          analysis_priority?: number | null
+          content_length?: number | null
+          content_snippet?: string | null
+          countries?: string[] | null
+          credibility_score?: number | null
+          days_old_when_processed?: number | null
+          extracted_deal_size?: string | null
+          has_pitchbook_data?: boolean | null
+          id?: string
+          memo_analysis?: string | null
+          memo_published_at?: string | null
+          memo_section?: string | null
+          processed_by?: string | null
+          processed_timestamp?: string | null
+          raw_signal_id?: string
+          signal_type_classified?: string | null
+          week_processed?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processed_signals_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processed_signals_raw_signal_id_fkey"
+            columns: ["raw_signal_id"]
+            isOneToOne: true
+            referencedRelation: "raw_signals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -423,6 +466,74 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      raw_signals: {
+        Row: {
+          author: string | null
+          created_at: string | null
+          description: string | null
+          document_url: string | null
+          file_path: string | null
+          fingerprint: string | null
+          id: string
+          original_id: string | null
+          publication_date: string | null
+          raw_content: string | null
+          scraped_date: string | null
+          signal_id: string
+          source: string
+          source_id: string | null
+          source_type: string | null
+          title: string
+          url: string | null
+        }
+        Insert: {
+          author?: string | null
+          created_at?: string | null
+          description?: string | null
+          document_url?: string | null
+          file_path?: string | null
+          fingerprint?: string | null
+          id?: string
+          original_id?: string | null
+          publication_date?: string | null
+          raw_content?: string | null
+          scraped_date?: string | null
+          signal_id: string
+          source: string
+          source_id?: string | null
+          source_type?: string | null
+          title: string
+          url?: string | null
+        }
+        Update: {
+          author?: string | null
+          created_at?: string | null
+          description?: string | null
+          document_url?: string | null
+          file_path?: string | null
+          fingerprint?: string | null
+          id?: string
+          original_id?: string | null
+          publication_date?: string | null
+          raw_content?: string | null
+          scraped_date?: string | null
+          signal_id?: string
+          source?: string
+          source_id?: string | null
+          source_type?: string | null
+          title?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raw_signals_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       regulations: {
         Row: {
@@ -541,60 +652,6 @@ export type Database = {
           },
         ]
       }
-      rss_sources: {
-        Row: {
-          author_field: string | null
-          categories_field: string | null
-          content_field: string | null
-          created_at: string | null
-          date_field: string | null
-          error_message: string | null
-          feed_url: string
-          id: string
-          last_fetched_at: string | null
-          source_name: string
-          status: string | null
-          title_field: string | null
-          type: string
-          updated_at: string | null
-          url_field: string | null
-        }
-        Insert: {
-          author_field?: string | null
-          categories_field?: string | null
-          content_field?: string | null
-          created_at?: string | null
-          date_field?: string | null
-          error_message?: string | null
-          feed_url: string
-          id?: string
-          last_fetched_at?: string | null
-          source_name: string
-          status?: string | null
-          title_field?: string | null
-          type: string
-          updated_at?: string | null
-          url_field?: string | null
-        }
-        Update: {
-          author_field?: string | null
-          categories_field?: string | null
-          content_field?: string | null
-          created_at?: string | null
-          date_field?: string | null
-          error_message?: string | null
-          feed_url?: string
-          id?: string
-          last_fetched_at?: string | null
-          source_name?: string
-          status?: string | null
-          title_field?: string | null
-          type?: string
-          updated_at?: string | null
-          url_field?: string | null
-        }
-        Relationships: []
-      }
       signals: {
         Row: {
           analysis_priority: number | null
@@ -709,44 +766,70 @@ export type Database = {
         }
         Relationships: []
       }
-      source_monitors: {
+      sources: {
         Row: {
-          base_url: string
-          check_frequency: string
+          api_endpoint: string | null
+          base_url: string | null
+          check_frequency: string | null
           created_at: string | null
+          created_by: string | null
+          error_message: string | null
+          feed_url: string | null
+          field_mappings: Json | null
           id: string
           last_checked_at: string | null
+          last_success_at: string | null
           scraping_config: Json | null
           source_name: string
           source_type: string
-          status: string
+          status: string | null
           updated_at: string | null
         }
         Insert: {
-          base_url: string
-          check_frequency?: string
+          api_endpoint?: string | null
+          base_url?: string | null
+          check_frequency?: string | null
           created_at?: string | null
+          created_by?: string | null
+          error_message?: string | null
+          feed_url?: string | null
+          field_mappings?: Json | null
           id?: string
           last_checked_at?: string | null
+          last_success_at?: string | null
           scraping_config?: Json | null
           source_name: string
-          source_type?: string
-          status?: string
+          source_type: string
+          status?: string | null
           updated_at?: string | null
         }
         Update: {
-          base_url?: string
-          check_frequency?: string
+          api_endpoint?: string | null
+          base_url?: string | null
+          check_frequency?: string | null
           created_at?: string | null
+          created_by?: string | null
+          error_message?: string | null
+          feed_url?: string | null
+          field_mappings?: Json | null
           id?: string
           last_checked_at?: string | null
+          last_success_at?: string | null
           scraping_config?: Json | null
           source_name?: string
           source_type?: string
-          status?: string
+          status?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sources_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       taxonomy_business_models: {
         Row: {
