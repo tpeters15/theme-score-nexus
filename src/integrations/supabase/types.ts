@@ -14,6 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
+      classification_batches: {
+        Row: {
+          batch_name: string
+          company_count: number | null
+          created_at: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          batch_name: string
+          company_count?: number | null
+          created_at?: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          batch_name?: string
+          company_count?: number | null
+          created_at?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      classifications: {
+        Row: {
+          batch_id: string
+          company_id: string
+          confidence_score: number | null
+          created_at: string
+          id: string
+          primary_theme: string | null
+          rationale: string | null
+          status: string
+        }
+        Insert: {
+          batch_id: string
+          company_id: string
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          primary_theme?: string | null
+          rationale?: string | null
+          status?: string
+        }
+        Update: {
+          batch_id?: string
+          company_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          primary_theme?: string | null
+          rationale?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classifications_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "classification_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classifications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          dealcloud_id: string | null
+          description: string | null
+          id: string
+          website_domain: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          dealcloud_id?: string | null
+          description?: string | null
+          id?: string
+          website_domain: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          dealcloud_id?: string | null
+          description?: string | null
+          id?: string
+          website_domain?: string
+        }
+        Relationships: []
+      }
       content_snapshots: {
         Row: {
           checked_at: string | null

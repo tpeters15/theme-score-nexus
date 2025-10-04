@@ -13,6 +13,7 @@ import Signals from "./pages/Signals";
 import Research from "./pages/Research";
 import RegulatoryTracker from "./pages/RegulatoryTracker";
 import SourceMonitors from "./pages/SourceMonitors";
+import BatchClassifier from "./pages/BatchClassifier";
 import Auth from "./pages/Auth";
 import ThemeProfile from "./pages/ThemeProfile";
 import NotFound from "./pages/NotFound";
@@ -39,6 +40,7 @@ const App = () => (
                       <Route path="/signals" element={<Signals />} />
                       <Route path="/research" element={<Research />} />
                       <Route path="/source-monitors" element={<SourceMonitors />} />
+                      <Route path="/batch-classifier" element={<BatchClassifier />} />
                       <Route path="/theme/:themeId" element={<ThemeProfile />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
