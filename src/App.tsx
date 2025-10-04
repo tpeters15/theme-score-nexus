@@ -13,7 +13,7 @@ import Signals from "./pages/Signals";
 import Research from "./pages/Research";
 import RegulatoryTracker from "./pages/RegulatoryTracker";
 import SourceMonitors from "./pages/SourceMonitors";
-import BatchClassifier from "./pages/BatchClassifier";
+import Classifier from "./pages/Classifier";
 import Auth from "./pages/Auth";
 import ThemeProfile from "./pages/ThemeProfile";
 import TaxonomyManagement from "./pages/TaxonomyManagement";
@@ -41,7 +41,7 @@ const App = () => (
                       <Route path="/signals" element={<Signals />} />
                       <Route path="/research" element={<Research />} />
                       <Route path="/source-monitors" element={<SourceMonitors />} />
-                      <Route path="/batch-classifier" element={<BatchClassifier />} />
+                      <Route path="/classifier" element={<Classifier />} />
                       <Route path="/taxonomy" element={<TaxonomyManagement />} />
                       <Route path="/theme/:themeId" element={<ThemeProfile />} />
                       <Route path="*" element={<NotFound />} />

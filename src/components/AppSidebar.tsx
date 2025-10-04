@@ -21,7 +21,7 @@ const mainItems = [
   { title: "Signals", url: "/signals", icon: Zap },
   { title: "Research", url: "/research", icon: FileText },
   { title: "Source Monitors", url: "/source-monitors", icon: Radar },
-  { title: "Batch Classifier", url: "/batch-classifier", icon: ListChecks },
+  { title: "Classifier", url: "/classifier", icon: ListChecks },
 ];
 
 const adminItems = [
