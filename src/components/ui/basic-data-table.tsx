@@ -241,7 +241,7 @@ export function DataTable<T extends Record<string, any>>({
       {/* Table */}
       <div
         className={cn(
-          "overflow-hidden bg-muted/30",
+          "overflow-hidden bg-muted/30 min-h-[600px]",
           searchable ? "rounded-b-2xl" : "rounded-2xl",
         )}
       >
@@ -417,8 +417,9 @@ export function DataTable<T extends Record<string, any>>({
                       "text-center text-muted-foreground bg-card",
                       compact ? "px-4 py-12" : "px-6 py-16",
                     )}
+                    style={{ height: '400px' }}
                   >
-                    <div className="flex flex-col items-center space-y-2">
+                    <div className="flex flex-col items-center justify-center space-y-2 h-full">
                       <div className="text-4xl">📊</div>
                       <div className="font-medium">{emptyMessage}</div>
                     </div>
