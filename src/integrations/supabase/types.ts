@@ -291,6 +291,62 @@ export type Database = {
           },
         ]
       }
+      intelligence_memos: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          deals_section: string | null
+          id: string
+          market_news_section: string | null
+          metadata: Json | null
+          published_at: string | null
+          regulatory_section: string | null
+          signal_count: number | null
+          status: string | null
+          summary: string | null
+          week_end_date: string
+          week_start_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          deals_section?: string | null
+          id?: string
+          market_news_section?: string | null
+          metadata?: Json | null
+          published_at?: string | null
+          regulatory_section?: string | null
+          signal_count?: number | null
+          status?: string | null
+          summary?: string | null
+          week_end_date: string
+          week_start_date: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          deals_section?: string | null
+          id?: string
+          market_news_section?: string | null
+          metadata?: Json | null
+          published_at?: string | null
+          regulatory_section?: string | null
+          signal_count?: number | null
+          status?: string | null
+          summary?: string | null
+          week_end_date?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intelligence_memos_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       n8n_research_runs: {
         Row: {
           completed_at: string | null
@@ -485,66 +541,171 @@ export type Database = {
           },
         ]
       }
+      rss_sources: {
+        Row: {
+          author_field: string | null
+          categories_field: string | null
+          content_field: string | null
+          created_at: string | null
+          date_field: string | null
+          error_message: string | null
+          feed_url: string
+          id: string
+          last_fetched_at: string | null
+          source_name: string
+          status: string | null
+          title_field: string | null
+          type: string
+          updated_at: string | null
+          url_field: string | null
+        }
+        Insert: {
+          author_field?: string | null
+          categories_field?: string | null
+          content_field?: string | null
+          created_at?: string | null
+          date_field?: string | null
+          error_message?: string | null
+          feed_url: string
+          id?: string
+          last_fetched_at?: string | null
+          source_name: string
+          status?: string | null
+          title_field?: string | null
+          type: string
+          updated_at?: string | null
+          url_field?: string | null
+        }
+        Update: {
+          author_field?: string | null
+          categories_field?: string | null
+          content_field?: string | null
+          created_at?: string | null
+          date_field?: string | null
+          error_message?: string | null
+          feed_url?: string
+          id?: string
+          last_fetched_at?: string | null
+          source_name?: string
+          status?: string | null
+          title_field?: string | null
+          type?: string
+          updated_at?: string | null
+          url_field?: string | null
+        }
+        Relationships: []
+      }
       signals: {
         Row: {
           analysis_priority: number | null
           author: string | null
+          content_length: number | null
+          content_snippet: string | null
+          countries: string[] | null
           created_at: string
+          credibility_score: number | null
+          days_old_when_processed: number | null
           description: string | null
           document_url: string | null
+          extracted_deal_size: string | null
           file_path: string | null
+          fingerprint: string | null
+          has_pitchbook_data: boolean | null
           id: string
           internal_id: string | null
+          memo_analysis: string | null
+          memo_published_at: string | null
+          memo_section: string | null
+          original_content: string | null
+          processed_timestamp: string | null
           processing_status: string | null
           publication_date: string | null
           raw_content: string | null
+          scraped_date: string | null
           signal_id: string
+          signal_type_classified: string | null
           source: string
           title: string
           topic_id: string | null
           type: string
           updated_at: string
           url: string | null
+          week_processed: string | null
+          workflow_stage: string | null
         }
         Insert: {
           analysis_priority?: number | null
           author?: string | null
+          content_length?: number | null
+          content_snippet?: string | null
+          countries?: string[] | null
           created_at?: string
+          credibility_score?: number | null
+          days_old_when_processed?: number | null
           description?: string | null
           document_url?: string | null
+          extracted_deal_size?: string | null
           file_path?: string | null
+          fingerprint?: string | null
+          has_pitchbook_data?: boolean | null
           id?: string
           internal_id?: string | null
+          memo_analysis?: string | null
+          memo_published_at?: string | null
+          memo_section?: string | null
+          original_content?: string | null
+          processed_timestamp?: string | null
           processing_status?: string | null
           publication_date?: string | null
           raw_content?: string | null
+          scraped_date?: string | null
           signal_id: string
+          signal_type_classified?: string | null
           source: string
           title: string
           topic_id?: string | null
           type: string
           updated_at?: string
           url?: string | null
+          week_processed?: string | null
+          workflow_stage?: string | null
         }
         Update: {
           analysis_priority?: number | null
           author?: string | null
+          content_length?: number | null
+          content_snippet?: string | null
+          countries?: string[] | null
           created_at?: string
+          credibility_score?: number | null
+          days_old_when_processed?: number | null
           description?: string | null
           document_url?: string | null
+          extracted_deal_size?: string | null
           file_path?: string | null
+          fingerprint?: string | null
+          has_pitchbook_data?: boolean | null
           id?: string
           internal_id?: string | null
+          memo_analysis?: string | null
+          memo_published_at?: string | null
+          memo_section?: string | null
+          original_content?: string | null
+          processed_timestamp?: string | null
           processing_status?: string | null
           publication_date?: string | null
           raw_content?: string | null
+          scraped_date?: string | null
           signal_id?: string
+          signal_type_classified?: string | null
           source?: string
           title?: string
           topic_id?: string | null
           type?: string
           updated_at?: string
           url?: string | null
+          week_processed?: string | null
+          workflow_stage?: string | null
         }
         Relationships: []
       }
