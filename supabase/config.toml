@@ -1,5 +1,11 @@
 project_id = "blwwpvvdnpkipjgajwiw"
 
+[functions.get-taxonomy]
+verify_jwt = false
+
+[functions.batch-classification-webhook]
+verify_jwt = false
+
 [functions.n8n-research-webhook]
 verify_jwt = false
 
