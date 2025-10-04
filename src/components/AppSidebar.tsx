@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Home, Target, Zap, FileText, Settings, Shield, Radar, ListChecks, Database } from "lucide-react";
 import { NavLink, useLocation, Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 
 import {
   Sidebar,
@@ -41,7 +39,8 @@ export function AppSidebar() {
   };
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-muted text-primary font-medium" : "hover:bg-muted/50";
+    (isActive ? "bg-muted text-primary font-medium" : "hover:bg-muted/50") +
+    " group relative";
 
   return (
     <Sidebar
@@ -61,28 +60,12 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end={item.url === "/"} className={getNavCls}>
-                      {!open ? (
-                        <motion.div
-                          whileHover={{ scale: 1.1, y: -2 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="relative group p-2 flex items-center justify-center w-full"
-                        >
-                          <item.icon className="h-5 w-5" />
-                          <span className={cn(
-                            "absolute left-full ml-2 px-3 py-2 rounded-lg text-sm",
-                            "bg-popover text-popover-foreground border border-border",
-                            "opacity-0 group-hover:opacity-100",
-                            "transition-opacity whitespace-nowrap pointer-events-none",
-                            "shadow-lg z-50"
-                          )}>
-                            {item.title}
-                          </span>
-                        </motion.div>
-                      ) : (
-                        <>
-                          <item.icon className="mr-2 h-4 w-4" />
-                          <span>{item.title}</span>
-                        </>
+                      <item.icon className={open ? "mr-2 h-4 w-4" : "h-6 w-6 transition-transform group-hover:scale-110 -translate-y-0 group-hover:-translate-y-0.5"} />
+                      {open && <span>{item.title}</span>}
+                      {!open && (
+                        <span className="absolute left-full ml-2 px-3 py-2 rounded-lg text-sm bg-popover text-popover-foreground border border-border opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg z-50">
+                          {item.title}
+                        </span>
                       )}
                     </NavLink>
                   </SidebarMenuButton>
@@ -102,28 +85,12 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={getNavCls}>
-                      {!open ? (
-                        <motion.div
-                          whileHover={{ scale: 1.1, y: -2 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="relative group p-2 flex items-center justify-center w-full"
-                        >
-                          <item.icon className="h-5 w-5" />
-                          <span className={cn(
-                            "absolute left-full ml-2 px-3 py-2 rounded-lg text-sm",
-                            "bg-popover text-popover-foreground border border-border",
-                            "opacity-0 group-hover:opacity-100",
-                            "transition-opacity whitespace-nowrap pointer-events-none",
-                            "shadow-lg z-50"
-                          )}>
-                            {item.title}
-                          </span>
-                        </motion.div>
-                      ) : (
-                        <>
-                          <item.icon className="mr-2 h-4 w-4" />
-                          <span>{item.title}</span>
-                        </>
+                      <item.icon className={open ? "mr-2 h-4 w-4" : "h-6 w-6 transition-transform group-hover:scale-110 -translate-y-0 group-hover:-translate-y-0.5"} />
+                      {open && <span>{item.title}</span>}
+                      {!open && (
+                        <span className="absolute left-full ml-2 px-3 py-2 rounded-lg text-sm bg-popover text-popover-foreground border border-border opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg z-50">
+                          {item.title}
+                        </span>
                       )}
                     </NavLink>
                   </SidebarMenuButton>
