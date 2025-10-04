@@ -48,17 +48,17 @@ export function AppSidebar() {
       collapsible="icon"
       style={{ overflow: 'visible' }}
     >
-      <SidebarContent>
-        <SidebarGroup>
+      <SidebarContent className="overflow-visible">
+        <SidebarGroup className="overflow-visible">
           <SidebarGroupLabel>
             <Link to="/" className="hover:opacity-80 transition-opacity">
               M/T Intelligence
             </Link>
           </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
+          <SidebarGroupContent className="overflow-visible">
+            <SidebarMenu className="overflow-visible">
               {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.title} className="overflow-visible">
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end={item.url === "/"} className={getNavCls}>
                       <item.icon className={open ? "mr-2 h-4 w-4" : "h-6 w-6 transition-transform group-hover:scale-110 -translate-y-0 group-hover:-translate-y-0.5"} />
@@ -76,14 +76,14 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
+        <SidebarGroup className="overflow-visible">
           <SidebarGroupLabel className="text-xs text-muted-foreground">
             Admin
           </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
+          <SidebarGroupContent className="overflow-visible">
+            <SidebarMenu className="overflow-visible">
               {adminItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.title} className="overflow-visible">
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={getNavCls}>
                       <item.icon className={open ? "mr-2 h-4 w-4" : "h-6 w-6 transition-transform group-hover:scale-110 -translate-y-0 group-hover:-translate-y-0.5"} />

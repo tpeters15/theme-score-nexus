@@ -10,7 +10,7 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full overflow-visible">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
           <DashboardHeader />
