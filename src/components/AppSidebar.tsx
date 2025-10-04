@@ -61,16 +61,15 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end={item.url === "/"} className={getNavCls}>
-                      <motion.div
-                        whileHover={!open ? { scale: 1.1, y: -2 } : {}}
-                        whileTap={!open ? { scale: 0.95 } : {}}
-                        className="relative group flex items-center w-full"
-                      >
-                        <item.icon className="mr-2 h-4 w-4" />
-                        {open && <span>{item.title}</span>}
-                        {!open && (
+                      {!open ? (
+                        <motion.div
+                          whileHover={{ scale: 1.1, y: -2 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="relative group p-2 flex items-center justify-center w-full"
+                        >
+                          <item.icon className="h-5 w-5" />
                           <span className={cn(
-                            "absolute left-12 px-2 py-1 rounded text-xs",
+                            "absolute left-full ml-2 px-3 py-2 rounded-lg text-sm",
                             "bg-popover text-popover-foreground border border-border",
                             "opacity-0 group-hover:opacity-100",
                             "transition-opacity whitespace-nowrap pointer-events-none",
@@ -78,8 +77,13 @@ export function AppSidebar() {
                           )}>
                             {item.title}
                           </span>
-                        )}
-                      </motion.div>
+                        </motion.div>
+                      ) : (
+                        <>
+                          <item.icon className="mr-2 h-4 w-4" />
+                          <span>{item.title}</span>
+                        </>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -98,16 +102,15 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={getNavCls}>
-                      <motion.div
-                        whileHover={!open ? { scale: 1.1, y: -2 } : {}}
-                        whileTap={!open ? { scale: 0.95 } : {}}
-                        className="relative group flex items-center w-full"
-                      >
-                        <item.icon className="mr-2 h-4 w-4" />
-                        {open && <span>{item.title}</span>}
-                        {!open && (
+                      {!open ? (
+                        <motion.div
+                          whileHover={{ scale: 1.1, y: -2 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="relative group p-2 flex items-center justify-center w-full"
+                        >
+                          <item.icon className="h-5 w-5" />
                           <span className={cn(
-                            "absolute left-12 px-2 py-1 rounded text-xs",
+                            "absolute left-full ml-2 px-3 py-2 rounded-lg text-sm",
                             "bg-popover text-popover-foreground border border-border",
                             "opacity-0 group-hover:opacity-100",
                             "transition-opacity whitespace-nowrap pointer-events-none",
@@ -115,8 +118,13 @@ export function AppSidebar() {
                           )}>
                             {item.title}
                           </span>
-                        )}
-                      </motion.div>
+                        </motion.div>
+                      ) : (
+                        <>
+                          <item.icon className="mr-2 h-4 w-4" />
+                          <span>{item.title}</span>
+                        </>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
