@@ -241,12 +241,13 @@ export function DataTable<T extends Record<string, any>>({
       {/* Table */}
       <div
         className={cn(
-          "overflow-hidden bg-muted/30 min-h-[600px]",
+          "overflow-x-auto overflow-y-auto bg-muted/30 h-[600px]",
           searchable ? "rounded-b-2xl" : "rounded-2xl",
         )}
+        style={{ scrollbarGutter: 'stable both-edges' }}
       >
         <div className="overflow-x-auto">
-          <table className="w-full min-w-full">
+          <table className="w-full min-w-full table-fixed">
             <thead className="bg-muted/30">
               <tr>
                 {" "}
@@ -257,7 +258,7 @@ export function DataTable<T extends Record<string, any>>({
                     <th
                       key={String(column.key)}
                       className={cn(
-                        "text-left font-medium bg-muted/30",
+                        "text-left font-medium bg-muted/30 h-14",
                         compact ? "px-4 py-3" : "px-6 py-4",
                       )}
                       style={column.width ? { width: column.width } : undefined}
@@ -265,12 +266,12 @@ export function DataTable<T extends Record<string, any>>({
                       <div className="flex items-center justify-between gap-3">
                         <div 
                           className={cn(
-                            "flex items-center gap-2 min-w-0 flex-1",
+                            "flex items-center gap-2 min-w-0 flex-1 h-12",
                             column.sortable && "cursor-pointer hover:text-foreground transition-colors group"
                           )}
                           onClick={() => column.sortable && handleSort(column.key)}
                         >
-                          <span className="text-sm font-semibold text-muted-foreground group-hover:text-foreground transition-colors truncate">
+                          <span className="text-sm font-semibold text-muted-foreground group-hover:text-foreground transition-colors truncate whitespace-nowrap">
                             {column.header}
                           </span>
                           {column.sortable && (
@@ -313,14 +314,16 @@ export function DataTable<T extends Record<string, any>>({
                                 )}
                               >
                                 <Filter className="h-3.5 w-3.5" />
-                                {activeFilterCount > 0 && (
-                                  <Badge 
-                                    variant="default" 
-                                    className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] font-semibold"
-                                  >
-                                    {activeFilterCount}
-                                  </Badge>
-                                )}
+                                <Badge 
+                                  variant="default" 
+                                  className={cn(
+                                    "absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] font-semibold",
+                                    activeFilterCount > 0 ? "" : "opacity-0"
+                                  )}
+                                  aria-hidden={activeFilterCount === 0}
+                                >
+                                  {activeFilterCount || 0}
+                                </Badge>
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent 
@@ -440,7 +443,7 @@ export function DataTable<T extends Record<string, any>>({
                       <td
                         key={String(column.key)}
                         className={cn(
-                          "text-sm text-foreground",
+                          "text-sm text-foreground align-middle",
                           compact ? "px-4 py-3" : "px-6 py-4",
                         )}
                       >
