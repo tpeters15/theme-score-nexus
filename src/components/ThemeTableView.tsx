@@ -71,7 +71,7 @@ export function ThemeTableView({ themes, onEditTheme }: ThemeTableViewProps) {
     },
     {
       key: 'pillar',
-      header: 'Strategic Pillar',
+      header: 'Pillar',
       sortable: true,
       filterable: true,
       width: '180px',

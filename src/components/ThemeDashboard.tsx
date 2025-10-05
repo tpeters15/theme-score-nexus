@@ -136,46 +136,6 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-          <ThemeFilterSegmented
-            themes={themes}
-            selectedPillars={selectedPillars}
-            selectedSectors={selectedSectors}
-            onPillarChange={setSelectedPillars}
-            onSectorChange={setSelectedSectors}
-            onClearAll={handleClearAllFilters}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-          />
-            
-              {/* Selected Filters */}
-              {(selectedPillars.length > 0 || selectedSectors.length > 0) && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  {selectedPillars.map((pillar) => (
-                    <Badge key={pillar} variant="secondary" className="flex items-center gap-1 text-xs">
-                      {pillar}
-                      <X
-                        className="h-3 w-3 cursor-pointer"
-                        onClick={() => setSelectedPillars(selectedPillars.filter((p) => p !== pillar))}
-                      />
-                    </Badge>
-                  ))}
-                  {selectedSectors.map((sector) => (
-                    <Badge key={sector} variant="outline" className="flex items-center gap-1 text-xs">
-                      {sector}
-                      <X
-                        className="h-3 w-3 cursor-pointer"
-                        onClick={() => setSelectedSectors(selectedSectors.filter((s) => s !== sector))}
-                      />
-                    </Badge>
-                  ))}
-                  <Button variant="ghost" size="sm" onClick={handleClearAllFilters} className="h-auto px-1 text-xs">
-                    Clear all
-                  </Button>
-                </div>
-              )}
-            </div>
-            
             <div className="flex items-center gap-2">
               {/* Compact Search */}
               <div className="relative flex items-center">
