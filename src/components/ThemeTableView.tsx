@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { ThemeWithScores } from "@/types/themes";
 import { DataTable, DataTableColumn } from "@/components/ui/basic-data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, TrendingDown, Minus, Edit } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Edit, ChevronDown, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,7 @@ interface ThemeTableViewProps {
 
 export function ThemeTableView({ themes, onEditTheme }: ThemeTableViewProps) {
   const navigate = useNavigate();
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const getScoreColor = (score: number) => {
     if (score >= 70) return "text-score-high";
@@ -53,7 +55,41 @@ export function ThemeTableView({ themes, onEditTheme }: ThemeTableViewProps) {
     }
   };
 
+  const toggleExpand = (themeId: string) => {
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(themeId)) {
+        newSet.delete(themeId);
+      } else {
+        newSet.add(themeId);
+      }
+      return newSet;
+    });
+  };
+
   const columns: DataTableColumn<ThemeWithScores>[] = [
+    {
+      key: 'id',
+      header: '',
+      width: '40px',
+      render: (value, theme) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleExpand(theme.id);
+          }}
+          className="h-7 w-7 p-0"
+        >
+          {expandedRows.has(theme.id) ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+        </Button>
+      ),
+    },
     {
       key: 'name',
       header: 'Investment Theme',
@@ -149,6 +185,96 @@ export function ThemeTableView({ themes, onEditTheme }: ThemeTableViewProps) {
     },
   ];
 
+  const renderExpandedRow = (theme: ThemeWithScores) => {
+    if (!expandedRows.has(theme.id)) return null;
+
+    return (
+      <div className="bg-muted/30 border-t border-border p-6">
+        <div className="grid grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-semibold text-foreground mb-2">Description</h4>
+              <p className="text-sm text-muted-foreground">
+                {theme.description || "No description available"}
+              </p>
+            </div>
+            
+            {theme.in_scope && theme.in_scope.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-foreground mb-2">In Scope</h4>
+                <div className="flex flex-wrap gap-2">
+                  {theme.in_scope.map((item, idx) => (
+                    <Badge key={idx} variant="outline" className="text-xs">
+                      {item}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {theme.out_of_scope && theme.out_of_scope.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-foreground mb-2">Out of Scope</h4>
+                <div className="flex flex-wrap gap-2">
+                  {theme.out_of_scope.map((item, idx) => (
+                    <Badge key={idx} variant="secondary" className="text-xs">
+                      {item}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-semibold text-foreground mb-3">Framework Scores</h4>
+              <div className="space-y-2">
+                {theme.scores.slice(0, 5).map((score) => (
+                  <div key={score.id} className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">{score.attribute.name}</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={score.score} className="h-1.5 w-24" />
+                      <span className={cn("text-xs font-medium", getScoreColor(score.score))}>
+                        {score.score}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {theme.keywords && theme.keywords.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-foreground mb-2">Keywords</h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {theme.keywords.map((keyword, idx) => (
+                    <Badge key={idx} variant="secondary" className="text-xs">
+                      {keyword}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/theme/${theme.id}`)}
+                className="text-xs"
+              >
+                View Full Profile →
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <DataTable
       data={themes}
@@ -161,6 +287,7 @@ export function ThemeTableView({ themes, onEditTheme }: ThemeTableViewProps) {
       emptyMessage="No themes found"
       onRowClick={(theme) => navigate(`/theme/${theme.id}`)}
       className="surface-elevated"
+      expandedRowRender={renderExpandedRow}
     />
   );
 }

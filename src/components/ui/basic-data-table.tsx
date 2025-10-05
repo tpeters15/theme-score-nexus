@@ -34,6 +34,7 @@ export type DataTableProps<T> = {
   loading?: boolean;
   emptyMessage?: string;
   onRowClick?: (row: T, index: number) => void;
+  expandedRowRender?: (row: T) => React.ReactNode;
 };
 
 export function DataTable<T extends Record<string, any>>({
@@ -51,6 +52,7 @@ export function DataTable<T extends Record<string, any>>({
   loading = false,
   emptyMessage = "No data available",
   onRowClick,
+  expandedRowRender,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [sortConfig, setSortConfig] = useState<{
@@ -429,30 +431,38 @@ export function DataTable<T extends Record<string, any>>({
                 </tr>
               ) : (
                 paginatedData.map((row, index) => (
-                  <tr
-                    key={index}
-                    className={cn(
-                      "border-t border-border bg-card transition-colors",
-                      striped && index % 2 === 0 && "bg-muted/20",
-                      hoverable && "hover:bg-muted/30",
-                      onRowClick && "cursor-pointer",
+                  <React.Fragment key={index}>
+                    <tr
+                      className={cn(
+                        "border-t border-border bg-card transition-colors",
+                        striped && index % 2 === 0 && "bg-muted/20",
+                        hoverable && "hover:bg-muted/30",
+                        onRowClick && "cursor-pointer",
+                      )}
+                      onClick={() => onRowClick?.(row, index)}
+                    >
+                      {columns.map((column) => (
+                        <td
+                          key={String(column.key)}
+                          className={cn(
+                            "text-sm text-foreground align-middle",
+                            compact ? "px-4 py-3" : "px-6 py-4",
+                          )}
+                        >
+                          {column.render
+                            ? column.render(row[column.key], row)
+                            : String(row[column.key] ?? "")}
+                        </td>
+                      ))}
+                    </tr>
+                    {expandedRowRender && (
+                      <tr className="border-t border-border">
+                        <td colSpan={columns.length} className="p-0">
+                          {expandedRowRender(row)}
+                        </td>
+                      </tr>
                     )}
-                    onClick={() => onRowClick?.(row, index)}
-                  >
-                    {columns.map((column) => (
-                      <td
-                        key={String(column.key)}
-                        className={cn(
-                          "text-sm text-foreground align-middle",
-                          compact ? "px-4 py-3" : "px-6 py-4",
-                        )}
-                      >
-                        {column.render
-                          ? column.render(row[column.key], row)
-                          : String(row[column.key] ?? "")}
-                      </td>
-                    ))}
-                  </tr>
+                  </React.Fragment>
                 ))
               )}
             </tbody>
