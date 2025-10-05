@@ -434,10 +434,10 @@ export function DataTable<T extends Record<string, any>>({
                   <React.Fragment key={index}>
                     <tr
                       className={cn(
-                        "border-t border-border bg-card transition-colors",
+                        "group border-t border-border bg-card transition-all duration-200",
                         striped && index % 2 === 0 && "bg-muted/20",
                         hoverable && "hover:bg-muted/30",
-                        onRowClick && "cursor-pointer",
+                        onRowClick && "cursor-pointer hover:border-l-4 hover:border-l-primary",
                       )}
                       onClick={() => onRowClick?.(row, index)}
                     >

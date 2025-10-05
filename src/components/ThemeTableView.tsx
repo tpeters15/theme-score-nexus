@@ -4,7 +4,7 @@ import { DataTable, DataTableColumn } from "@/components/ui/basic-data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, TrendingDown, Minus, Edit, ChevronDown, ChevronRight } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Edit, ChevronDown, ChevronRight, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -170,17 +170,22 @@ export function ThemeTableView({ themes, onEditTheme }: ThemeTableViewProps) {
       header: '',
       width: '80px',
       render: (value, theme) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEditTheme(theme);
-          }}
-          className="h-7 w-7 p-0"
-        >
-          <Edit className="h-3.5 w-3.5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditTheme(theme);
+            }}
+            className="h-7 w-7 p-0"
+          >
+            <Edit className="h-3.5 w-3.5" />
+          </Button>
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </div>
       ),
     },
   ];
