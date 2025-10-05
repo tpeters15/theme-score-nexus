@@ -1,0 +1,468 @@
+{
+  "name": "Universal Signal Scraper",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "schedule-scraper",
+      "name": "Schedule - Every 30 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  id,\n  name,\n  source_type,\n  url,\n  config,\n  extraction_prompt,\n  expected_schema,\n  selectors\nFROM scraper_sources\nWHERE is_active = true\n  AND (\n    last_scraped_at IS NULL\n    OR last_scraped_at < (now() - INTERVAL '30 minutes')\n  )\nORDER BY last_scraped_at ASC NULLS FIRST",
+        "options": {}
+      },
+      "id": "fetch-sources",
+      "name": "Get Sources to Scrape",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "loop-sources",
+      "name": "Loop Over Sources",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "tableId": "scraper_runs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "source_id",
+              "fieldValue": "={{ $json.id }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "running"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "create-run",
+      "name": "Create Run Record",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "route-rss",
+              "leftValue": "={{ $('Loop Over Sources').item.json.source_type }}",
+              "rightValue": "rss",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "route-type",
+      "name": "Route by Source Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Loop Over Sources').item.json.url }}",
+        "method": "GET",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "fetch-rss",
+      "name": "Fetch RSS Feed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 140]
+    },
+    {
+      "parameters": {
+        "mode": "xmlToJson",
+        "options": {}
+      },
+      "id": "parse-rss",
+      "name": "Parse RSS XML",
+      "type": "n8n-nodes-base.xml",
+      "typeVersion": 1,
+      "position": [1560, 140]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rssData = $input.first().json;\nconst sourceConfig = $('Loop Over Sources').item.json;\nconst runId = $('Create Run Record').first().json.id;\n\n// Extract items from RSS (handle both RSS 2.0 and Atom)\nlet items = [];\nif (rssData.rss?.channel?.item) {\n  items = Array.isArray(rssData.rss.channel.item) ? rssData.rss.channel.item : [rssData.rss.channel.item];\n} else if (rssData.feed?.entry) {\n  items = Array.isArray(rssData.feed.entry) ? rssData.feed.entry : [rssData.feed.entry];\n}\n\n// Transform to signal schema\nconst signals = items.map((item, index) => {\n  // Handle both RSS and Atom formats\n  const title = item.title?._ || item.title || '';\n  const link = item.link?._ || item.link?.href || item.link || '';\n  const description = item.description?._ || item.summary?._ || item.description || item.summary || '';\n  const author = item.author?.name || item.author || item['dc:creator'] || sourceConfig.config?.author_field || sourceConfig.name;\n  const pubDate = item.pubDate || item.published || item.updated || new Date().toISOString();\n  \n  // Generate unique signal_id\n  const signalId = `sig_${sourceConfig.name.toLowerCase().replace(/\\s+/g, '_')}_${Date.now()}_${index}`;\n  \n  return {\n    signal_id: signalId,\n    title: title.substring(0, 500),\n    description: description.substring(0, 2000),\n    url: link,\n    source: sourceConfig.name,\n    type: 'rss',\n    author: author,\n    created_at: new Date(pubDate).toISOString(),\n    \n    // Metadata for deduplication\n    source_id: sourceConfig.id,\n    run_id: runId\n  };\n});\n\nreturn signals.map(signal => ({ json: signal }));"
+      },
+      "id": "transform-rss",
+      "name": "Transform RSS to Signals",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 140]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "route-html-simple",
+              "leftValue": "={{ $('Loop Over Sources').item.json.source_type }}",
+              "rightValue": "html_simple",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-html-simple",
+      "name": "Check if HTML Simple",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1340, 460]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Loop Over Sources').item.json.url }}",
+        "method": "GET",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "fetch-html",
+      "name": "Fetch HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 460]
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.first().json.data || $input.first().binary?.data?.toString() || '';\nconst sourceConfig = $('Loop Over Sources').item.json;\nconst selectors = sourceConfig.selectors || {};\nconst runId = $('Create Run Record').first().json.id;\n\n// Parse HTML using cheerio-like logic (simplified)\nconst extractText = (htmlContent, selector) => {\n  // This is simplified - in production, use HTML Extract node or cheerio\n  const regex = new RegExp(`<[^>]*class=\"${selector.replace('.', '')}\"[^>]*>([\\\\s\\\\S]*?)<\\/`, 'gi');\n  const match = regex.exec(htmlContent);\n  return match ? match[1].replace(/<[^>]+>/g, '').trim() : '';\n};\n\nconst extractAttr = (htmlContent, selector, attr) => {\n  const [sel, attribute] = selector.split('@');\n  const regex = new RegExp(`<[^>]*class=\"${sel.replace('.', '')}\"[^>]*${attr}=\"([^\"]+)\"`, 'i');\n  const match = regex.exec(htmlContent);\n  return match ? match[1] : '';\n};\n\n// Extract items using list selector\nconst listSelector = selectors.list_selector?.replace('.', '') || '';\nconst itemRegex = new RegExp(`<[^>]*class=\"[^\"]*${listSelector}[^\"]*\"[^>]*>([\\\\s\\\\S]*?)<\\/[^>]+>`, 'gi');\nconst items = [...html.matchAll(itemRegex)].map(m => m[1]);\n\n// Transform each item to signal\nconst signals = items.map((itemHtml, index) => {\n  const itemSelectors = selectors.item_selectors || {};\n  \n  const title = extractText(itemHtml, itemSelectors.title || '.title');\n  const description = extractText(itemHtml, itemSelectors.description || '.description');\n  const url = extractAttr(itemHtml, itemSelectors.url || '.link@href', 'href');\n  const date = extractText(itemHtml, itemSelectors.date || '.date');\n  \n  const signalId = `sig_${sourceConfig.name.toLowerCase().replace(/\\s+/g, '_')}_${Date.now()}_${index}`;\n  \n  return {\n    signal_id: signalId,\n    title: title.substring(0, 500),\n    description: description.substring(0, 2000),\n    url: url,\n    source: sourceConfig.name,\n    type: 'html',\n    author: sourceConfig.name,\n    created_at: date ? new Date(date).toISOString() : new Date().toISOString(),\n    source_id: sourceConfig.id,\n    run_id: runId\n  };\n}).filter(s => s.title && s.url);\n\nreturn signals.map(signal => ({ json: signal }));"
+      },
+      "id": "parse-html-simple",
+      "name": "Parse HTML with Selectors",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 460]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.firecrawl.dev/v1/scrape",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "firecrawlApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"url\": $('Loop Over Sources').item.json.url,\n  \"formats\": [\"markdown\", \"html\"],\n  \"onlyMainContent\": true,\n  \"waitFor\": 2000\n} }}",
+        "options": {}
+      },
+      "id": "firecrawl-fetch",
+      "name": "Firecrawl - Extract Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 780]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 4000,\n  \"temperature\": 0,\n  \"messages\": [{\n    \"role\": \"user\",\n    \"content\": $('Loop Over Sources').item.json.extraction_prompt + \"\\n\\nCONTENT:\\n\" + $json.data.markdown\n  }]\n} }}",
+        "options": {}
+      },
+      "id": "claude-extract",
+      "name": "Claude - Extract Signals",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 780],
+      "credentials": {
+        "anthropicApi": {
+          "id": "YOUR_ANTHROPIC_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const claudeResponse = $input.first().json;\nconst sourceConfig = $('Loop Over Sources').item.json;\nconst runId = $('Create Run Record').first().json.id;\n\n// Extract JSON from Claude response\nlet extractedSignals = [];\ntry {\n  const content = claudeResponse.content[0].text;\n  const jsonMatch = content.match(/\\[[\\s\\S]*\\]/);\n  if (jsonMatch) {\n    extractedSignals = JSON.parse(jsonMatch[0]);\n  } else {\n    throw new Error('No JSON array found in response');\n  }\n} catch (error) {\n  console.error('Failed to parse Claude response:', error);\n  return [];\n}\n\n// Transform to signal schema\nconst signals = extractedSignals.map((item, index) => {\n  const signalId = `sig_${sourceConfig.name.toLowerCase().replace(/\\s+/g, '_')}_${Date.now()}_${index}`;\n  \n  return {\n    signal_id: signalId,\n    title: (item.title || '').substring(0, 500),\n    description: (item.summary || item.description || '').substring(0, 2000),\n    url: item.source_url || item.url || '',\n    source: item.source || sourceConfig.name,\n    type: 'html',\n    author: item.source || sourceConfig.name,\n    created_at: item.published_date ? new Date(item.published_date).toISOString() : new Date().toISOString(),\n    source_id: sourceConfig.id,\n    run_id: runId,\n    \n    // Store additional metadata in internal_id\n    internal_id: JSON.stringify({\n      category: item.category,\n      entities: item.entities,\n      sentiment: item.sentiment\n    })\n  };\n}).filter(s => s.title && s.url);\n\nreturn signals.map(signal => ({ json: signal }));"
+      },
+      "id": "transform-ai",
+      "name": "Transform AI Extraction",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 780]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT signal_id FROM signals WHERE url = '{{ $json.url }}' OR signal_id = '{{ $json.signal_id }}'",
+        "options": {}
+      },
+      "id": "check-duplicate",
+      "name": "Check for Duplicate",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2220, 460],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "is-new",
+              "leftValue": "={{ $json.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-new",
+      "name": "Filter New Signals Only",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2440, 460]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "tableId": "signals",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "signal_id",
+              "fieldValue": "={{ $json.signal_id }}"
+            },
+            {
+              "fieldId": "title",
+              "fieldValue": "={{ $json.title }}"
+            },
+            {
+              "fieldId": "description",
+              "fieldValue": "={{ $json.description }}"
+            },
+            {
+              "fieldId": "url",
+              "fieldValue": "={{ $json.url }}"
+            },
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $json.source }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "={{ $json.type }}"
+            },
+            {
+              "fieldId": "author",
+              "fieldValue": "={{ $json.author }}"
+            },
+            {
+              "fieldId": "internal_id",
+              "fieldValue": "={{ $json.internal_id }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $json.created_at }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "insert-signal",
+      "name": "Insert Signal",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2660, 340],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\nconst runId = $('Create Run Record').first().json.id;\nconst sourceId = $('Loop Over Sources').item.json.id;\n\n// Count new vs duplicate\nconst newSignals = allItems.filter(item => item.json.inserted === true);\nconst duplicates = allItems.length - newSignals.length;\n\nreturn {\n  json: {\n    run_id: runId,\n    source_id: sourceId,\n    signals_new: newSignals.length,\n    signals_duplicate: duplicates,\n    signals_total: allItems.length,\n    status: 'completed'\n  }\n};"
+      },
+      "id": "aggregate-stats",
+      "name": "Aggregate Stats",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2880, 460]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE scraper_runs\nSET\n  status = '{{ $json.status }}',\n  completed_at = now(),\n  signals_found = {{ $json.signals_total }},\n  signals_new = {{ $json.signals_new }},\n  signals_duplicate = {{ $json.signals_duplicate }},\n  execution_time_seconds = EXTRACT(EPOCH FROM (now() - started_at))\nWHERE id = '{{ $json.run_id }}';\n\nUPDATE scraper_sources\nSET\n  last_scraped_at = now(),\n  last_success_at = now(),\n  total_signals_collected = total_signals_collected + {{ $json.signals_new }}\nWHERE id = '{{ $json.source_id }}';",
+        "options": {}
+      },
+      "id": "update-stats",
+      "name": "Update Run Stats",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [3100, 460],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule - Every 30 Minutes": {
+      "main": [[{ "node": "Get Sources to Scrape", "type": "main", "index": 0 }]]
+    },
+    "Get Sources to Scrape": {
+      "main": [[{ "node": "Loop Over Sources", "type": "main", "index": 0 }]]
+    },
+    "Loop Over Sources": {
+      "main": [[{ "node": "Create Run Record", "type": "main", "index": 0 }]]
+    },
+    "Create Run Record": {
+      "main": [[{ "node": "Route by Source Type", "type": "main", "index": 0 }]]
+    },
+    "Route by Source Type": {
+      "main": [
+        [{ "node": "Fetch RSS Feed", "type": "main", "index": 0 }],
+        [{ "node": "Check if HTML Simple", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch RSS Feed": {
+      "main": [[{ "node": "Parse RSS XML", "type": "main", "index": 0 }]]
+    },
+    "Parse RSS XML": {
+      "main": [[{ "node": "Transform RSS to Signals", "type": "main", "index": 0 }]]
+    },
+    "Transform RSS to Signals": {
+      "main": [[{ "node": "Check for Duplicate", "type": "main", "index": 0 }]]
+    },
+    "Check if HTML Simple": {
+      "main": [
+        [{ "node": "Fetch HTML", "type": "main", "index": 0 }],
+        [{ "node": "Firecrawl - Extract Content", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch HTML": {
+      "main": [[{ "node": "Parse HTML with Selectors", "type": "main", "index": 0 }]]
+    },
+    "Parse HTML with Selectors": {
+      "main": [[{ "node": "Check for Duplicate", "type": "main", "index": 0 }]]
+    },
+    "Firecrawl - Extract Content": {
+      "main": [[{ "node": "Claude - Extract Signals", "type": "main", "index": 0 }]]
+    },
+    "Claude - Extract Signals": {
+      "main": [[{ "node": "Transform AI Extraction", "type": "main", "index": 0 }]]
+    },
+    "Transform AI Extraction": {
+      "main": [[{ "node": "Check for Duplicate", "type": "main", "index": 0 }]]
+    },
+    "Check for Duplicate": {
+      "main": [[{ "node": "Filter New Signals Only", "type": "main", "index": 0 }]]
+    },
+    "Filter New Signals Only": {
+      "main": [
+        [{ "node": "Insert Signal", "type": "main", "index": 0 }],
+        [{ "node": "Aggregate Stats", "type": "main", "index": 0 }]
+      ]
+    },
+    "Insert Signal": {
+      "main": [[{ "node": "Aggregate Stats", "type": "main", "index": 0 }]]
+    },
+    "Aggregate Stats": {
+      "main": [[{ "node": "Update Run Stats", "type": "main", "index": 0 }]]
+    },
+    "Update Run Stats": {
+      "main": [[{ "node": "Loop Over Sources", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "universal-scraper-v1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "your-instance-id"
+  },
+  "tags": []
+}

@@ -121,18 +121,55 @@ const BatchClassifier = () => {
 
       setActiveBatchId(batch.id);
 
-      // TODO: Replace with your actual n8n webhook URL
-      const n8nWebhookUrl = "https://your-n8n-instance.com/webhook/classify-companies";
+      // Get n8n webhook URL from environment variable
+      const n8nWebhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || "https://your-n8n-instance.com/webhook-test/classify-companies";
 
-      // Send to n8n webhook
+      // Prepare companies with proper structure for n8n workflow
+      const companiesForWorkflow = await Promise.all(
+        companies.map(async (company) => {
+          // Create company record in database first
+          const { data: companyRecord, error: companyError } = await supabase
+            .from("companies")
+            .upsert({
+              company_name: company.company_name,
+              website_domain: company.website,
+              description: "",
+            }, {
+              onConflict: "website_domain",
+              ignoreDuplicates: false,
+            })
+            .select()
+            .single();
+
+          if (companyError) {
+            console.error("Error creating company:", companyError);
+            return {
+              id: crypto.randomUUID(),
+              name: company.company_name,
+              website: company.website,
+              description: "",
+            };
+          }
+
+          return {
+            id: companyRecord.id,
+            name: company.company_name,
+            website: company.website,
+            description: companyRecord.description || "",
+          };
+        })
+      );
+
+      // Send to n8n webhook with proper payload structure
       const response = await fetch(n8nWebhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          mode: "batch",
           batch_id: batch.id,
-          companies: companies,
+          companies: companiesForWorkflow,
         }),
       });
 
