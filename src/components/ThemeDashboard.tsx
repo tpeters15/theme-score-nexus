@@ -33,11 +33,14 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
 
   const filteredThemes = themes.filter(theme => {
-    // Search filter
+    // Universal search across all visible columns
     const matchesSearch = searchQuery === "" || 
       theme.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      theme.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       theme.pillar.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      theme.sector.toLowerCase().includes(searchQuery.toLowerCase());
+      theme.sector.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      theme.overall_confidence.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      theme.weighted_total_score.toString().includes(searchQuery);
 
     // Pillar filter
     const matchesPillar = selectedPillars.length === 0 || 
@@ -132,6 +135,29 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
                 <Download className="h-3.5 w-3.5 mr-1.5" />
                 Export
               </Button>
+            </div>
+          </div>
+
+          {/* Universal Search Bar */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search themes across all fields..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
           </div>
 
