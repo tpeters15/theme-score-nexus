@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, Target, Zap, FileText, Settings, Shield, Radar, ListChecks, Database } from "lucide-react";
+import { Home, Target, Zap, FileText, Settings, Shield, Radar, ListChecks, Database, Presentation } from "lucide-react";
 import { NavLink, useLocation, Link } from "react-router-dom";
 
 import {
@@ -16,6 +16,7 @@ import {
 
 const mainItems = [
   { title: "Dashboard", url: "/", icon: Home },
+  { title: "Executive Summary", url: "/executive-summary", icon: Presentation },
   { title: "Themes", url: "/themes", icon: Target },
   { title: "Regulatory Tracker", url: "/regulatory-tracker", icon: Shield },
   { title: "Signals", url: "/signals", icon: Zap },
