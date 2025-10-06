@@ -46,8 +46,9 @@ export const VisualSelectorBuilder = ({
 
   // Generate proxy URL to avoid CORS issues
   useEffect(() => {
-    // Use a CORS proxy for loading external pages
-    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(sourceUrl)}`;
+    // Use Supabase edge function as CORS proxy
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const proxy = `${supabaseUrl}/functions/v1/cors-proxy?url=${encodeURIComponent(sourceUrl)}`;
     setProxyUrl(proxy);
   }, [sourceUrl]);
 
