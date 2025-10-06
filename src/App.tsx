@@ -19,7 +19,6 @@ import ThemeProfile from "./pages/ThemeProfile";
 import SourceProfile from "./pages/SourceProfile";
 import TaxonomyManagement from "./pages/TaxonomyManagement";
 import ScraperManagement from "./pages/ScraperManagement";
-import ExecutiveSummary from "./pages/ExecutiveSummary";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,7 +47,6 @@ const App = () => (
                       <Route path="/classifier" element={<Classifier />} />
                       <Route path="/taxonomy" element={<TaxonomyManagement />} />
                       <Route path="/scraper-management" element={<ScraperManagement />} />
-                      <Route path="/executive-summary" element={<ExecutiveSummary />} />
                       <Route path="/theme/:themeId" element={<ThemeProfile />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>

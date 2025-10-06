@@ -42,13 +42,13 @@ const ScraperManagement = () => {
     try {
       // Save to Supabase
       const { data, error } = await supabase
-        .from('scraper_sources')
+        .from('sources')
         .insert({
-          name: sourceName,
+          source_name: sourceName,
           source_type: sourceType,
-          url: sourceUrl,
-          config: config,
-          is_active: false, // Start inactive until tested
+          base_url: sourceUrl,
+          scraping_config: config,
+          status: 'inactive',
         })
         .select()
         .single();

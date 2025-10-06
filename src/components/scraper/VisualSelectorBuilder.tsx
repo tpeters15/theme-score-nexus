@@ -109,9 +109,7 @@ export const VisualSelectorBuilder = ({
     // Generate optimal CSS selector using @medv/finder
     const selector = finder(element, {
       root: iframeRef.current?.contentDocument?.body,
-      optimizedMinLength: 2,
-      threshold: 1000,
-      maxNumberOfTries: 10000
+      optimizedMinLength: 2
     });
 
     // Determine what we're extracting
