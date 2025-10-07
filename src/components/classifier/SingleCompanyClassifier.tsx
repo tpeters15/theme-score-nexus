@@ -62,13 +62,23 @@ export const SingleCompanyClassifier = () => {
 
       if (batchError) throw batchError;
 
-      // Create classification record
+      // Get taxonomy version
+      const { data: latestTheme } = await supabase
+        .from('taxonomy_themes')
+        .select('version')
+        .order('version', { ascending: false })
+        .limit(1)
+        .single();
+
+      // Create classification record (no batch for single classifications)
       const { data: classificationData, error: classificationError } = await supabase
         .from("classifications")
         .insert({
-          batch_id: batchData.id,
           company_id: companyData.id,
-          status: "Queued",
+          source_system: 'dashboard',
+          classification_type: 'initial',
+          taxonomy_version: latestTheme?.version || 1,
+          status: "Pending",
         })
         .select()
         .single();
@@ -76,20 +86,18 @@ export const SingleCompanyClassifier = () => {
       if (classificationError) throw classificationError;
 
       // Send to n8n webhook
-      const webhookUrl = "YOUR_N8N_WEBHOOK_URL"; // TODO: Replace with actual webhook URL
+      const webhookUrl = "https://n8n.siliconvalleytrading.com/webhook/classify-company";
       await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        mode: "no-cors",
         body: JSON.stringify({
-          batch_id: batchData.id,
-          companies: [
-            {
-              id: companyData.id,
-              company_name: companyName,
-              website: website,
-            },
-          ],
+          classification_id: classificationData.id,
+          company_id: companyData.id,
+          company_name: companyName,
+          website: website,
+          domain: website.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0],
+          source_system: 'dashboard',
+          taxonomy_version: latestTheme?.version || 1
         }),
       });
 

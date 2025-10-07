@@ -83,42 +83,64 @@ export const ManualBatchClassifier = () => {
 
       if (batchError) throw batchError;
 
+      // Get taxonomy version
+      const { data: latestTheme } = await supabase
+        .from('taxonomy_themes')
+        .select('version')
+        .order('version', { ascending: false })
+        .limit(1)
+        .single();
+
+      const taxonomyVersion = latestTheme?.version || 1;
+
       // Create company records and classifications
       const companyRecords = [];
       for (const company of validCompanies) {
+        const domain = company.website.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+
         const { data: companyData, error: companyError } = await supabase
           .from("companies")
           .insert({
             company_name: company.company_name,
-            website_domain: company.website,
+            website_domain: domain,
           })
           .select()
           .single();
 
         if (companyError) throw companyError;
 
-        await supabase.from("classifications").insert({
-          batch_id: batchData.id,
-          company_id: companyData.id,
-          status: "Queued",
-        });
+        const { data: classification } = await supabase
+          .from("classifications")
+          .insert({
+            company_id: companyData.id,
+            batch_id: batchData.id,
+            source_system: 'dashboard',
+            classification_type: 'initial',
+            taxonomy_version: taxonomyVersion,
+            status: "Pending",
+          })
+          .select()
+          .single();
 
         companyRecords.push({
-          id: companyData.id,
+          classification_id: classification?.id,
+          company_id: companyData.id,
           company_name: company.company_name,
           website: company.website,
+          domain: domain,
+          source_system: 'dashboard',
+          taxonomy_version: taxonomyVersion
         });
       }
 
       // Send to n8n
-      const webhookUrl = "YOUR_N8N_WEBHOOK_URL"; // TODO: Replace with actual webhook URL
+      const webhookUrl = "https://n8n.siliconvalleytrading.com/webhook/classify-company";
       await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        mode: "no-cors",
         body: JSON.stringify({
           batch_id: batchData.id,
-          companies: companyRecords,
+          classifications: companyRecords,
         }),
       });
 

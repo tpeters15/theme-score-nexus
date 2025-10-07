@@ -46,34 +46,85 @@ export type Database = {
       }
       classifications: {
         Row: {
-          batch_id: string
+          batch_id: string | null
+          business_model: string | null
+          classification_type: string | null
           company_id: string
           confidence_score: number | null
+          context_metadata: Json | null
           created_at: string
+          dealcloud_id: string | null
           id: string
+          model_used: string | null
+          n8n_execution_id: string | null
+          perplexity_research: string | null
+          pillar: string | null
+          pitchbook_data: string | null
+          preqin_data: string | null
           primary_theme: string | null
           rationale: string | null
+          sector: string | null
+          source_system: string
+          sourcescrub_description: string | null
           status: string
+          taxonomy_version: number | null
+          theme_id: string | null
+          updated_at: string | null
+          website_summary: string | null
         }
         Insert: {
-          batch_id: string
+          batch_id?: string | null
+          business_model?: string | null
+          classification_type?: string | null
           company_id: string
           confidence_score?: number | null
+          context_metadata?: Json | null
           created_at?: string
+          dealcloud_id?: string | null
           id?: string
+          model_used?: string | null
+          n8n_execution_id?: string | null
+          perplexity_research?: string | null
+          pillar?: string | null
+          pitchbook_data?: string | null
+          preqin_data?: string | null
           primary_theme?: string | null
           rationale?: string | null
+          sector?: string | null
+          source_system: string
+          sourcescrub_description?: string | null
           status?: string
+          taxonomy_version?: number | null
+          theme_id?: string | null
+          updated_at?: string | null
+          website_summary?: string | null
         }
         Update: {
-          batch_id?: string
+          batch_id?: string | null
+          business_model?: string | null
+          classification_type?: string | null
           company_id?: string
           confidence_score?: number | null
+          context_metadata?: Json | null
           created_at?: string
+          dealcloud_id?: string | null
           id?: string
+          model_used?: string | null
+          n8n_execution_id?: string | null
+          perplexity_research?: string | null
+          pillar?: string | null
+          pitchbook_data?: string | null
+          preqin_data?: string | null
           primary_theme?: string | null
           rationale?: string | null
+          sector?: string | null
+          source_system?: string
+          sourcescrub_description?: string | null
           status?: string
+          taxonomy_version?: number | null
+          theme_id?: string | null
+          updated_at?: string | null
+          website_summary?: string | null
         }
         Relationships: [
           {
@@ -90,6 +141,13 @@ export type Database = {
             referencedRelation: "companies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "classifications_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_themes"
+            referencedColumns: ["id"]
+          },
         ]
       }
       companies: {
@@ -99,6 +157,7 @@ export type Database = {
           dealcloud_id: string | null
           description: string | null
           id: string
+          updated_at: string | null
           website_domain: string
         }
         Insert: {
@@ -107,6 +166,7 @@ export type Database = {
           dealcloud_id?: string | null
           description?: string | null
           id?: string
+          updated_at?: string | null
           website_domain: string
         }
         Update: {
@@ -115,6 +175,7 @@ export type Database = {
           dealcloud_id?: string | null
           description?: string | null
           id?: string
+          updated_at?: string | null
           website_domain?: string
         }
         Relationships: []
