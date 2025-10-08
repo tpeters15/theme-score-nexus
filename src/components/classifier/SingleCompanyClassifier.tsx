@@ -86,7 +86,7 @@ export const SingleCompanyClassifier = () => {
       if (classificationError) throw classificationError;
 
       // Send to n8n webhook
-      const webhookUrl = "https://n8n.siliconvalleytrading.com/webhook/classify-company";
+      const webhookUrl = "YOUR_N8N_WEBHOOK_URL_HERE"; // Replace with your actual n8n webhook URL
       await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
