@@ -134,7 +134,7 @@ export const ManualBatchClassifier = () => {
       }
 
       // Send to n8n
-      const webhookUrl = "YOUR_N8N_WEBHOOK_URL_HERE"; // Replace with your actual n8n webhook URL
+      const webhookUrl = "https://towerbrook.app.n8n.cloud/webhook/dealcloud-classifier";
       await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
