@@ -180,6 +180,80 @@ export type Database = {
         }
         Relationships: []
       }
+      company_theme_mappings: {
+        Row: {
+          batch_id: string | null
+          classification_method: string | null
+          classified_at: string
+          classified_by: string | null
+          company_id: string
+          confidence_score: number | null
+          created_at: string | null
+          id: string
+          is_primary: boolean
+          notes: string | null
+          theme_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          batch_id?: string | null
+          classification_method?: string | null
+          classified_at?: string
+          classified_by?: string | null
+          company_id: string
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean
+          notes?: string | null
+          theme_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          batch_id?: string | null
+          classification_method?: string | null
+          classified_at?: string
+          classified_by?: string | null
+          company_id?: string
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean
+          notes?: string | null
+          theme_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_theme_mappings_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "classification_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_theme_mappings_classified_by_fkey"
+            columns: ["classified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_theme_mappings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_theme_mappings_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       detailed_scores: {
         Row: {
           ai_research_data: Json | null
@@ -226,13 +300,6 @@ export type Database = {
             columns: ["criteria_id"]
             isOneToOne: false
             referencedRelation: "framework_criteria"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "detailed_scores_theme_id_fkey"
-            columns: ["theme_id"]
-            isOneToOne: false
-            referencedRelation: "themes"
             referencedColumns: ["id"]
           },
         ]
@@ -419,15 +486,7 @@ export type Database = {
           theme_id?: string | null
           webhook_url?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "n8n_research_runs_theme_id_fkey"
-            columns: ["theme_id"]
-            isOneToOne: false
-            referencedRelation: "themes"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       processed_signals: {
         Row: {
@@ -705,13 +764,6 @@ export type Database = {
             columns: ["criteria_id"]
             isOneToOne: false
             referencedRelation: "framework_criteria"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "research_documents_theme_id_fkey"
-            columns: ["theme_id"]
-            isOneToOne: false
-            referencedRelation: "themes"
             referencedColumns: ["id"]
           },
         ]
@@ -1020,17 +1072,62 @@ export type Database = {
           },
         ]
       }
+      taxonomy_theme_example_companies: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          id: string
+          is_positive_example: boolean
+          notes: string | null
+          theme_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          id?: string
+          is_positive_example?: boolean
+          notes?: string | null
+          theme_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          is_positive_example?: boolean
+          notes?: string | null
+          theme_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxonomy_theme_example_companies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taxonomy_theme_example_companies_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       taxonomy_themes: {
         Row: {
           common_edge_cases: string | null
           created_at: string | null
           description: string | null
-          example_companies: string[] | null
           id: string
           impact: string | null
           in_scope: string[] | null
           is_active: boolean
           key_identifiers: string[] | null
+          keywords: string[] | null
           name: string
           out_of_scope: string[] | null
           sector_id: string
@@ -1041,12 +1138,12 @@ export type Database = {
           common_edge_cases?: string | null
           created_at?: string | null
           description?: string | null
-          example_companies?: string[] | null
           id?: string
           impact?: string | null
           in_scope?: string[] | null
           is_active?: boolean
           key_identifiers?: string[] | null
+          keywords?: string[] | null
           name: string
           out_of_scope?: string[] | null
           sector_id: string
@@ -1057,12 +1154,12 @@ export type Database = {
           common_edge_cases?: string | null
           created_at?: string | null
           description?: string | null
-          example_companies?: string[] | null
           id?: string
           impact?: string | null
           in_scope?: string[] | null
           is_active?: boolean
           key_identifiers?: string[] | null
+          keywords?: string[] | null
           name?: string
           out_of_scope?: string[] | null
           sector_id?: string
@@ -1109,45 +1206,6 @@ export type Database = {
           relevance_score?: number | null
           theme_id?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      themes: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string
-          in_scope: string[] | null
-          keywords: string[] | null
-          name: string
-          out_of_scope: string[] | null
-          pillar: string
-          sector: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          in_scope?: string[] | null
-          keywords?: string[] | null
-          name: string
-          out_of_scope?: string[] | null
-          pillar: string
-          sector: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          in_scope?: string[] | null
-          keywords?: string[] | null
-          name?: string
-          out_of_scope?: string[] | null
-          pillar?: string
-          sector?: string
-          updated_at?: string | null
         }
         Relationships: []
       }
