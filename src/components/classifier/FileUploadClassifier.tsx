@@ -98,10 +98,13 @@ export const FileUploadClassifier = () => {
 
         const { data: companyData, error: companyError } = await supabase
           .from("companies")
-          .insert({
-            company_name: company.company_name,
-            website_domain: domain,
-          })
+          .upsert(
+            {
+              company_name: company.company_name,
+              website_domain: domain,
+            },
+            { onConflict: 'website_domain', ignoreDuplicates: false }
+          )
           .select()
           .single();
 

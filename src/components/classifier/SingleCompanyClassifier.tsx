@@ -40,10 +40,13 @@ export const SingleCompanyClassifier = () => {
     setResult(null);
 
     try {
-      // Create company record
+      // Create or get existing company record
       const { data: companyData, error: companyError } = await supabase
         .from("companies")
-        .insert({ company_name: companyName, website_domain: website })
+        .upsert(
+          { company_name: companyName, website_domain: website },
+          { onConflict: 'website_domain', ignoreDuplicates: false }
+        )
         .select()
         .single();
 
