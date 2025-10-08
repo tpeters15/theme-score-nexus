@@ -1,25 +1,13 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Signal, 
-  ExternalLink, 
-  Search, 
-  Filter, 
-  Clock,
-  Globe,
-  Building2,
-  Eye
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Signal, Search } from "lucide-react";
 import { format } from "date-fns";
 import { useProcessedSignals, type ProcessedSignal } from "@/hooks/useProcessedSignals";
 import { SignalDetailModal } from "@/components/SignalDetailModal";
 import { SignalFilterDemo } from "@/components/ui/signal-filter-demo";
+import { SignalsTableView } from "@/components/SignalsTableView";
 
 export default function Signals() {
   const { data: processedSignals, isLoading: loading, error } = useProcessedSignals();
@@ -170,97 +158,11 @@ export default function Signals() {
         </CardContent>
       </Card>
 
-      {/* Signals List */}
-      <div className="space-y-4">
-        {filteredSignals.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <Signal className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No signals match your current filters</p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredSignals.map((signal) => (
-            <Card 
-              key={signal.id} 
-              className="hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => handleSignalClick(signal)}
-            >
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-lg leading-tight">{signal.raw_signal?.title || "Untitled"}</h3>
-                      <div className="flex items-center gap-1 ml-auto">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-auto p-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSignalClick(signal);
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        {signal.raw_signal?.url && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-auto p-1" 
-                            asChild
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <a href={signal.raw_signal.url} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {(signal.content_snippet || signal.raw_signal?.description) && (
-                      <p className="text-muted-foreground text-sm leading-relaxed mb-3 line-clamp-2">
-                        {signal.content_snippet || signal.raw_signal?.description}
-                      </p>
-                    )}
-
-                    <div className="flex items-center flex-wrap gap-2 mb-3">
-                      <Badge 
-                        variant="outline" 
-                        className={cn("text-xs", getSourceColor(signal.raw_signal?.source || ""))}
-                      >
-                        <Building2 className="h-3 w-3 mr-1" />
-                        {signal.raw_signal?.source}
-                      </Badge>
-                      <Badge 
-                        variant="outline" 
-                        className={cn("text-xs", getTypeColor(signal.signal_type_classified || ""))}
-                      >
-                        {signal.signal_type_classified?.replace('_', ' ') || "Unclassified"}
-                      </Badge>
-                      {signal.raw_signal?.author && (
-                        <Badge variant="secondary" className="text-xs">
-                          {signal.raw_signal.author}
-                        </Badge>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>{format(new Date(signal.raw_signal?.scraped_date || signal.processed_timestamp), 'MMM dd, yyyy HH:mm')}</span>
-                      </div>
-                      <span>•</span>
-                      <span>ID: {signal.raw_signal?.signal_id}</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+      {/* Signals Table */}
+      <SignalsTableView 
+        signals={filteredSignals}
+        onSignalClick={handleSignalClick}
+      />
 
       <SignalDetailModal 
         signal={selectedSignal}

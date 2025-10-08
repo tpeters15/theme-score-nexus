@@ -1,18 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useSources, useToggleSourceStatus, useTriggerScrape } from "@/hooks/useSources";
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, RefreshCw, Plus, Activity, CheckCircle2, Clock, Search } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { RefreshCw, Plus, Search } from "lucide-react";
 import { AddSourceDialog } from "@/components/sources/AddSourceDialog";
 import { SourceStats } from "@/components/sources/SourceStats";
+import { SourcesTableView } from "@/components/SourcesTableView";
 
 
 export default function SourceMonitors() {
@@ -158,174 +154,12 @@ export default function SourceMonitors() {
 
       <SourceStats sources={sources} />
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4 flex-1">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search sources..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {uniqueTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type.toUpperCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {selectedSources.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  {selectedSources.length} selected
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleBulkAction("activate")}
-                >
-                  <Play className="h-4 w-4 mr-1" />
-                  Activate
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleBulkAction("pause")}
-                >
-                  <Pause className="h-4 w-4 mr-1" />
-                  Pause
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={selectedSources.length === filteredSources.length && filteredSources.length > 0}
-                    onCheckedChange={handleToggleAll}
-                  />
-                </TableHead>
-                <TableHead>Source</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Frequency</TableHead>
-                <TableHead>Last Checked</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSources.map((source) => (
-                <TableRow key={source.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedSources.includes(source.id)}
-                      onCheckedChange={() => handleToggleSource(source.id)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <Link
-                        to={`/source/${source.id}`}
-                        className="font-medium hover:underline"
-                      >
-                        {source.source_name}
-                      </Link>
-                      <p className="text-sm text-muted-foreground truncate max-w-xs">
-                        {source.base_url || source.feed_url || source.api_endpoint}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{source.source_type.toUpperCase()}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={source.status === "active" ? "default" : "secondary"}>
-                      {source.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="capitalize">{source.check_frequency}</TableCell>
-                  <TableCell>
-                    {source.last_checked_at ? (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        {formatDistanceToNow(new Date(source.last_checked_at), {
-                          addSuffix: true,
-                        })}
-                      </div>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">Never</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleCheckNow(source.id, source.source_name)}
-                        disabled={triggerScrape.isPending}
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => toggleStatus.mutate({
-                          id: source.id,
-                          status: source.status === "active" ? "paused" : "active"
-                        })}
-                      >
-                        {source.status === "active" ? (
-                          <Pause className="h-4 w-4" />
-                        ) : (
-                          <Play className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          {filteredSources.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                {searchQuery || statusFilter !== "all" || typeFilter !== "all"
-                  ? "No sources match your filters"
-                  : "No sources configured yet"}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Sources Table */}
+      <SourcesTableView 
+        sources={filteredSources}
+        onToggleStatus={(id, status) => toggleStatus.mutate({ id, status })}
+        onCheckNow={handleCheckNow}
+      />
 
       <AddSourceDialog
         open={isAddDialogOpen}
