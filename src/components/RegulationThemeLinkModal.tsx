@@ -57,12 +57,27 @@ export function RegulationThemeLinkModal({
   const fetchThemes = async () => {
     try {
       const { data, error } = await supabase
-        .from('themes')
-        .select('id, name, pillar, sector')
+        .from('taxonomy_themes')
+        .select(`
+          id,
+          name,
+          sector:taxonomy_sectors!inner(
+            name,
+            pillar:taxonomy_pillars!inner(name)
+          )
+        `)
         .order('name');
 
       if (error) throw error;
-      setThemes(data || []);
+      
+      const transformedThemes = (data || []).map(t => ({
+        id: t.id,
+        name: t.name,
+        pillar: t.sector.pillar.name,
+        sector: t.sector.name,
+      }));
+      
+      setThemes(transformedThemes);
     } catch (error) {
       console.error('Error fetching themes:', error);
       toast.error('Failed to load themes');

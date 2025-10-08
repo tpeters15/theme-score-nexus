@@ -37,7 +37,14 @@ export function useResearchDocuments() {
         .from("research_documents")
         .select(`
           *,
-          theme:themes(id, name, pillar, sector),
+          theme:taxonomy_themes(
+            id, 
+            name,
+            sector:taxonomy_sectors!inner(
+              name,
+              pillar:taxonomy_pillars!inner(name)
+            )
+          ),
           criteria:framework_criteria(id, name, code)
         `)
         .not("file_path", "is", null) // Only get documents with actual files
@@ -47,7 +54,18 @@ export function useResearchDocuments() {
         throw error;
       }
 
-      return data as ResearchDocument[];
+      // Transform theme data structure
+      const transformedData = data?.map(doc => ({
+        ...doc,
+        theme: doc.theme ? {
+          id: doc.theme.id,
+          name: doc.theme.name,
+          pillar: doc.theme.sector?.pillar?.name || '',
+          sector: doc.theme.sector?.name || '',
+        } : undefined
+      }));
+
+      return transformedData as ResearchDocument[];
     },
   });
 }

@@ -53,7 +53,7 @@ export default function RegulatoryTracker() {
       
       // Fetch all themes for filtering
       const { data: themesData, error: themesError } = await supabase
-        .from('themes')
+        .from('taxonomy_themes')
         .select('id, name')
         .order('name');
 
@@ -88,7 +88,7 @@ export default function RegulatoryTracker() {
 
       // Fetch themes separately
       const { data: allThemes, error: themesError2 } = await supabase
-        .from('themes')
+        .from('taxonomy_themes')
         .select('id, name');
 
       if (themesError2) {

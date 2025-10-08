@@ -103,11 +103,36 @@ export const useFramework = () => {
   const fetchThemeWithDetailedScores = async (themeId: string): Promise<ThemeWithDetailedScores | null> => {
     try {
       // Fetch theme
-      const { data: theme, error: themeError } = await supabase
-        .from('themes')
-        .select('*')
-        .eq('id', themeId)
-        .single();
+    const { data: themeData, error: themeError } = await supabase
+      .from('taxonomy_themes')
+      .select(`
+        *,
+        sector:taxonomy_sectors!inner(
+          name,
+          pillar:taxonomy_pillars!inner(name)
+        )
+      `)
+      .eq('id', themeId)
+      .single();
+
+    if (themeError || !themeData) {
+      console.error('Error fetching theme:', themeError);
+      return null;
+    }
+
+    // Transform to match Theme interface
+    const theme = {
+      id: themeData.id,
+      name: themeData.name,
+      pillar: themeData.sector.pillar.name,
+      sector: themeData.sector.name,
+      description: themeData.description,
+      in_scope: themeData.in_scope,
+      out_of_scope: themeData.out_of_scope,
+      keywords: themeData.keywords,
+      created_at: themeData.created_at,
+      updated_at: themeData.updated_at,
+    };
 
       if (themeError) throw themeError;
 

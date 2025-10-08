@@ -5,18 +5,35 @@ import { FrameworkCategory, FrameworkCriteria, DetailedScore } from '@/types/fra
 
 async function fetchThemes(): Promise<Theme[]> {
   const { data, error } = await supabase
-    .from('themes')
-    .select('*')
-    .order('pillar', { ascending: true })
-    .order('sector', { ascending: true })
-    .order('name', { ascending: true });
+    .from('taxonomy_themes')
+    .select(`
+      *,
+      sector:taxonomy_sectors!inner(
+        name,
+        pillar:taxonomy_pillars!inner(name)
+      )
+    `);
 
   if (error) {
     console.error('Error fetching themes:', error);
     return [];
   }
 
-  return data || [];
+  // Transform the data to match Theme interface
+  const themes = (data || []).map(theme => ({
+    id: theme.id,
+    name: theme.name,
+    pillar: theme.sector.pillar.name,
+    sector: theme.sector.name,
+    description: theme.description,
+    in_scope: theme.in_scope,
+    out_of_scope: theme.out_of_scope,
+    keywords: theme.keywords,
+    created_at: theme.created_at,
+    updated_at: theme.updated_at,
+  }));
+
+  return themes;
 }
 
 async function fetchFrameworkCategories(): Promise<FrameworkCategory[]> {
@@ -219,7 +236,7 @@ export function useThemes() {
     // Update theme fields if any changes
     if (Object.keys(themeUpdates).length > 0) {
       const { error } = await supabase
-        .from('themes')
+        .from('taxonomy_themes')
         .update(themeUpdates)
         .eq('id', themeId);
       

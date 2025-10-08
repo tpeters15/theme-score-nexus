@@ -25,11 +25,23 @@ export function useHighImpactRegulations() {
       }
 
       // Preload themes to avoid FK join (FK not present yet)
-      const { data: allThemes } = await supabase
-        .from('themes')
-        .select('id, name, pillar');
+      const { data: allThemesData } = await supabase
+        .from('taxonomy_themes')
+        .select(`
+          id, 
+          name,
+          sector:taxonomy_sectors!inner(
+            pillar:taxonomy_pillars!inner(name)
+          )
+        `);
 
-      const themeById = new Map((allThemes || []).map(t => [t.id, t]));
+      const allThemes = (allThemesData || []).map(t => ({
+        id: t.id,
+        name: t.name,
+        pillar: t.sector?.pillar?.name || ''
+      }));
+
+      const themeById = new Map(allThemes.map(t => [t.id, t]));
 
       // For each regulation, get the theme connections and highest relevance score
       const regulationsWithRelevance = await Promise.all(
