@@ -22,6 +22,8 @@ export const SingleCompanyClassifier = () => {
   const [website, setWebsite] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<Classification | null>(null);
+  const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null);
+  const [currentClassificationId, setCurrentClassificationId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleClassify = async (e: React.FormEvent) => {
@@ -110,8 +112,10 @@ export const SingleCompanyClassifier = () => {
         description: "Your company is being analyzed. Results will appear below.",
       });
 
+      setCurrentClassificationId(classificationData.id);
+
       // Poll for results
-      const pollInterval = setInterval(async () => {
+      const interval = setInterval(async () => {
         const { data } = await supabase
           .from("classifications")
           .select("*")
@@ -119,20 +123,41 @@ export const SingleCompanyClassifier = () => {
           .single();
 
         if (data?.status === "Completed") {
-          clearInterval(pollInterval);
+          clearInterval(interval);
+          setPollInterval(null);
           setResult({
             ...data,
             company_name: companyName,
             website: website,
           });
           setIsProcessing(false);
+          setCurrentClassificationId(null);
+        } else if (data?.status === "Failed") {
+          clearInterval(interval);
+          setPollInterval(null);
+          setIsProcessing(false);
+          setCurrentClassificationId(null);
+          toast({
+            title: "Classification Failed",
+            description: "The classification workflow encountered an error. Please try again.",
+            variant: "destructive",
+          });
         }
       }, 3000);
 
+      setPollInterval(interval);
+
       // Stop polling after 5 minutes
       setTimeout(() => {
-        clearInterval(pollInterval);
+        clearInterval(interval);
+        setPollInterval(null);
         setIsProcessing(false);
+        setCurrentClassificationId(null);
+        toast({
+          title: "Classification Timeout",
+          description: "The classification is taking longer than expected. Please check back later.",
+          variant: "destructive",
+        });
       }, 300000);
     } catch (error: any) {
       console.error("Error classifying company:", error);
@@ -143,6 +168,19 @@ export const SingleCompanyClassifier = () => {
       });
       setIsProcessing(false);
     }
+  };
+
+  const handleCancel = () => {
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      setPollInterval(null);
+    }
+    setIsProcessing(false);
+    setCurrentClassificationId(null);
+    toast({
+      title: "Classification Cancelled",
+      description: "The classification has been cancelled.",
+    });
   };
 
   return (
@@ -171,16 +209,29 @@ export const SingleCompanyClassifier = () => {
           />
         </div>
 
-        <Button type="submit" disabled={isProcessing} className="w-full">
-          {isProcessing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing...
-            </>
-          ) : (
-            "Classify Company"
+        <div className="flex gap-2">
+          <Button type="submit" disabled={isProcessing} className="flex-1">
+            {isProcessing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Analyzing...
+              </>
+            ) : (
+              "Classify Company"
+            )}
+          </Button>
+          
+          {isProcessing && (
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleCancel}
+              className="px-4"
+            >
+              Cancel
+            </Button>
           )}
-        </Button>
+        </div>
       </form>
 
       {result && <ClassificationResult result={result} />}
