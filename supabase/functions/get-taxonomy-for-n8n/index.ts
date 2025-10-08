@@ -23,28 +23,34 @@ Deno.serve(async (req) => {
       }
     )
 
-    // Fetch all taxonomy data in parallel
-    const [pillarsResult, sectorsResult, themesResult] = await Promise.all([
+    // Fetch all taxonomy data in parallel including business models
+    const [pillarsResult, sectorsResult, themesResult, businessModelsResult] = await Promise.all([
       supabaseClient
         .from('taxonomy_pillars')
-        .select('id, name, display_order')
+        .select('id, name, display_order, description')
         .order('display_order', { ascending: true }),
 
       supabaseClient
         .from('taxonomy_sectors')
-        .select('id, name, pillar_id, display_order')
+        .select('id, name, pillar_id, display_order, description')
         .order('display_order', { ascending: true }),
 
       supabaseClient
         .from('taxonomy_themes')
-        .select('id, name, sector_id')
+        .select('id, name, sector_id, description, impact, in_scope, out_of_scope, key_identifiers, keywords, common_edge_cases')
         .eq('is_active', true)
+        .order('name', { ascending: true }),
+
+      supabaseClient
+        .from('taxonomy_business_models')
+        .select('id, name, description')
         .order('name', { ascending: true })
     ])
 
     if (pillarsResult.error) throw pillarsResult.error
     if (sectorsResult.error) throw sectorsResult.error
     if (themesResult.error) throw themesResult.error
+    if (businessModelsResult.error) throw businessModelsResult.error
 
     // Build hierarchical taxonomy structure optimized for n8n
     const taxonomyMap: Record<string, any> = {}
@@ -62,7 +68,14 @@ Deno.serve(async (req) => {
           .filter(t => t.sector_id === sector.id)
           .map(t => ({
             id: t.id,
-            name: t.name
+            name: t.name,
+            description: t.description,
+            impact: t.impact,
+            in_scope: t.in_scope,
+            out_of_scope: t.out_of_scope,
+            key_identifiers: t.key_identifiers,
+            keywords: t.keywords,
+            common_edge_cases: t.common_edge_cases
           }))
 
         taxonomyMap[pillar.name].sectors[sector.name] = {
@@ -91,10 +104,16 @@ Deno.serve(async (req) => {
       JSON.stringify({
         taxonomy: taxonomyMap,
         flat_themes: flatThemes,
+        business_models: businessModelsResult.data.map(bm => ({
+          id: bm.id,
+          name: bm.name,
+          description: bm.description
+        })),
         metadata: {
           total_pillars: pillarsResult.data.length,
           total_sectors: sectorsResult.data.length,
           total_themes: themesResult.data.length,
+          total_business_models: businessModelsResult.data.length,
           generated_at: new Date().toISOString()
         }
       }),

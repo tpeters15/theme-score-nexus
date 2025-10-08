@@ -1,0 +1,614 @@
+{
+  "name": "Dealcloud Classifier v2 (Optimized)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dealcloud-classifier",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "dealcloud-classifier"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate and prepare batch input\nconst body = $input.item.json.body;\n\nif (!body || !body.companies || !Array.isArray(body.companies)) {\n  throw new Error('Invalid input: companies array required');\n}\n\nif (!body.batch_id) {\n  throw new Error('Invalid input: batch_id required');\n}\n\nconst companies = body.companies.map((company, index) => ({\n  ...company,\n  index,\n  batch_id: body.batch_id,\n  total_count: body.companies.length\n}));\n\nreturn companies.map(company => ({ json: company }));"
+      },
+      "id": "validate-prepare",
+      "name": "Validate & Prepare",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://blwwpvvdnpkipjgajwiw.supabase.co/functions/v1/get-taxonomy-for-n8n",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "fetch-taxonomy",
+      "name": "Fetch Enhanced Taxonomy",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Attach taxonomy context to each company\nconst taxonomyData = $('Fetch Enhanced Taxonomy').item.json;\nconst companies = $input.all();\n\nreturn companies.map(item => {\n  const company = item.json;\n  return {\n    json: {\n      ...company,\n      taxonomy: taxonomyData.taxonomy,\n      flat_themes: taxonomyData.flat_themes,\n      business_models: taxonomyData.business_models,\n      taxonomy_metadata: taxonomyData.metadata\n    }\n  };\n});"
+      },
+      "id": "build-context",
+      "name": "Build Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {},
+      "id": "loop-companies",
+      "name": "Loop Over Companies",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.perplexity.ai/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "llama-3.1-sonar-large-128k-online"
+            },
+            {
+              "name": "messages",
+              "value": "={{ [{\"role\": \"system\", \"content\": \"You are a business research analyst. Provide factual, concise summaries of companies based on their website and public information.\"}, {\"role\": \"user\", \"content\": `Research this company: ${$json.company_name} (${$json.website}). Provide: 1) Core business activities 2) Primary products/services 3) Key markets/sectors 4) Recent developments. Keep response under 300 words.`}] }}"
+            },
+            {
+              "name": "temperature",
+              "value": "0.2"
+            },
+            {
+              "name": "max_tokens",
+              "value": "600"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "perplexity-research",
+      "name": "Perplexity Research",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "perplexity-api",
+          "name": "Perplexity API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build comprehensive Claude classification prompt with full taxonomy metadata\nconst companyData = $('Loop Over Companies').item.json;\nconst perplexityResponse = $input.item.json;\nconst researchSummary = perplexityResponse?.choices?.[0]?.message?.content || 'No research data available';\n\n// Build theme list with full descriptions for Claude\nconst themesList = companyData.flat_themes.map(theme => {\n  const themeDetails = companyData.taxonomy[theme.pillar_name]?.sectors?.[theme.sector_name]?.themes?.find(t => t.id === theme.id);\n  \n  return `\n**Theme ID**: ${theme.id}\n**Name**: ${theme.name}\n**Pillar**: ${theme.pillar_name}\n**Sector**: ${theme.sector_name}\n**Description**: ${themeDetails?.description || 'N/A'}\n**In Scope**: ${themeDetails?.in_scope?.join('; ') || 'N/A'}\n**Out of Scope**: ${themeDetails?.out_of_scope?.join('; ') || 'N/A'}\n**Key Identifiers**: ${themeDetails?.key_identifiers?.join(', ') || 'N/A'}\n`;\n}).join('\\n---\\n');\n\n// Build business models list\nconst businessModelsList = companyData.business_models.map(bm => \n  `- ${bm.id}: ${bm.name} (${bm.description || 'N/A'})`\n).join('\\n');\n\nconst prompt = `You are a climate-tech taxonomy classification expert. Classify this company into our sustainability investment taxonomy.\n\n**COMPANY INFORMATION:**\nName: ${companyData.company_name}\nWebsite: ${companyData.website}\n\n**RESEARCH SUMMARY:**\n${researchSummary}\n\n**AVAILABLE THEMES (${companyData.flat_themes.length}):**\n${themesList}\n\n**AVAILABLE BUSINESS MODELS:**\n${businessModelsList}\n\n**CLASSIFICATION TASK:**\n1. Determine if this company fits ANY theme in our taxonomy\n2. If YES: Select the MOST RELEVANT theme_id (UUID format)\n3. If NO: Return null for theme_id\n4. Select the most appropriate business_model_id from the list above\n5. Provide a confidence score (0.0-1.0)\n6. Write a detailed rationale explaining your classification\n7. Identify key context factors that influenced your decision\n\n**CRITICAL REQUIREMENTS:**\n- Return theme_id as the exact UUID from the list above\n- Return business_model_id as the exact UUID from the business models list\n- For out-of-scope companies, set theme_id to null but still provide rationale\n- Confidence should reflect certainty: 0.9+ for clear fits, 0.7-0.89 for good fits, 0.5-0.69 for uncertain, <0.5 for poor fits\n\n**RESPONSE FORMAT (JSON ONLY):**\n{\n  \"theme_id\": \"<exact UUID or null>\",\n  \"business_model_id\": \"<exact UUID or null>\",\n  \"confidence_score\": 0.85,\n  \"rationale\": \"Detailed explanation of why this theme was selected...\",\n  \"context_metadata\": {\n    \"primary_activities\": [\"activity1\", \"activity2\"],\n    \"key_signals\": [\"signal1\", \"signal2\"],\n    \"scope_determination\": \"in-scope\" or \"out-of-scope\",\n    \"edge_case_notes\": \"Any relevant edge case considerations\"\n  }\n}`;\n\nreturn [{\n  json: {\n    company_context: companyData,\n    research_summary: researchSummary,\n    claude_prompt: prompt\n  }\n}];"
+      },
+      "id": "prepare-claude-prompt",
+      "name": "Prepare Claude Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "claude-sonnet-4-20250514"
+            },
+            {
+              "name": "max_tokens",
+              "value": "2048"
+            },
+            {
+              "name": "messages",
+              "value": "={{ [{\"role\": \"user\", \"content\": $json.claude_prompt}] }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "claude-classification",
+      "name": "Claude Classification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "anthropic-api",
+          "name": "Anthropic API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse and validate Claude's classification response\nconst claudeResponse = $input.item.json;\nconst companyContext = $('Prepare Claude Prompt').item.json.company_context;\nconst researchSummary = $('Prepare Claude Prompt').item.json.research_summary;\n\nlet classification;\ntry {\n  const claudeContent = claudeResponse?.content?.[0]?.text || '{}';\n  classification = JSON.parse(claudeContent);\n} catch (error) {\n  throw new Error(`Failed to parse Claude response: ${error.message}`);\n}\n\n// Validate theme_id is either null or a valid UUID from our taxonomy\nlet validatedThemeId = null;\nlet isInScope = false;\n\nif (classification.theme_id && classification.theme_id !== 'null') {\n  const themeExists = companyContext.flat_themes.find(t => t.id === classification.theme_id);\n  if (themeExists) {\n    validatedThemeId = classification.theme_id;\n    isInScope = true;\n  } else {\n    console.error(`Invalid theme_id returned: ${classification.theme_id}`);\n  }\n}\n\n// Validate business_model_id\nlet validatedBusinessModelId = null;\nif (classification.business_model_id && classification.business_model_id !== 'null') {\n  const bmExists = companyContext.business_models.find(bm => bm.id === classification.business_model_id);\n  if (bmExists) {\n    validatedBusinessModelId = classification.business_model_id;\n  }\n}\n\n// Get theme details for reference\nconst themeDetails = validatedThemeId \n  ? companyContext.flat_themes.find(t => t.id === validatedThemeId)\n  : null;\n\nconst businessModelName = validatedBusinessModelId\n  ? companyContext.business_models.find(bm => bm.id === validatedBusinessModelId)?.name\n  : null;\n\nreturn [{\n  json: {\n    company_id: companyContext.company_id,\n    company_name: companyContext.company_name,\n    website: companyContext.website,\n    batch_id: companyContext.batch_id,\n    theme_id: validatedThemeId,\n    theme_name: themeDetails?.name || null,\n    pillar_name: themeDetails?.pillar_name || null,\n    sector_name: themeDetails?.sector_name || null,\n    business_model_id: validatedBusinessModelId,\n    business_model_name: businessModelName,\n    confidence_score: classification.confidence_score || 0,\n    rationale: classification.rationale || 'No rationale provided',\n    context_metadata: classification.context_metadata || {},\n    research_summary: researchSummary,\n    is_in_scope: isInScope,\n    index: companyContext.index,\n    total_count: companyContext.total_count\n  }\n}];"
+      },
+      "id": "parse-classification",
+      "name": "Parse Classification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "scope-check",
+              "leftValue": "={{ $json.is_in_scope }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "route-by-scope",
+      "name": "Route by Scope",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2220, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://blwwpvvdnpkipjgajwiw.supabase.co/rest/v1/classifications",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"company_id\": $json.company_id,\n  \"batch_id\": $json.batch_id,\n  \"theme_id\": $json.theme_id,\n  \"primary_theme\": $json.theme_name,\n  \"pillar\": $json.pillar_name,\n  \"sector\": $json.sector_name,\n  \"business_model\": $json.business_model_name,\n  \"confidence_score\": $json.confidence_score,\n  \"rationale\": $json.rationale,\n  \"context_metadata\": $json.context_metadata,\n  \"perplexity_research\": $json.research_summary,\n  \"source_system\": \"n8n\",\n  \"classification_type\": \"initial\",\n  \"taxonomy_version\": 2,\n  \"status\": \"Completed\",\n  \"model_used\": \"claude-sonnet-4 + perplexity\"\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "save-classification",
+      "name": "Save Classification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2440, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-role",
+          "name": "Supabase Service Role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://blwwpvvdnpkipjgajwiw.supabase.co/rest/v1/company_theme_mappings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"company_id\": $('Parse Classification').item.json.company_id,\n  \"theme_id\": $('Parse Classification').item.json.theme_id,\n  \"confidence_score\": $('Parse Classification').item.json.confidence_score,\n  \"is_primary\": true,\n  \"classification_method\": \"ai_classification\",\n  \"notes\": $('Parse Classification').item.json.rationale,\n  \"batch_id\": $('Parse Classification').item.json.batch_id,\n  \"is_example\": false\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "create-company-theme-mapping",
+      "name": "Create Company-Theme Mapping",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2660, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-role",
+          "name": "Supabase Service Role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://blwwpvvdnpkipjgajwiw.supabase.co/rest/v1/classifications",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"company_id\": $json.company_id,\n  \"batch_id\": $json.batch_id,\n  \"theme_id\": null,\n  \"primary_theme\": \"Out of Scope\",\n  \"pillar\": null,\n  \"sector\": null,\n  \"business_model\": $json.business_model_name,\n  \"confidence_score\": $json.confidence_score,\n  \"rationale\": $json.rationale,\n  \"context_metadata\": Object.assign({}, $json.context_metadata, {scope_determination: \"out-of-scope\"}),\n  \"perplexity_research\": $json.research_summary,\n  \"source_system\": \"n8n\",\n  \"classification_type\": \"initial\",\n  \"taxonomy_version\": 2,\n  \"status\": \"Completed\",\n  \"model_used\": \"claude-sonnet-4 + perplexity\"\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "save-out-of-scope",
+      "name": "Save Out-of-Scope Classification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2440, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-role",
+          "name": "Supabase Service Role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Wait for rate limiting (avoid API throttling)\nawait new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay between companies\nreturn [$input.item];"
+      },
+      "id": "rate-limit-wait",
+      "name": "Rate Limit Wait",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2880, 300]
+    },
+    {
+      "parameters": {},
+      "id": "merge-routes",
+      "name": "Merge Routes",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [2880, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://blwwpvvdnpkipjgajwiw.supabase.co/rest/v1/classification_batches?id=eq.={{ $('Loop Over Companies').item.json.batch_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"status\": \"Completed\",\n  \"updated_at\": new Date().toISOString()\n} }}",
+        "options": {}
+      },
+      "id": "update-batch-complete",
+      "name": "Update Batch Complete",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3320, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-role",
+          "name": "Supabase Service Role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  \"success\": true,\n  \"batch_id\": $('Loop Over Companies').item.json.batch_id,\n  \"companies_processed\": $('Loop Over Companies').item.json.total_count,\n  \"message\": \"Batch classification completed successfully\"\n} }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [3540, 300]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate & Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Prepare": {
+      "main": [
+        [
+          {
+            "node": "Fetch Enhanced Taxonomy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Enhanced Taxonomy": {
+      "main": [
+        [
+          {
+            "node": "Build Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Context": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Companies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Companies": {
+      "main": [
+        [
+          {
+            "node": "Perplexity Research",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Batch Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perplexity Research": {
+      "main": [
+        [
+          {
+            "node": "Prepare Claude Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Claude Prompt": {
+      "main": [
+        [
+          {
+            "node": "Claude Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude Classification": {
+      "main": [
+        [
+          {
+            "node": "Parse Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Classification": {
+      "main": [
+        [
+          {
+            "node": "Route by Scope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Scope": {
+      "main": [
+        [
+          {
+            "node": "Save Classification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save Out-of-Scope Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Classification": {
+      "main": [
+        [
+          {
+            "node": "Create Company-Theme Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Company-Theme Mapping": {
+      "main": [
+        [
+          {
+            "node": "Merge Routes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Out-of-Scope Classification": {
+      "main": [
+        [
+          {
+            "node": "Merge Routes",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Routes": {
+      "main": [
+        [
+          {
+            "node": "Rate Limit Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Companies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Batch Complete": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "optimized-v2",
+  "meta": {
+    "instanceId": "your-n8n-instance"
+  },
+  "id": "dealcloud-classifier-v2",
+  "tags": []
+}
