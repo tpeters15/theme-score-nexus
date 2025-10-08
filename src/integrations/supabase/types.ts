@@ -190,6 +190,8 @@ export type Database = {
           confidence_score: number | null
           created_at: string | null
           id: string
+          is_example: boolean
+          is_positive_example: boolean
           is_primary: boolean
           notes: string | null
           theme_id: string
@@ -204,6 +206,8 @@ export type Database = {
           confidence_score?: number | null
           created_at?: string | null
           id?: string
+          is_example?: boolean
+          is_positive_example?: boolean
           is_primary?: boolean
           notes?: string | null
           theme_id: string
@@ -218,6 +222,8 @@ export type Database = {
           confidence_score?: number | null
           created_at?: string | null
           id?: string
+          is_example?: boolean
+          is_positive_example?: boolean
           is_primary?: boolean
           notes?: string | null
           theme_id?: string
@@ -1072,51 +1078,6 @@ export type Database = {
           },
           {
             foreignKeyName: "taxonomy_theme_business_models_theme_id_fkey"
-            columns: ["theme_id"]
-            isOneToOne: false
-            referencedRelation: "taxonomy_themes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      taxonomy_theme_example_companies: {
-        Row: {
-          company_id: string
-          created_at: string | null
-          id: string
-          is_positive_example: boolean
-          notes: string | null
-          theme_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          company_id: string
-          created_at?: string | null
-          id?: string
-          is_positive_example?: boolean
-          notes?: string | null
-          theme_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          company_id?: string
-          created_at?: string | null
-          id?: string
-          is_positive_example?: boolean
-          notes?: string | null
-          theme_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "taxonomy_theme_example_companies_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "taxonomy_theme_example_companies_theme_id_fkey"
             columns: ["theme_id"]
             isOneToOne: false
             referencedRelation: "taxonomy_themes"
