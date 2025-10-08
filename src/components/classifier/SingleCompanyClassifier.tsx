@@ -73,11 +73,12 @@ export const SingleCompanyClassifier = () => {
         .limit(1)
         .single();
 
-      // Create classification record (no batch for single classifications)
+      // Create classification record
       const { data: classificationData, error: classificationError } = await supabase
         .from("classifications")
         .insert({
           company_id: companyData.id,
+          batch_id: batchData.id,
           source_system: 'dashboard',
           classification_type: 'initial',
           taxonomy_version: latestTheme?.version || 1,
