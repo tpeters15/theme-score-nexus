@@ -33,8 +33,8 @@ export function DashboardHeader() {
           <div className="flex items-center gap-4">
             <SidebarTrigger />
             <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <img src={deltaLogo} alt="Delta Intelligence Logo" className="h-8 w-8" />
-              <h1 className="text-lg font-semibold text-foreground">Delta Intelligence</h1>
+              <img src={deltaLogo} alt="Delta Intelligence Logo" className="h-11 w-11" />
+              <h1 className="text-xl font-semibold text-foreground font-sans">Delta Intelligence</h1>
             </Link>
           </div>
           
