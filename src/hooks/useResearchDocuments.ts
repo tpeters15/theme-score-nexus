@@ -55,15 +55,21 @@ export function useResearchDocuments() {
       }
 
       // Transform theme data structure
-      const transformedData = data?.map(doc => ({
-        ...doc,
-        theme: doc.theme ? {
-          id: doc.theme.id,
-          name: doc.theme.name,
-          pillar: doc.theme.sector?.pillar?.name || '',
-          sector: doc.theme.sector?.name || '',
-        } : undefined
-      }));
+      const transformedData = data?.map(doc => {
+        if (!doc.theme) {
+          return { ...doc, theme: undefined };
+        }
+        
+        return {
+          ...doc,
+          theme: {
+            id: doc.theme.id,
+            name: doc.theme.name,
+            pillar: doc.theme.sector?.pillar?.name || '',
+            sector: doc.theme.sector?.name || '',
+          }
+        };
+      });
 
       return transformedData as ResearchDocument[];
     },

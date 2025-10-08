@@ -766,6 +766,13 @@ export type Database = {
             referencedRelation: "framework_criteria"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "research_documents_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_themes"
+            referencedColumns: ["id"]
+          },
         ]
       }
       signals: {
