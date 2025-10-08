@@ -1,8 +1,9 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { LogOut, Building2 } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
+import deltaLogo from "@/assets/delta-logo.png";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,13 +33,8 @@ export function DashboardHeader() {
           <div className="flex items-center gap-4">
             <SidebarTrigger />
             <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="p-1.5 bg-primary rounded-md">
-                <Building2 className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold text-foreground">M/T Intelligence</h1>
-                <p className="text-xs text-muted-foreground">Investment Research Platform</p>
-              </div>
+              <img src={deltaLogo} alt="Delta Intelligence Logo" className="h-8 w-8" />
+              <h1 className="text-lg font-semibold text-foreground">Delta Intelligence</h1>
             </Link>
           </div>
           
