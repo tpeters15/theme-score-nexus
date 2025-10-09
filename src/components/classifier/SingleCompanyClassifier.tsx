@@ -47,7 +47,7 @@ export const SingleCompanyClassifier = () => {
         .from("companies")
         .upsert(
           { company_name: companyName, website_domain: website },
-          { onConflict: 'website_domain', ignoreDuplicates: false }
+          { onConflict: "website_domain", ignoreDuplicates: false },
         )
         .select()
         .single();
@@ -69,9 +69,9 @@ export const SingleCompanyClassifier = () => {
 
       // Get taxonomy version
       const { data: latestTheme } = await supabase
-        .from('taxonomy_themes')
-        .select('version')
-        .order('version', { ascending: false })
+        .from("taxonomy_themes")
+        .select("version")
+        .order("version", { ascending: false })
         .limit(1)
         .single();
 
@@ -81,8 +81,8 @@ export const SingleCompanyClassifier = () => {
         .insert({
           company_id: companyData.id,
           batch_id: batchData.id,
-          source_system: 'dashboard',
-          classification_type: 'initial',
+          source_system: "dashboard",
+          classification_type: "initial",
           taxonomy_version: latestTheme?.version || 1,
           status: "Pending",
         })
@@ -92,7 +92,7 @@ export const SingleCompanyClassifier = () => {
       if (classificationError) throw classificationError;
 
       // Send to n8n webhook
-      const webhookUrl = "https://towerbrook.app.n8n.cloud/webhook/dealcloud-classifier";
+      const webhookUrl = "https://towerbrook.app.n8n.cloud/webhook/classify-single-company";
       await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -101,9 +101,12 @@ export const SingleCompanyClassifier = () => {
           company_id: companyData.id,
           company_name: companyName,
           website: website,
-          domain: website.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0],
-          source_system: 'dashboard',
-          taxonomy_version: latestTheme?.version || 1
+          domain: website
+            .replace(/^https?:\/\//, "")
+            .replace(/^www\./, "")
+            .split("/")[0],
+          source_system: "dashboard",
+          taxonomy_version: latestTheme?.version || 1,
         }),
       });
 
@@ -116,11 +119,7 @@ export const SingleCompanyClassifier = () => {
 
       // Poll for results
       const interval = setInterval(async () => {
-        const { data } = await supabase
-          .from("classifications")
-          .select("*")
-          .eq("id", classificationData.id)
-          .single();
+        const { data } = await supabase.from("classifications").select("*").eq("id", classificationData.id).single();
 
         if (data?.status === "Completed") {
           clearInterval(interval);
@@ -220,14 +219,9 @@ export const SingleCompanyClassifier = () => {
               "Classify Company"
             )}
           </Button>
-          
+
           {isProcessing && (
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleCancel}
-              className="px-4"
-            >
+            <Button type="button" variant="outline" onClick={handleCancel} className="px-4">
               Cancel
             </Button>
           )}
