@@ -3,45 +3,99 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Signal, ExternalLink, Clock, Eye } from "lucide-react";
 import { format } from "date-fns";
-import { useRecentProcessedSignals } from "@/hooks/useProcessedSignals";
-import { useState } from "react";
-import type { ProcessedSignal } from "@/hooks/useProcessedSignals";
+import { useRecentProcessedSignals, type ProcessedSignal } from "@/hooks/useProcessedSignals";
+import { useState, useMemo } from "react";
 import { SignalDetailModal } from "@/components/SignalDetailModal";
 
+// Mock data for signal highlights
+const MOCK_SIGNALS_DATA = [
+  {
+    signal_id: "sig_1758626263287_0",
+    original_id: "pitchbook-1758626263199-uinu0ctnp-collision-repair",
+    title: "Collision Repair - Acquisition",
+    company: "Collision Repair",
+    location: "Bellshill, United Kingdom",
+    industry: "Road",
+    deal_type: "acquisition",
+    published_date: "2025-09-23T11:16:47Z",
+    source: "PitchBook Alert",
+    content: "Collision Repair was acquired for an undisclosed amount with close date of 19-Sep-2025. Provider of automotive body repair services."
+  },
+  {
+    signal_id: "sig_1758621873680_1",
+    original_id: "https://www.reuters.com",
+    title: "US judge rules Trump cannot block Rhode Island offshore wind project",
+    company: "Ørsted",
+    location: "Rhode Island, USA",
+    industry: "Renewable Energy",
+    deal_type: "news",
+    published_date: "2025-09-23T00:00:00.000Z",
+    source: "Carbon Brief Daily",
+    content: "Federal judge ruled that Danish offshore wind developer Ørsted can restart work on its $6.2bn Revolution Wind project."
+  },
+  {
+    signal_id: "sig_1758621663476_0",
+    original_id: "https://www.bloomberg.com/eu-deforestation",
+    title: "EU Proposes Another Delay to Landmark Deforestation Law",
+    company: "European Commission",
+    location: "European Union",
+    industry: "Environmental Policy",
+    deal_type: "news",
+    published_date: "2025-09-23T09:40:37.000Z",
+    source: "Bloomberg Green",
+    content: "The European Commission will seek to again delay the implementation of its landmark law to tackle deforestation."
+  },
+  {
+    signal_id: "sig_1758621663476_1",
+    original_id: "https://www.bloomberg.com/australia-battery",
+    title: "Australian Government Strikes Battery Offtake Deal",
+    company: "Snowy Hydro Ltd.",
+    location: "Australia",
+    industry: "Energy Storage",
+    deal_type: "news",
+    published_date: "2025-09-23T08:57:50.000Z",
+    source: "Bloomberg Green",
+    content: "Snowy Hydro struck a deal to use a battery being developed by a BlackRock Inc. unit."
+  }
+];
+
 export function SignalHighlightsCard() {
-  const { data: signals, isLoading: loading } = useRecentProcessedSignals(4);
+  const { data: dbSignals, isLoading: loading } = useRecentProcessedSignals(4);
   const [selectedSignal, setSelectedSignal] = useState<ProcessedSignal | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Map mock data to ProcessedSignal format
+  const mockProcessedSignals: ProcessedSignal[] = useMemo(() => {
+    return MOCK_SIGNALS_DATA.map((mock, index) => ({
+      id: mock.signal_id,
+      raw_signal_id: mock.original_id,
+      signal_type_classified: mock.deal_type,
+      content_snippet: mock.content,
+      processed_timestamp: mock.published_date,
+      memo_analysis: `${mock.company} in ${mock.location} - ${mock.industry}`,
+      credibility_score: Math.floor(Math.random() * 3) + 8,
+      raw_signal: {
+        id: mock.signal_id,
+        signal_id: mock.signal_id,
+        original_id: mock.original_id,
+        url: mock.original_id.startsWith('http') ? mock.original_id : undefined,
+        title: mock.title,
+        description: mock.content,
+        source: mock.source,
+        source_type: mock.deal_type === 'news' ? 'rss' : 'email_alert',
+        author: mock.company,
+        scraped_date: mock.published_date,
+        created_at: mock.published_date,
+        publication_date: mock.published_date
+      }
+    }));
+  }, []);
 
   const openModal = (signal: ProcessedSignal) => { setSelectedSignal(signal); setIsModalOpen(true); };
   const closeModal = () => { setIsModalOpen(false); setSelectedSignal(null); };
 
-  if (loading) {
-    return (
-      <Card className="bg-gradient-to-br from-card to-muted/20 border-border/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <div className="p-1.5 rounded-lg bg-blue-500/10">
-              <Signal className="h-4 w-4 text-blue-600" />
-            </div>
-            Signal Highlights
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="p-3 rounded-lg border">
-              <div className="h-4 bg-muted rounded mb-2" />
-              <div className="h-3 bg-muted rounded w-3/4 mb-2" />
-              <div className="h-3 bg-muted rounded w-1/2" />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Recent signals from the database
-  const recentSignals = signals || [];
+  // Use mock data instead of database signals
+  const recentSignals = mockProcessedSignals;
 
   const getCategoryColor = (signal: ProcessedSignal) => {
     // Determine category based on source and content
