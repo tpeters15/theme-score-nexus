@@ -92,7 +92,7 @@ export const SingleCompanyClassifier = () => {
       if (classificationError) throw classificationError;
 
       // Send to n8n webhook
-      const webhookUrl = "https://towerbrook.app.n8n.cloud/webhook/classify-single-company";
+      const webhookUrl = "https://towerbrook.app.n8n.cloud/webhook-test/classify-single-company";
       await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
