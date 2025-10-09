@@ -7,9 +7,13 @@ interface ClassificationResultProps {
     company_name: string;
     website: string;
     primary_theme: string;
+    sector?: string;
+    pillar?: string;
     confidence_score: number;
     rationale: string;
     status: string;
+    website_summary?: string;
+    perplexity_research?: string;
   };
 }
 
@@ -27,11 +31,25 @@ export const ClassificationResult = ({ result }: ClassificationResultProps) => {
         <p className="text-sm text-muted-foreground">{result.website}</p>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div>
-          <p className="text-sm font-medium mb-1">Primary Theme</p>
-          <Badge variant="secondary" className="text-base">
-            {result.primary_theme}
-          </Badge>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <p className="text-sm font-medium mb-1">Pillar</p>
+            <Badge variant="outline" className="text-sm">
+              {result.pillar || 'N/A'}
+            </Badge>
+          </div>
+          <div>
+            <p className="text-sm font-medium mb-1">Sector</p>
+            <Badge variant="outline" className="text-sm">
+              {result.sector || 'N/A'}
+            </Badge>
+          </div>
+          <div>
+            <p className="text-sm font-medium mb-1">Theme</p>
+            <Badge variant="secondary" className="text-sm">
+              {result.primary_theme}
+            </Badge>
+          </div>
         </div>
 
         <div>
@@ -52,6 +70,25 @@ export const ClassificationResult = ({ result }: ClassificationResultProps) => {
         <div>
           <p className="text-sm font-medium mb-1">Rationale</p>
           <p className="text-sm text-muted-foreground">{result.rationale}</p>
+        </div>
+
+        <div>
+          <p className="text-sm font-medium mb-1">Sources Used</p>
+          <div className="flex flex-wrap gap-2">
+            {result.website_summary && (
+              <Badge variant="outline" className="text-xs">
+                Website Analysis
+              </Badge>
+            )}
+            {result.perplexity_research && (
+              <Badge variant="outline" className="text-xs">
+                Web Research
+              </Badge>
+            )}
+            {!result.website_summary && !result.perplexity_research && (
+              <span className="text-sm text-muted-foreground">No sources recorded</span>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

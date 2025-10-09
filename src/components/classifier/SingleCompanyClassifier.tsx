@@ -10,11 +10,15 @@ import { ClassificationResult } from "./ClassificationResult";
 interface Classification {
   id: string;
   primary_theme: string;
+  sector?: string;
+  pillar?: string;
   confidence_score: number;
   rationale: string;
   status: string;
   company_name: string;
   website: string;
+  website_summary?: string;
+  perplexity_research?: string;
 }
 
 export const SingleCompanyClassifier = () => {
