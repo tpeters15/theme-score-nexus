@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Signal, ExternalLink, Clock, Eye } from "lucide-react";
 import { PROCESSED_SIGNALS_DATA, ProcessedSignalData } from "@/data/processedSignals";
 import { useState } from "react";
+import { ProcessedSignalDetailModal } from "@/components/ProcessedSignalDetailModal";
 
 export function SignalHighlightsCard() {
   const [selectedSignal, setSelectedSignal] = useState<ProcessedSignalData | null>(null);
@@ -114,6 +115,12 @@ export function SignalHighlightsCard() {
           </a>
         </Button>
       </CardContent>
+
+      <ProcessedSignalDetailModal 
+        signal={selectedSignal}
+        isOpen={isModalOpen}
+        onClose={closeModal}
+      />
     </Card>
   );
 }
