@@ -12,9 +12,11 @@ export function SignalHighlightsCard() {
 
   const recentSignals = PROCESSED_SIGNALS_DATA.slice(0, 4);
 
-  const openModal = (signal: ProcessedSignalData) => { 
+  const openModal = (signal: ProcessedSignalData) => {
+    console.log('Opening modal for signal:', signal);
     setSelectedSignal(signal); 
-    setIsModalOpen(true); 
+    setIsModalOpen(true);
+    console.log('Modal state updated:', { isModalOpen: true, signal });
   };
   
   const closeModal = () => { 

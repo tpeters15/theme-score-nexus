@@ -21,6 +21,7 @@ interface ProcessedSignalDetailModalProps {
 }
 
 export function ProcessedSignalDetailModal({ signal, isOpen, onClose }: ProcessedSignalDetailModalProps) {
+  console.log('ProcessedSignalDetailModal render:', { signal, isOpen });
   if (!signal) return null;
 
   const getSourceColor = (source: string) => {
