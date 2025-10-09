@@ -97,20 +97,24 @@ export default function Auth() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Shield className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">M/T Intelligence</h1>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <img 
+              src="/src/assets/delta-logo.png" 
+              alt="Delta Logo" 
+              className="h-12 w-12 object-contain"
+            />
+            <h1 className="text-3xl font-bold text-foreground">M/T Intelligence</h1>
           </div>
           <p className="text-muted-foreground">
-            Access your investment intelligence platform
+            Delta's Investment Intelligence Platform
           </p>
         </div>
 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-center">Sign In</CardTitle>
+            <CardTitle className="text-center">Welcome Back</CardTitle>
             <CardDescription className="text-center">
-              Access your investment intelligence platform
+              Sign in to access Delta's investment intelligence platform
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -174,7 +178,7 @@ export default function Auth() {
 
         <div className="text-center mt-6 text-sm text-muted-foreground">
           <p>
-            Secure authentication powered by Supabase
+            © 2025 Delta. Secure authentication powered by Supabase
           </p>
         </div>
       </div>
