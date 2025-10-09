@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import deltaLogo from "@/assets/delta-logo.png";
 
 import { Loader2, Shield, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -99,14 +100,14 @@ export default function Auth() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
             <img 
-              src="/src/assets/delta-logo.png" 
+              src={deltaLogo} 
               alt="Delta Logo" 
               className="h-12 w-12 object-contain"
             />
-            <h1 className="text-3xl font-bold text-foreground">M/T Intelligence</h1>
+            <h1 className="text-3xl font-bold text-foreground">Delta Intelligence</h1>
           </div>
           <p className="text-muted-foreground">
-            Delta's Investment Intelligence Platform
+            Investment Intelligence Platform
           </p>
         </div>
 
