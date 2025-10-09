@@ -130,10 +130,18 @@ export const SingleCompanyClassifier = () => {
       setIsProcessing(false);
       setCurrentClassificationId(null);
 
-      toast({
-        title: "Classification Complete",
-        description: `Classified using ${functionData.stages_used}`,
-      });
+      // Show different toast message if classification was reused
+      if (functionData.reused) {
+        toast({
+          title: "Classification Reused",
+          description: "This company was already classified. Using existing results to avoid duplicates.",
+        });
+      } else {
+        toast({
+          title: "Classification Complete",
+          description: `Classified using ${functionData.stages_used}`,
+        });
+      }
 
       /* ============== N8N WORKFLOW (DEACTIVATED - kept for reference) ==============
       // Send to n8n webhook

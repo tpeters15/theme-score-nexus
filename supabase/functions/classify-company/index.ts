@@ -48,7 +48,68 @@ Deno.serve(async (req) => {
     
     console.log(`Starting classification for ${companyName} (${website})`)
 
-    // Update status to Processing
+    // Check for existing completed classification for this company
+    const { data: existingClassification } = await supabase
+      .from('classifications')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('status', 'Completed')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    // If we have an existing classification, use it instead of re-classifying
+    if (existingClassification) {
+      console.log(`Found existing classification for company ${companyId}, reusing results`)
+      
+      // Copy the existing classification data to the new classification record
+      const { error: copyError } = await supabase
+        .from('classifications')
+        .update({
+          status: 'Completed',
+          primary_theme: existingClassification.primary_theme,
+          theme_id: existingClassification.theme_id,
+          pillar: existingClassification.pillar,
+          sector: existingClassification.sector,
+          business_model: existingClassification.business_model,
+          confidence_score: existingClassification.confidence_score,
+          rationale: `[Reused from previous classification] ${existingClassification.rationale}`,
+          model_used: existingClassification.model_used,
+          website_summary: existingClassification.website_summary,
+          perplexity_research: existingClassification.perplexity_research,
+          context_metadata: {
+            ...existingClassification.context_metadata,
+            reused_from_classification_id: existingClassification.id,
+            reused_at: new Date().toISOString(),
+          }
+        })
+        .eq('id', classificationId)
+
+      if (copyError) {
+        console.error('Error copying classification:', copyError)
+      } else {
+        // Update batch status
+        await supabase
+          .from('classification_batches')
+          .update({ status: 'Completed', updated_at: new Date().toISOString() })
+          .eq('id', batchId)
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            classification: existingClassification,
+            reused: true,
+            message: 'Reused existing classification for this company'
+          }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200 
+          }
+        )
+      }
+    }
+
+    // Update status to Processing (only if we're doing a new classification)
     await supabase
       .from('classifications')
       .update({ status: 'Processing' })
