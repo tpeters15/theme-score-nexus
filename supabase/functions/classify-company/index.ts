@@ -109,6 +109,107 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Fallback: try to find existing classification by website domain or company name
+    const normalizeDomain = (url: string) => {
+      try {
+        const u = new URL(url)
+        return u.hostname.replace(/^www\./, '')
+      } catch (_) {
+        return url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]
+      }
+    }
+    const normalizedDomain = normalizeDomain(website)
+
+    // 1) Try matching by website_domain
+    const { data: domainCompany } = await supabase
+      .from('companies')
+      .select('id')
+      .eq('website_domain', normalizedDomain)
+      .maybeSingle()
+
+    let reuseClassification: any = null
+
+    if (domainCompany) {
+      const { data: byDomain } = await supabase
+        .from('classifications')
+        .select('*')
+        .eq('company_id', domainCompany.id)
+        .eq('status', 'Completed')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (byDomain) reuseClassification = byDomain
+    }
+
+    // 2) If not found, try matching by company name (case-insensitive)
+    if (!reuseClassification) {
+      const { data: nameCompany } = await supabase
+        .from('companies')
+        .select('id')
+        .ilike('company_name', companyName)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (nameCompany) {
+        const { data: byName } = await supabase
+          .from('classifications')
+          .select('*')
+          .eq('company_id', nameCompany.id)
+          .eq('status', 'Completed')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (byName) reuseClassification = byName
+      }
+    }
+
+    if (reuseClassification) {
+      console.log('Reusing classification found via website/company name')
+      const { error: copyError2 } = await supabase
+        .from('classifications')
+        .update({
+          status: 'Completed',
+          primary_theme: reuseClassification.primary_theme,
+          theme_id: reuseClassification.theme_id,
+          pillar: reuseClassification.pillar,
+          sector: reuseClassification.sector,
+          business_model: reuseClassification.business_model,
+          confidence_score: reuseClassification.confidence_score,
+          rationale: `[Reused from previous classification] ${reuseClassification.rationale}`,
+          model_used: reuseClassification.model_used,
+          website_summary: reuseClassification.website_summary,
+          perplexity_research: reuseClassification.perplexity_research,
+          context_metadata: {
+            ...reuseClassification.context_metadata,
+            reused_from_classification_id: reuseClassification.id,
+            reused_at: new Date().toISOString(),
+            reuse_lookup: { normalizedDomain, companyName }
+          }
+        })
+        .eq('id', classificationId)
+
+      if (!copyError2) {
+        await supabase
+          .from('classification_batches')
+          .update({ status: 'Completed', updated_at: new Date().toISOString() })
+          .eq('id', batchId)
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            classification: reuseClassification,
+            reused: true,
+            message: 'Reused existing classification matched by website/company name'
+          }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200 
+          }
+        )
+      }
+    }
+
     // Update status to Processing (only if we're doing a new classification)
     await supabase
       .from('classifications')

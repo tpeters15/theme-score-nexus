@@ -46,11 +46,20 @@ export const SingleCompanyClassifier = () => {
     setResult(null);
 
     try {
-      // Create or get existing company record
+      // Normalize domain and create or get existing company record
+      const domain = (() => {
+        try {
+          const u = new URL(website);
+          return u.hostname.replace(/^www\./, '');
+        } catch {
+          return website.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+        }
+      })();
+
       const { data: companyData, error: companyError } = await supabase
         .from("companies")
         .upsert(
-          { company_name: companyName, website_domain: website },
+          { company_name: companyName, website_domain: domain },
           { onConflict: "website_domain", ignoreDuplicates: false },
         )
         .select()
