@@ -6,6 +6,7 @@ export interface ProcessedSignalData {
   deal_size: string;
   published_date: string;
   source: string;
+  source_url?: string;
   days_old: number;
   content_snippet: string;
 }
@@ -19,6 +20,7 @@ export const PROCESSED_SIGNALS_DATA: ProcessedSignalData[] = [
     deal_size: "",
     published_date: "2025-08-27T08:00:00Z",
     source: "DG CLIMA (European Commission)",
+    source_url: "https://climate.ec.europa.eu/eu-action/carbon-removal_en",
     days_old: 11,
     content_snippet: "DG CLIMA has initiated studies evaluating the design of an EU-wide purchasing programme to promote permanent carbon dioxide removals (CDR). The studies highlight investment needs and propose mechanisms to stimulate demand for permanent CDR technologies."
   },

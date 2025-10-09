@@ -201,10 +201,29 @@ export function ProcessedSignalDetailModal({ signal, isOpen, onClose }: Processe
               )}
             </div>
 
+            {/* Source Link */}
+            {signal.source_url && (
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold">Original Source</h3>
+                <Button asChild variant="outline" className="w-fit">
+                  <a 
+                    href={signal.source_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    <Globe className="h-4 w-4" />
+                    View Original Article
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Button>
+              </div>
+            )}
+
             {/* Note about source */}
             <div className="bg-muted/50 rounded-lg p-4 text-sm">
               <p className="text-muted-foreground">
-                This is a processed signal from {signal.source}. For the full original article and additional details, please visit the source website.
+                This is a processed signal from {signal.source}.
               </p>
             </div>
 
