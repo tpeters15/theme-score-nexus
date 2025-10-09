@@ -33,7 +33,7 @@ export function RecentActivityCard({ themes }: RecentActivityCardProps) {
     {
       id: "2", 
       type: "score_update",
-      title: "EV Infrastructure score updated",
+      title: "Residential Decarbonisation Platforms",
       description: "Market Attractiveness increased from 65 to 72",
       timestamp: "4 hours ago",
       theme: themes.find(t => t.name.includes("Carbon")) || themes[1],
