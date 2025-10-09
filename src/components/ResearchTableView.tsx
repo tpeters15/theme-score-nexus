@@ -2,7 +2,13 @@ import { useState } from "react";
 import { DataTable, DataTableColumn } from "@/components/ui/basic-data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, Download, ExternalLink, FileText, Calendar } from "lucide-react";
+import { 
+  ChevronDown, 
+  ChevronRight, 
+  Download, 
+  FileText, 
+  Calendar 
+} from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { PILLAR_COLORS } from "@/types/themes";
