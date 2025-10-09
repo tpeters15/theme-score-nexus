@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.scrape-iea-sources]
 verify_jwt = false
+
+[functions.classify-company]
+verify_jwt = false

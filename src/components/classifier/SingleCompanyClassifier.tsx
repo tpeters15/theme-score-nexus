@@ -91,6 +91,47 @@ export const SingleCompanyClassifier = () => {
 
       if (classificationError) throw classificationError;
 
+      setCurrentClassificationId(classificationData.id);
+
+      // Call Lovable AI classification edge function
+      const { data: functionData, error: functionError } = await supabase.functions.invoke('classify-company', {
+        body: {
+          companyId: companyData.id,
+          companyName: companyName,
+          website: website,
+          batchId: batchData.id,
+          classificationId: classificationData.id,
+        }
+      });
+
+      if (functionError) {
+        throw new Error(`Classification failed: ${functionError.message}`);
+      }
+
+      if (!functionData.success) {
+        throw new Error(functionData.error || 'Classification failed');
+      }
+
+      // Fetch final result
+      const { data: finalData } = await supabase.from("classifications").select("*").eq("id", classificationData.id).single();
+
+      if (finalData) {
+        setResult({
+          ...finalData,
+          company_name: companyName,
+          website: website,
+        });
+      }
+
+      setIsProcessing(false);
+      setCurrentClassificationId(null);
+
+      toast({
+        title: "Classification Complete",
+        description: `Classified using ${functionData.stages_used}`,
+      });
+
+      /* ============== N8N WORKFLOW (DEACTIVATED - kept for reference) ==============
       // Send to n8n webhook
       const webhookUrl = "https://towerbrook.app.n8n.cloud/webhook/classify-single-company";
       await fetch(webhookUrl, {
@@ -158,6 +199,7 @@ export const SingleCompanyClassifier = () => {
           variant: "destructive",
         });
       }, 300000);
+      ============== END N8N WORKFLOW ============== */
     } catch (error: any) {
       console.error("Error classifying company:", error);
       toast({
