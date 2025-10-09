@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.classify-company]
 verify_jwt = false
+
+[functions.analyze-signal-themes]
+verify_jwt = false

@@ -8,11 +8,23 @@ import {
   Clock, 
   Globe,
   DollarSign,
-  FileText
+  FileText,
+  Loader2,
+  Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { ProcessedSignalData } from "@/data/processedSignals";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface ThemeMapping {
+  theme_id: string;
+  theme_name: string;
+  relevance_score: number;
+  analysis: string;
+}
 
 interface ProcessedSignalDetailModalProps {
   signal: ProcessedSignalData | null;
@@ -21,7 +33,42 @@ interface ProcessedSignalDetailModalProps {
 }
 
 export function ProcessedSignalDetailModal({ signal, isOpen, onClose }: ProcessedSignalDetailModalProps) {
-  console.log('ProcessedSignalDetailModal render:', { signal, isOpen });
+  const [themeMappings, setThemeMappings] = useState<ThemeMapping[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (signal && isOpen) {
+      analyzeSignalThemes();
+    }
+  }, [signal, isOpen]);
+
+  const analyzeSignalThemes = async () => {
+    if (!signal) return;
+    
+    setIsAnalyzing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-signal-themes', {
+        body: { signal }
+      });
+
+      if (error) throw error;
+
+      if (data?.mappings) {
+        setThemeMappings(data.mappings);
+      }
+    } catch (error) {
+      console.error('Error analyzing signal themes:', error);
+      toast({
+        title: "Analysis Error",
+        description: "Could not analyze theme relevance. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   if (!signal) return null;
 
   const getSourceColor = (source: string) => {
@@ -116,6 +163,43 @@ export function ProcessedSignalDetailModal({ signal, isOpen, onClose }: Processe
                 </div>
               </div>
             )}
+
+            <Separator />
+
+            {/* AI Theme Analysis */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-semibold">Relevant Themes</h3>
+              </div>
+
+              {isAnalyzing ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">Analyzing theme relevance...</span>
+                </div>
+              ) : themeMappings.length > 0 ? (
+                <div className="space-y-3">
+                  {themeMappings.map((mapping) => (
+                    <div key={mapping.theme_id} className="border rounded-lg p-4 space-y-2 bg-card">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-semibold text-sm">{mapping.theme_name}</h4>
+                        <Badge variant="secondary" className="text-xs shrink-0">
+                          {Math.round(mapping.relevance_score * 100)}% match
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {mapping.analysis}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  No strong theme matches identified for this signal.
+                </p>
+              )}
+            </div>
 
             {/* Note about source */}
             <div className="bg-muted/50 rounded-lg p-4 text-sm">
