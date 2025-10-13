@@ -308,7 +308,7 @@ Respond with a JSON object:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.5-pro',
         messages: [
           { role: 'user', content: stage1Prompt }
         ],
@@ -337,6 +337,7 @@ Respond with a JSON object:
 Company: ${companyName}
 Website Domain: ${website}
 
+${business_description ? `Business Description (from SourceScrub):\n${business_description}\n\n` : ''}
 ${websiteContent ? `Initial Website Analysis:\n${stage1Result.rationale}\n\n` : ''}
 
 Research the company "${companyName}" (website: ${website}) using current web sources to gather:
@@ -368,7 +369,7 @@ Respond with a JSON object:
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: 'google/gemini-2.5-pro',
           messages: [
             { role: 'user', content: stage2Prompt }
           ],
