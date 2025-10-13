@@ -205,10 +205,11 @@ export const FileUploadClassifier = () => {
             'classify-company',
             {
               body: {
-                company_name: company.company_name,
+                companyId: companyData.id,
+                companyName: company.company_name,
                 website: company.website,
-                classification_id: classification.id,
-                batch_id: batchData.id,
+                classificationId: classification.id,
+                batchId: batchData.id,
                 business_description: company.business_description,
               },
             }
