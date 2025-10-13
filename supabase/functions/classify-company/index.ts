@@ -11,6 +11,7 @@ interface ClassificationRequest {
   website: string
   batchId: string
   classificationId: string
+  business_description?: string
 }
 
 interface TaxonomyData {
@@ -44,7 +45,7 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey)
     
-    const { companyId, companyName, website, batchId, classificationId }: ClassificationRequest = await req.json()
+    const { companyId, companyName, website, batchId, classificationId, business_description }: ClassificationRequest = await req.json()
     
     console.log(`Starting classification for ${companyName} (${website})`)
 
@@ -282,6 +283,7 @@ Deno.serve(async (req) => {
 Company: ${companyName}
 Website: ${website}
 
+${business_description ? `Business Description (from SourceScrub):\n${business_description}\n` : ''}
 ${websiteContent ? `Website Content:\n${websiteContent.substring(0, 8000)}` : 'Website content unavailable.'}
 
 Taxonomy (select ONE theme):

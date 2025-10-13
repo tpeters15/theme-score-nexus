@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 interface Company {
   company_name: string;
   website: string;
+  business_description?: string;
 }
 
 interface ProcessingStats {
@@ -42,6 +43,7 @@ export const FileUploadClassifier = () => {
 
     const companyNameIndex = headers.indexOf("company_name");
     const websiteIndex = headers.indexOf("website");
+    const descriptionIndex = headers.indexOf("business_description");
 
     if (companyNameIndex === -1 || websiteIndex === -1) {
       throw new Error("CSV must have 'company_name' and 'website' columns");
@@ -49,10 +51,17 @@ export const FileUploadClassifier = () => {
 
     return lines.slice(1).map((line) => {
       const values = line.split(",").map((v) => v.trim());
-      return {
+      const company: Company = {
         company_name: values[companyNameIndex],
         website: values[websiteIndex],
       };
+      
+      // Include business description if available
+      if (descriptionIndex !== -1 && values[descriptionIndex]) {
+        company.business_description = values[descriptionIndex];
+      }
+      
+      return company;
     });
   };
 
@@ -200,6 +209,7 @@ export const FileUploadClassifier = () => {
                 website: company.website,
                 classification_id: classification.id,
                 batch_id: batchData.id,
+                business_description: company.business_description,
               },
             }
           );
@@ -283,7 +293,7 @@ export const FileUploadClassifier = () => {
             disabled={isProcessing}
           />
           <p className="text-sm text-muted-foreground">
-            CSV must include columns: company_name, website
+            Required: company_name, website. Optional: business_description (improves accuracy)
           </p>
         </div>
 
