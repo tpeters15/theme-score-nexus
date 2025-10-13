@@ -404,9 +404,33 @@ Respond with a JSON object:
   "sector": "sector name OR null if Other",
   "business_model": "primary business model from theme's list OR null if Other",
   "confidence_score": 0.0-1.0,
-  "rationale": "brief explanation (2-3 sentences)",
-  "needs_more_research": true/false (true if confidence < 0.7 or website content insufficient)
+  "rationale": "brief explanation (2-3 sentences)"
 }`
+
+    const stage1Response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableAiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'user', content: stage1Prompt }
+        ],
+        response_format: { type: 'json_object' },
+      }),
+    })
+
+    if (!stage1Response.ok) {
+      const errorText = await stage1Response.text()
+      throw new Error(`Lovable AI Stage 1 error: ${stage1Response.status} - ${errorText}`)
+    }
+
+    const stage1Data = await stage1Response.json()
+    const stage1Result = JSON.parse(stage1Data.choices[0].message.content)
+    
+    console.log('Stage 1 result:', stage1Result)
 
     const stage1Response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -433,26 +457,26 @@ Respond with a JSON object:
     
     console.log('Stage 1 result:', stage1Result)
 
-    // ==================== STAGE 2: Web Research (if needed) ====================
-    let finalResult = stage1Result
+    // ==================== STAGE 2: Web Research (ALWAYS RUN) ====================
+    console.log('Stage 2: Conducting web research with Gemini + Google Search')
     
-    if (stage1Result.needs_more_research || stage1Result.confidence_score < 0.7) {
-      console.log('Stage 2: Conducting web research with Gemini + Google Search')
-      
-      const stage2Prompt = `You are a climate tech investment analyst. Research and classify this company into ONE primary theme from our taxonomy.
+    const stage2Prompt = `You are a climate tech investment analyst. Research and classify this company into ONE primary theme from our taxonomy.
 
 Company: ${companyName}
 Website Domain: ${website}
 
-${business_description ? `Business Description (from SourceScrub):\n${business_description}\n\n` : ''}
+${business_description ? `Expected Business Description (from SourceScrub - USE THIS TO VERIFY YOU'RE RESEARCHING THE CORRECT COMPANY):\n${business_description}\n\n` : ''}
 ${websiteContent ? `Initial Website Analysis:\n${stage1Result.rationale}\n\n` : ''}
 
-Research the company "${companyName}" (website: ${website}) using current web sources to gather:
-- Business model and revenue streams
-- Products/services offered
-- Market positioning and customers
-- Technology and approach
-- Recent news and developments
+CRITICAL VERIFICATION STEP:
+1. Research the company "${companyName}" (website: ${website}) using current web sources
+2. ${business_description ? `VERIFY that the web search results match the expected business description above. If the search results describe a completely different company, set "company_verification_passed" to false and reduce confidence.` : 'Focus on finding accurate information about this specific company.'}
+3. Gather information on:
+   - Business model and revenue streams
+   - Products/services offered
+   - Market positioning and customers
+   - Technology and approach
+   - Recent news and developments
 
 Then classify into ONE theme from this taxonomy:
 ${JSON.stringify(compressedTaxonomy, null, 2)}
@@ -464,44 +488,48 @@ IMPORTANT: If after research the company still does NOT fit any theme, you can c
 
 Respond with a JSON object:
 {
+  "company_verification_passed": ${business_description ? 'true/false (does research match expected business description?)' : 'true'},
+  "verification_notes": ${business_description ? '"brief note if verification failed"' : 'null'},
   "theme_id": "uuid of the selected theme OR null if Other",
   "theme_name": "theme name OR null if Other",
   "pillar": "pillar name OR 'Other' if no fit",
   "sector": "sector name OR null if Other",
   "business_model": "primary business model from theme's list OR null if Other",
-  "confidence_score": 0.0-1.0,
+  "confidence_score": 0.0-1.0 (reduce by 0.3 if company_verification_passed is false),
   "rationale": "detailed explanation based on web research (3-4 sentences)",
   "sources_consulted": "brief note on what sources informed the decision"
 }`
 
-      const stage2Response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${lovableAiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-pro',
-          messages: [
-            { role: 'user', content: stage2Prompt }
-          ],
-          tools: [
-            {
-              google_search_retrieval: {}
-            }
-          ],
-          response_format: { type: 'json_object' },
-        }),
-      })
+    const stage2Response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableAiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-pro',
+        messages: [
+          { role: 'user', content: stage2Prompt }
+        ],
+        tools: [
+          {
+            google_search_retrieval: {}
+          }
+        ],
+        response_format: { type: 'json_object' },
+      }),
+    })
 
-      if (stage2Response.ok) {
-        const stage2Data = await stage2Response.json()
-        const stage2Result = JSON.parse(stage2Data.choices[0].message.content)
-        console.log('Stage 2 result:', stage2Result)
-        finalResult = stage2Result
-      } else {
-        console.error('Stage 2 failed, using Stage 1 result')
-      }
+    if (!stage2Response.ok) {
+      const errorText = await stage2Response.text()
+      console.error('Stage 2 failed:', errorText)
+      // Fallback to Stage 1 result if Stage 2 fails
+      finalResult = stage1Result
+      finalResult.sources_consulted = 'Stage 2 research failed, using website analysis only'
+    } else {
+      const stage2Data = await stage2Response.json()
+      finalResult = JSON.parse(stage2Data.choices[0].message.content)
+      console.log('Stage 2 result:', finalResult)
     }
 
     // ==================== STAGE 3: Save Final Classification ====================
@@ -522,7 +550,9 @@ Respond with a JSON object:
       context_metadata: {
         stage0_climate_check: true,
         stage1_confidence: stage1Result.confidence_score,
-        stage2_triggered: stage1Result.needs_more_research || stage1Result.confidence_score < 0.7,
+        stage2_always_run: true,
+        company_verification_passed: finalResult.company_verification_passed !== false,
+        verification_notes: finalResult.verification_notes || null,
         website_scraped: !!websiteContent,
         scraping_error: websiteError,
         classified_as_other: finalResult.pillar === 'Other',
@@ -550,7 +580,8 @@ Respond with a JSON object:
       JSON.stringify({ 
         success: true, 
         classification: updateData,
-        stages_used: updateData.context_metadata.stage2_triggered ? 'Stage 1 + 2' : 'Stage 1 only'
+        stages_used: 'Stage 0 (climate check) + Stage 1 (website) + Stage 2 (Google Search)',
+        verification_passed: updateData.context_metadata.company_verification_passed
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
