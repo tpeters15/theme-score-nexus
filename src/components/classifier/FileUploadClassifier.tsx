@@ -37,11 +37,19 @@ export const FileUploadClassifier = () => {
   });
   const { toast } = useToast();
 
-  const isValidUrl = (url: string): boolean => {
-    if (!url || url.length < 4) return false;
-    // Must have at least a domain with TLD (e.g., "abc.com")
-    const hasValidFormat = /^[a-zA-Z0-9][a-zA-Z0-9-_.]+\.[a-zA-Z]{2,}/.test(url.replace(/^https?:\/\/(www\.)?/, ''));
-    return hasValidFormat;
+  const normalizeUrl = (url: string): string => {
+    if (!url || url.trim().length === 0) return '';
+    
+    let normalized = url.trim();
+    
+    // Remove common prefixes if present
+    normalized = normalized.replace(/^https?:\/\//i, '');
+    normalized = normalized.replace(/^www\./i, '');
+    
+    // Remove trailing slashes and paths
+    normalized = normalized.split('/')[0];
+    
+    return normalized;
   };
 
   const parseCSV = (text: string): Company[] => {
@@ -57,22 +65,24 @@ export const FileUploadClassifier = () => {
     }
 
     const companies: Company[] = [];
-    const errors: string[] = [];
+    const warnings: string[] = [];
 
     lines.slice(1).forEach((line, idx) => {
       const values = line.split(",").map((v) => v.trim());
       const companyName = values[companyNameIndex];
-      const website = values[websiteIndex];
+      const rawWebsite = values[websiteIndex];
       
-      // Validate URL
-      if (!isValidUrl(website)) {
-        errors.push(`Row ${idx + 2}: "${companyName}" has invalid website "${website}"`);
-        return;
+      // Normalize URL (accept all formats)
+      const website = normalizeUrl(rawWebsite);
+      
+      // Warn about missing URLs but still process
+      if (!website || website.length < 3) {
+        warnings.push(`Row ${idx + 2}: "${companyName}" has no valid website - will classify using name and description only`);
       }
 
       const company: Company = {
         company_name: companyName,
-        website: website,
+        website: rawWebsite, // Keep original for display
       };
       
       // Include business description if available
@@ -83,8 +93,9 @@ export const FileUploadClassifier = () => {
       companies.push(company);
     });
 
-    if (errors.length > 0) {
-      throw new Error(`Invalid URLs found:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n...and ${errors.length - 5} more` : ''}`);
+    // Show warnings but don't block processing
+    if (warnings.length > 0) {
+      console.warn(`CSV warnings:\n${warnings.slice(0, 5).join('\n')}${warnings.length > 5 ? `\n...and ${warnings.length - 5} more` : ''}`);
     }
 
     return companies;

@@ -222,33 +222,41 @@ Deno.serve(async (req) => {
     
     let websiteContent = ''
     let websiteError = null
+    let hasValidWebsite = true
     
-    try {
-      const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${firecrawlKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: website,
-          formats: ['markdown'],
-          onlyMainContent: true,
-          waitFor: 2000,
-        }),
-      })
+    // Check if website is valid before attempting scrape
+    if (!website || website.length < 3 || !website.includes('.')) {
+      websiteError = 'No valid website URL provided'
+      hasValidWebsite = false
+      console.log('No valid website - will rely on company name and business description')
+    } else {
+      try {
+        const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${firecrawlKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: website.startsWith('http') ? website : `https://${website}`,
+            formats: ['markdown'],
+            onlyMainContent: true,
+            waitFor: 2000,
+          }),
+        })
 
-      if (firecrawlResponse.ok) {
-        const firecrawlData = await firecrawlResponse.json()
-        websiteContent = firecrawlData.data?.markdown || firecrawlData.data?.content || ''
-        console.log(`Scraped ${websiteContent.length} characters from website`)
-      } else {
-        websiteError = `Firecrawl error: ${firecrawlResponse.status}`
+        if (firecrawlResponse.ok) {
+          const firecrawlData = await firecrawlResponse.json()
+          websiteContent = firecrawlData.data?.markdown || firecrawlData.data?.content || ''
+          console.log(`Scraped ${websiteContent.length} characters from website`)
+        } else {
+          websiteError = `Firecrawl error: ${firecrawlResponse.status}`
+          console.error(websiteError)
+        }
+      } catch (error) {
+        websiteError = `Firecrawl failed: ${error.message}`
         console.error(websiteError)
       }
-    } catch (error) {
-      websiteError = `Firecrawl failed: ${error.message}`
-      console.error(websiteError)
     }
 
     // Fetch taxonomy
@@ -281,10 +289,12 @@ Deno.serve(async (req) => {
     const stage0Prompt = `You are a climate tech investment analyst. Determine if this company is climate-related.
 
 Company: ${companyName}
-Website: ${website}
+${hasValidWebsite ? `Website: ${website}` : 'Website: Not provided'}
 
 ${business_description ? `Business Description (from SourceScrub):\n${business_description}\n` : ''}
-${websiteContent ? `Website Content:\n${websiteContent.substring(0, 8000)}` : 'Website content unavailable.'}
+${websiteContent ? `Website Content:\n${websiteContent.substring(0, 8000)}` : hasValidWebsite ? 'Website content unavailable.' : 'No website available - classify based on company name and business description.'}
+
+${!hasValidWebsite ? 'NOTE: No valid website URL was provided. Base your assessment on the company name and business description only.\n' : ''}
 
 A company is climate-related if it:
 - Reduces greenhouse gas emissions (decarbonization)
@@ -345,6 +355,7 @@ Respond with a JSON object:
           stage0_rationale: stage0Result.rationale,
           website_scraped: !!websiteContent,
           scraping_error: websiteError,
+          has_valid_website: hasValidWebsite,
         }
       }
 
@@ -383,10 +394,12 @@ Respond with a JSON object:
     const stage1Prompt = `You are a climate tech investment analyst. Analyze this company and classify it into ONE primary theme from our taxonomy.
 
 Company: ${companyName}
-Website: ${website}
+${hasValidWebsite ? `Website: ${website}` : 'Website: Not provided'}
 
 ${business_description ? `Business Description (from SourceScrub):\n${business_description}\n` : ''}
-${websiteContent ? `Website Content:\n${websiteContent.substring(0, 8000)}` : 'Website content unavailable.'}
+${websiteContent ? `Website Content:\n${websiteContent.substring(0, 8000)}` : hasValidWebsite ? 'Website content unavailable.' : 'No website available - classify based on company name and business description.'}
+
+${!hasValidWebsite ? 'NOTE: No valid website URL was provided. Base classification on company name and business description. Reduce confidence slightly due to limited information.\n' : ''}
 
 Taxonomy (select ONE theme):
 ${JSON.stringify(compressedTaxonomy, null, 2)}
@@ -440,13 +453,15 @@ Respond with a JSON object:
     const stage2Prompt = `You are a climate tech investment analyst. Research and classify this company into ONE primary theme from our taxonomy.
 
 Company: ${companyName}
-Website Domain: ${website}
+${hasValidWebsite ? `Website Domain: ${website}` : 'Website: Not provided'}
 
 ${business_description ? `Expected Business Description (from SourceScrub - USE THIS TO VERIFY YOU'RE RESEARCHING THE CORRECT COMPANY):\n${business_description}\n\n` : ''}
 ${websiteContent ? `Initial Website Analysis:\n${stage1Result.rationale}\n\n` : ''}
 
+${!hasValidWebsite ? 'NOTE: No valid website URL was provided. Search using company name only and verify against business description.\n\n' : ''}
+
 CRITICAL VERIFICATION STEP:
-1. Research the company "${companyName}" (website: ${website}) using current web sources
+1. Research the company "${companyName}" ${hasValidWebsite ? `(website: ${website})` : ''} using current web sources
 2. ${business_description ? `VERIFY that the web search results match the expected business description above. If the search results describe a completely different company, set "company_verification_passed" to false and reduce confidence.` : 'Focus on finding accurate information about this specific company.'}
 3. Gather information on:
    - Business model and revenue streams
@@ -532,6 +547,7 @@ Respond with a JSON object:
         verification_notes: finalResult.verification_notes || null,
         website_scraped: !!websiteContent,
         scraping_error: websiteError,
+        has_valid_website: hasValidWebsite,
         classified_as_other: finalResult.pillar === 'Other',
       }
     }
