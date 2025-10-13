@@ -39,14 +39,14 @@ export const FileUploadClassifier = () => {
 
   const parseCSV = (text: string): Company[] => {
     const lines = text.split("\n").filter((line) => line.trim());
-    const headers = lines[0].toLowerCase().split(",").map((h) => h.trim());
+    const headers = lines[0].toLowerCase().split(",").map((h) => h.trim().replace(/\s+/g, '_'));
 
     const companyNameIndex = headers.indexOf("company_name");
     const websiteIndex = headers.indexOf("website");
     const descriptionIndex = headers.indexOf("business_description");
 
     if (companyNameIndex === -1 || websiteIndex === -1) {
-      throw new Error("CSV must have 'company_name' and 'website' columns");
+      throw new Error("CSV must have 'Company Name' (or 'company_name') and 'Website' (or 'website') columns");
     }
 
     return lines.slice(1).map((line) => {
