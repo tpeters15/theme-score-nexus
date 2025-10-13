@@ -37,6 +37,13 @@ export const FileUploadClassifier = () => {
   });
   const { toast } = useToast();
 
+  const isValidUrl = (url: string): boolean => {
+    if (!url || url.length < 4) return false;
+    // Must have at least a domain with TLD (e.g., "abc.com")
+    const hasValidFormat = /^[a-zA-Z0-9][a-zA-Z0-9-_.]+\.[a-zA-Z]{2,}/.test(url.replace(/^https?:\/\/(www\.)?/, ''));
+    return hasValidFormat;
+  };
+
   const parseCSV = (text: string): Company[] => {
     const lines = text.split("\n").filter((line) => line.trim());
     const headers = lines[0].toLowerCase().split(",").map((h) => h.trim().replace(/\s+/g, '_'));
@@ -49,11 +56,23 @@ export const FileUploadClassifier = () => {
       throw new Error("CSV must have 'Company Name' (or 'company_name') and 'Website' (or 'website') columns");
     }
 
-    return lines.slice(1).map((line) => {
+    const companies: Company[] = [];
+    const errors: string[] = [];
+
+    lines.slice(1).forEach((line, idx) => {
       const values = line.split(",").map((v) => v.trim());
+      const companyName = values[companyNameIndex];
+      const website = values[websiteIndex];
+      
+      // Validate URL
+      if (!isValidUrl(website)) {
+        errors.push(`Row ${idx + 2}: "${companyName}" has invalid website "${website}"`);
+        return;
+      }
+
       const company: Company = {
-        company_name: values[companyNameIndex],
-        website: values[websiteIndex],
+        company_name: companyName,
+        website: website,
       };
       
       // Include business description if available
@@ -61,8 +80,14 @@ export const FileUploadClassifier = () => {
         company.business_description = values[descriptionIndex];
       }
       
-      return company;
+      companies.push(company);
     });
+
+    if (errors.length > 0) {
+      throw new Error(`Invalid URLs found:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n...and ${errors.length - 5} more` : ''}`);
+    }
+
+    return companies;
   };
 
   const normalizeDomain = (url: string): string => {
