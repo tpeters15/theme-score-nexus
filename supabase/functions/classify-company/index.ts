@@ -432,30 +432,7 @@ Respond with a JSON object:
     
     console.log('Stage 1 result:', stage1Result)
 
-    const stage1Response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableAiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
-        messages: [
-          { role: 'user', content: stage1Prompt }
-        ],
-        response_format: { type: 'json_object' },
-      }),
-    })
-
-    if (!stage1Response.ok) {
-      const errorText = await stage1Response.text()
-      throw new Error(`Lovable AI Stage 1 error: ${stage1Response.status} - ${errorText}`)
-    }
-
-    const stage1Data = await stage1Response.json()
-    const stage1Result = JSON.parse(stage1Data.choices[0].message.content)
-    
-    console.log('Stage 1 result:', stage1Result)
+    let finalResult = stage1Result
 
     // ==================== STAGE 2: Web Research (ALWAYS RUN) ====================
     console.log('Stage 2: Conducting web research with Gemini + Google Search')
