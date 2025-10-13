@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ClassificationDetailModal } from "./ClassificationDetailModal";
 
 interface Classification {
   id: string;
@@ -41,6 +42,7 @@ interface BatchClassificationResultsProps {
 export const BatchClassificationResults = ({ batchId }: BatchClassificationResultsProps) => {
   const [classifications, setClassifications] = useState<Classification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedClassification, setSelectedClassification] = useState<Classification | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -173,12 +175,16 @@ export const BatchClassificationResults = ({ batchId }: BatchClassificationResul
                 <TableHead>Business Model</TableHead>
                 <TableHead>Confidence</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="max-w-xs">Rationale</TableHead>
+                <TableHead>Rationale</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {classifications.map((classification) => (
-                <TableRow key={classification.id}>
+                <TableRow 
+                  key={classification.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => setSelectedClassification(classification)}
+                >
                   <TableCell className="font-medium">
                     {classification.company?.company_name || "-"}
                   </TableCell>
@@ -212,14 +218,23 @@ export const BatchClassificationResults = ({ batchId }: BatchClassificationResul
                     </div>
                   </TableCell>
                   <TableCell>{getStatusBadge(classification.status)}</TableCell>
-                  <TableCell className="max-w-md text-sm whitespace-normal">
-                    {classification.rationale || "-"}
+                  <TableCell className="max-w-xs text-sm text-muted-foreground">
+                    {classification.rationale 
+                      ? `${classification.rationale.substring(0, 100)}${classification.rationale.length > 100 ? '...' : ''}`
+                      : "-"
+                    }
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
+
+        <ClassificationDetailModal 
+          classification={selectedClassification}
+          open={!!selectedClassification}
+          onOpenChange={(open) => !open && setSelectedClassification(null)}
+        />
       </CardContent>
     </Card>
   );
