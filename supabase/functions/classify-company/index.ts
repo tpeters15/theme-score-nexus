@@ -217,8 +217,8 @@ Deno.serve(async (req) => {
       .update({ status: 'Processing' })
       .eq('id', classificationId)
 
-    // ==================== STAGE 1: Company Website Analysis ====================
-    console.log('Stage 1: Scraping company website with Firecrawl')
+    // ==================== WEBSITE SCRAPING ====================
+    console.log('Scraping company website with Firecrawl')
     
     let websiteContent = ''
     let websiteError = null
@@ -275,7 +275,109 @@ Deno.serve(async (req) => {
       }))
     }))
 
-    // Stage 1: Initial classification with website content
+    // ==================== STAGE 0: Climate Relevance Check ====================
+    console.log('Stage 0: Quick climate relevance check')
+    
+    const stage0Prompt = `You are a climate tech investment analyst. Determine if this company is climate-related.
+
+Company: ${companyName}
+Website: ${website}
+
+${business_description ? `Business Description (from SourceScrub):\n${business_description}\n` : ''}
+${websiteContent ? `Website Content:\n${websiteContent.substring(0, 8000)}` : 'Website content unavailable.'}
+
+A company is climate-related if it:
+- Reduces greenhouse gas emissions (decarbonization)
+- Enables renewable energy or energy transition
+- Improves resource sustainability (water, waste, circular economy)
+- Provides climate adaptation or resilience solutions
+- Manufactures components/systems for climate solutions
+- Provides software/services enabling climate solutions
+
+Respond with a JSON object:
+{
+  "is_climate_related": true/false,
+  "rationale": "brief explanation (1-2 sentences)"
+}`
+
+    const stage0Response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableAiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'user', content: stage0Prompt }
+        ],
+        response_format: { type: 'json_object' },
+      }),
+    })
+
+    if (!stage0Response.ok) {
+      const errorText = await stage0Response.text()
+      throw new Error(`Lovable AI Stage 0 error: ${stage0Response.status} - ${errorText}`)
+    }
+
+    const stage0Data = await stage0Response.json()
+    const stage0Result = JSON.parse(stage0Data.choices[0].message.content)
+    
+    console.log('Stage 0 result:', stage0Result)
+
+    // If not climate-related, classify as "Other"
+    if (!stage0Result.is_climate_related) {
+      console.log('Company not climate-related, classifying as "Other"')
+      
+      const updateData = {
+        status: 'Completed',
+        primary_theme: null,
+        theme_id: null,
+        pillar: 'Other',
+        sector: null,
+        business_model: null,
+        confidence_score: 0.95,
+        rationale: `Not climate-related: ${stage0Result.rationale}`,
+        model_used: 'gemini-2.5-flash',
+        website_summary: websiteContent.substring(0, 1000),
+        context_metadata: {
+          stage0_climate_check: false,
+          stage0_rationale: stage0Result.rationale,
+          website_scraped: !!websiteContent,
+          scraping_error: websiteError,
+        }
+      }
+
+      const { error: updateError } = await supabase
+        .from('classifications')
+        .update(updateData)
+        .eq('id', classificationId)
+
+      if (updateError) {
+        throw new Error(`Failed to update classification: ${updateError.message}`)
+      }
+
+      await supabase
+        .from('classification_batches')
+        .update({ status: 'Completed', updated_at: new Date().toISOString() })
+        .eq('id', batchId)
+
+      console.log(`Classification completed for ${companyName} - classified as Other`)
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          classification: updateData,
+          stages_used: 'Stage 0 only (Out of Scope)'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      )
+    }
+
+    // ==================== STAGE 1: Initial Classification ====================
     console.log('Stage 1: Analyzing website content with Gemini')
     
     const stage1Prompt = `You are a climate tech investment analyst. Analyze this company and classify it into ONE primary theme from our taxonomy.
@@ -289,13 +391,18 @@ ${websiteContent ? `Website Content:\n${websiteContent.substring(0, 8000)}` : 'W
 Taxonomy (select ONE theme):
 ${JSON.stringify(compressedTaxonomy, null, 2)}
 
+IMPORTANT: If the company does NOT fit any theme (even after careful analysis), you can classify it as "Other":
+- Set pillar to "Other"
+- Set theme_id, theme_name, sector, and business_model to null
+- Explain why it doesn't fit any theme in the rationale
+
 Respond with a JSON object:
 {
-  "theme_id": "uuid of the selected theme",
-  "theme_name": "theme name",
-  "pillar": "pillar name",
-  "sector": "sector name",
-  "business_model": "primary business model from theme's list",
+  "theme_id": "uuid of the selected theme OR null if Other",
+  "theme_name": "theme name OR null if Other",
+  "pillar": "pillar name OR 'Other' if no fit",
+  "sector": "sector name OR null if Other",
+  "business_model": "primary business model from theme's list OR null if Other",
   "confidence_score": 0.0-1.0,
   "rationale": "brief explanation (2-3 sentences)",
   "needs_more_research": true/false (true if confidence < 0.7 or website content insufficient)
@@ -350,13 +457,18 @@ Research the company "${companyName}" (website: ${website}) using current web so
 Then classify into ONE theme from this taxonomy:
 ${JSON.stringify(compressedTaxonomy, null, 2)}
 
+IMPORTANT: If after research the company still does NOT fit any theme, you can classify it as "Other":
+- Set pillar to "Other"
+- Set theme_id, theme_name, sector, and business_model to null
+- Explain why it doesn't fit any theme in the rationale
+
 Respond with a JSON object:
 {
-  "theme_id": "uuid of the selected theme",
-  "theme_name": "theme name",
-  "pillar": "pillar name",
-  "sector": "sector name",
-  "business_model": "primary business model from theme's list",
+  "theme_id": "uuid of the selected theme OR null if Other",
+  "theme_name": "theme name OR null if Other",
+  "pillar": "pillar name OR 'Other' if no fit",
+  "sector": "sector name OR null if Other",
+  "business_model": "primary business model from theme's list OR null if Other",
   "confidence_score": 0.0-1.0,
   "rationale": "detailed explanation based on web research (3-4 sentences)",
   "sources_consulted": "brief note on what sources informed the decision"
@@ -404,14 +516,16 @@ Respond with a JSON object:
       business_model: finalResult.business_model,
       confidence_score: finalResult.confidence_score,
       rationale: finalResult.rationale,
-      model_used: 'gemini-2.5-flash',
+      model_used: 'gemini-2.5-pro',
       website_summary: websiteContent.substring(0, 1000),
       perplexity_research: finalResult.sources_consulted || null,
       context_metadata: {
+        stage0_climate_check: true,
         stage1_confidence: stage1Result.confidence_score,
         stage2_triggered: stage1Result.needs_more_research || stage1Result.confidence_score < 0.7,
         website_scraped: !!websiteContent,
         scraping_error: websiteError,
+        classified_as_other: finalResult.pillar === 'Other',
       }
     }
 
