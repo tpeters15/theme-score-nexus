@@ -83,8 +83,8 @@ function calculateThemeFrameworkScores(
   criteria: FrameworkCriteria[], 
   scores: DetailedScore[]
 ): ThemeWithScores[] {
-  // Only categories A, B, C are used for scoring
-  const scoringCategories = categories.filter(cat => ['A', 'B', 'C'].includes(cat.code));
+  // Only categories A, B, C, D are used for scoring (E, F are qualitative)
+  const scoringCategories = categories.filter(cat => ['A', 'B', 'C', 'D'].includes(cat.code));
   const scoringCriteriaIds = new Set(
     criteria
       .filter(c => scoringCategories.some(cat => cat.id === c.category_id))

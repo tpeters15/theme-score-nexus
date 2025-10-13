@@ -22,8 +22,8 @@ export function FrameworkCategoryCard({
 }: FrameworkCategoryCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   
-  // Check if this category should be scored (only A, B, C are scored)
-  const isScoringCategory = ['A', 'B', 'C'].includes(category.code);
+  // Check if this category should be scored (A, B, C, D are scored; E, F are qualitative)
+  const isScoringCategory = ['A', 'B', 'C', 'D'].includes(category.code);
 
   const categoryScores = scores.filter(s => 
     category.criteria.some(c => c.id === s.criteria_id)

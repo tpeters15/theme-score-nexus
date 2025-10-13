@@ -27,8 +27,8 @@ export function ScoreProgressIndicator({ theme, className = "" }: ScoreProgressI
   };
 
   const getOverallProgress = () => {
-    // Only count categories A, B, C for scoring progress
-    const scoringCategories = theme.categories.filter(cat => ['A', 'B', 'C'].includes(cat.code));
+    // Only count categories A, B, C, D for scoring progress
+    const scoringCategories = theme.categories.filter(cat => ['A', 'B', 'C', 'D'].includes(cat.code));
     const totalCriteria = scoringCategories.reduce((sum, cat) => sum + cat.criteria.length, 0);
     
     const scoringCriteriaIds = new Set(
@@ -47,8 +47,8 @@ export function ScoreProgressIndicator({ theme, className = "" }: ScoreProgressI
   };
 
   const getConfidenceDistribution = () => {
-    // Only count scored items from scoring categories (A, B, C)
-    const scoringCategories = theme.categories.filter(cat => ['A', 'B', 'C'].includes(cat.code));
+    // Only count scored items from scoring categories (A, B, C, D)
+    const scoringCategories = theme.categories.filter(cat => ['A', 'B', 'C', 'D'].includes(cat.code));
     const scoringCriteriaIds = new Set(
       scoringCategories.flatMap(cat => cat.criteria.map(c => c.id))
     );
@@ -71,8 +71,8 @@ export function ScoreProgressIndicator({ theme, className = "" }: ScoreProgressI
   };
 
   const getScoreDistribution = () => {
-    // Only count scored items from scoring categories (A, B, C)
-    const scoringCategories = theme.categories.filter(cat => ['A', 'B', 'C'].includes(cat.code));
+    // Only count scored items from scoring categories (A, B, C, D)
+    const scoringCategories = theme.categories.filter(cat => ['A', 'B', 'C', 'D'].includes(cat.code));
     const scoringCriteriaIds = new Set(
       scoringCategories.flatMap(cat => cat.criteria.map(c => c.id))
     );

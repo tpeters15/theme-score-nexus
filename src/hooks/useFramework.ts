@@ -212,8 +212,8 @@ export const useFramework = () => {
   };
 
   const calculateOverallScore = (scores: any[], categories: FrameworkCategoryWithCriteria[]) => {
-    // Only include categories A, B, C for scoring (D and E are qualitative only)
-    const scoringCategories = categories.filter(cat => ['A', 'B', 'C'].includes(cat.code));
+    // Only include categories A, B, C, D for scoring (E and F are qualitative only)
+    const scoringCategories = categories.filter(cat => ['A', 'B', 'C', 'D'].includes(cat.code));
     
     let totalWeightedScore = 0;
     let totalWeight = 0;
