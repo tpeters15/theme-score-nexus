@@ -4,12 +4,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { BatchClassificationResults } from "./BatchClassificationResults";
+import { Progress } from "@/components/ui/progress";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Company {
   company_name: string;
   website: string;
+}
+
+interface ProcessingStats {
+  total: number;
+  completed: number;
+  reused: number;
+  newClassifications: number;
+  failed: number;
 }
 
 export const FileUploadClassifier = () => {
@@ -17,6 +27,13 @@ export const FileUploadClassifier = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
+  const [stats, setStats] = useState<ProcessingStats>({
+    total: 0,
+    completed: 0,
+    reused: 0,
+    newClassifications: 0,
+    failed: 0,
+  });
   const { toast } = useToast();
 
   const parseCSV = (text: string): Company[] => {
@@ -37,6 +54,15 @@ export const FileUploadClassifier = () => {
         website: values[websiteIndex],
       };
     });
+  };
+
+  const normalizeDomain = (url: string): string => {
+    try {
+      const u = new URL(url);
+      return u.hostname.replace(/^www\./, '');
+    } catch {
+      return url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+    }
   };
 
   const handleProcessList = async (e: React.FormEvent) => {
@@ -66,6 +92,15 @@ export const FileUploadClassifier = () => {
       const text = await csvFile.text();
       const companies = parseCSV(text);
 
+      // Initialize stats
+      setStats({
+        total: companies.length,
+        completed: 0,
+        reused: 0,
+        newClassifications: 0,
+        failed: 0,
+      });
+
       const user = (await supabase.auth.getUser()).data.user;
 
       // Create batch
@@ -75,11 +110,13 @@ export const FileUploadClassifier = () => {
           batch_name: batchName,
           company_count: companies.length,
           user_id: user?.id,
+          status: 'Processing',
         })
         .select()
         .single();
 
       if (batchError) throw batchError;
+      setActiveBatchId(batchData.id);
 
       // Get taxonomy version
       const { data: latestTheme } = await supabase
@@ -91,65 +128,120 @@ export const FileUploadClassifier = () => {
 
       const taxonomyVersion = latestTheme?.version || 1;
 
-      // Create company records and classifications
-      const companyRecords = [];
-      for (const company of companies) {
-        const domain = company.website.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+      // Phase 3: Bulk pre-screening - check for existing companies
+      const normalizedDomains = companies.map(c => normalizeDomain(c.website));
+      const { data: existingCompanies } = await supabase
+        .from('companies')
+        .select(`
+          id,
+          website_domain,
+          company_name,
+          classifications!inner(*)
+        `)
+        .in('website_domain', normalizedDomains)
+        .eq('classifications.status', 'Completed')
+        .order('classifications.created_at', { ascending: false });
 
-        const { data: companyData, error: companyError } = await supabase
-          .from("companies")
-          .upsert(
-            {
-              company_name: company.company_name,
-              website_domain: domain,
-            },
-            { onConflict: 'website_domain', ignoreDuplicates: false }
-          )
-          .select()
-          .single();
-
-        if (companyError) throw companyError;
-
-        const { data: classification } = await supabase
-          .from("classifications")
-          .insert({
-            company_id: companyData.id,
-            batch_id: batchData.id,
-            source_system: 'dashboard',
-            classification_type: 'initial',
-            taxonomy_version: taxonomyVersion,
-            status: "Pending",
-          })
-          .select()
-          .single();
-
-        companyRecords.push({
-          classification_id: classification?.id,
-          company_id: companyData.id,
-          company_name: company.company_name,
-          website: company.website,
-          domain: domain,
-          source_system: 'dashboard',
-          taxonomy_version: taxonomyVersion
-        });
-      }
-
-      // Send to n8n
-      const webhookUrl = "https://towerbrook.app.n8n.cloud/webhook/dealcloud-classifier";
-      await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          batch_id: batchData.id,
-          classifications: companyRecords,
-        }),
+      const existingMap = new Map();
+      existingCompanies?.forEach(company => {
+        if (!existingMap.has(company.website_domain)) {
+          existingMap.set(company.website_domain, company);
+        }
       });
 
-      setActiveBatchId(batchData.id);
+      toast({
+        title: "Processing Batch",
+        description: `Found ${existingMap.size} existing classifications. Processing ${companies.length} companies...`,
+      });
+
+      // Process each company
+      for (let i = 0; i < companies.length; i++) {
+        const company = companies[i];
+        const domain = normalizeDomain(company.website);
+
+        try {
+          // Upsert company
+          const { data: companyData, error: companyError } = await supabase
+            .from("companies")
+            .upsert(
+              {
+                company_name: company.company_name,
+                website_domain: domain,
+              },
+              { onConflict: 'website_domain', ignoreDuplicates: false }
+            )
+            .select()
+            .single();
+
+          if (companyError) throw companyError;
+
+          // Create classification record
+          const { data: classification, error: classError } = await supabase
+            .from("classifications")
+            .insert({
+              company_id: companyData.id,
+              batch_id: batchData.id,
+              source_system: 'dashboard',
+              classification_type: 'initial',
+              taxonomy_version: taxonomyVersion,
+              status: "Queued",
+            })
+            .select()
+            .single();
+
+          if (classError) throw classError;
+
+          // Call classify-company edge function
+          const { data: result, error: fnError } = await supabase.functions.invoke(
+            'classify-company',
+            {
+              body: {
+                company_name: company.company_name,
+                website: company.website,
+                classification_id: classification.id,
+                batch_id: batchData.id,
+              },
+            }
+          );
+
+          if (fnError) {
+            console.error(`Error classifying ${company.company_name}:`, fnError);
+            setStats(prev => ({
+              ...prev,
+              completed: prev.completed + 1,
+              failed: prev.failed + 1,
+            }));
+          } else {
+            const wasReused = result?.reused || false;
+            setStats(prev => ({
+              ...prev,
+              completed: prev.completed + 1,
+              reused: wasReused ? prev.reused + 1 : prev.reused,
+              newClassifications: wasReused ? prev.newClassifications : prev.newClassifications + 1,
+            }));
+          }
+        } catch (error) {
+          console.error(`Error processing ${company.company_name}:`, error);
+          setStats(prev => ({
+            ...prev,
+            completed: prev.completed + 1,
+            failed: prev.failed + 1,
+          }));
+        }
+
+        // Small delay to avoid overwhelming the system
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      // Update batch status
+      await supabase
+        .from("classification_batches")
+        .update({ status: 'Completed' })
+        .eq('id', batchData.id);
 
       toast({
-        title: "Batch Started",
-        description: `Processing ${companies.length} companies from CSV...`,
+        title: "Batch Complete",
+        description: `Processed ${companies.length} companies. ${stats.reused} reused, ${stats.newClassifications} newly classified.`,
       });
 
       // Reset form
@@ -209,6 +301,57 @@ export const FileUploadClassifier = () => {
           )}
         </Button>
       </form>
+
+      {isProcessing && stats.total > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Processing Progress</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span>Progress: {stats.completed} / {stats.total}</span>
+                <span>{Math.round((stats.completed / stats.total) * 100)}%</span>
+              </div>
+              <Progress value={(stats.completed / stats.total) * 100} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <div>
+                  <p className="text-sm font-medium">Reused: {stats.reused}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.total > 0 ? Math.round((stats.reused / stats.total) * 100) : 0}%
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-blue-500" />
+                <div>
+                  <p className="text-sm font-medium">New: {stats.newClassifications}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.total > 0 ? Math.round((stats.newClassifications / stats.total) * 100) : 0}%
+                  </p>
+                </div>
+              </div>
+
+              {stats.failed > 0 && (
+                <div className="flex items-center gap-2">
+                  <XCircle className="h-4 w-4 text-red-500" />
+                  <div>
+                    <p className="text-sm font-medium">Failed: {stats.failed}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {stats.total > 0 ? Math.round((stats.failed / stats.total) * 100) : 0}%
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {activeBatchId && <BatchClassificationResults batchId={activeBatchId} />}
     </div>
