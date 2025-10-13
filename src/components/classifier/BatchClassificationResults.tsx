@@ -212,7 +212,7 @@ export const BatchClassificationResults = ({ batchId }: BatchClassificationResul
                     </div>
                   </TableCell>
                   <TableCell>{getStatusBadge(classification.status)}</TableCell>
-                  <TableCell className="max-w-xs truncate text-sm">
+                  <TableCell className="max-w-md text-sm whitespace-normal">
                     {classification.rationale || "-"}
                   </TableCell>
                 </TableRow>
