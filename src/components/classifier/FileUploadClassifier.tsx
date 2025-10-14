@@ -52,9 +52,42 @@ export const FileUploadClassifier = () => {
     return normalized;
   };
 
+  // Proper CSV parser that handles quoted values
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+      
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          // Escaped quote
+          current += '"';
+          i++; // Skip next quote
+        } else {
+          // Toggle quote state
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        // End of field
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    
+    // Add last field
+    result.push(current.trim());
+    return result;
+  };
+
   const parseCSV = (text: string): Company[] => {
     const lines = text.split("\n").filter((line) => line.trim());
-    const headers = lines[0].toLowerCase().split(",").map((h) => h.trim().replace(/\s+/g, '_'));
+    const headers = parseCSVLine(lines[0].toLowerCase()).map((h) => h.trim().replace(/\s+/g, '_'));
 
     const companyNameIndex = headers.indexOf("company_name");
     const websiteIndex = headers.indexOf("website");
@@ -68,9 +101,9 @@ export const FileUploadClassifier = () => {
     const warnings: string[] = [];
 
     lines.slice(1).forEach((line, idx) => {
-      const values = line.split(",").map((v) => v.trim());
-      const companyName = values[companyNameIndex];
-      const rawWebsite = values[websiteIndex];
+      const values = parseCSVLine(line);
+      const companyName = values[companyNameIndex]?.replace(/^"|"$/g, '').trim() || '';
+      const rawWebsite = values[websiteIndex]?.replace(/^"|"$/g, '').trim() || '';
       
       // Normalize URL (accept all formats)
       const website = normalizeUrl(rawWebsite);
