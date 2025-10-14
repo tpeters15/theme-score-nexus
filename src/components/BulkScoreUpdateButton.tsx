@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { bulkUpdateScores, INDUSTRIAL_ENERGY_EFFICIENCY_SCORES } from '@/utils/bulkScoreUpdate';
+import { useThemes } from '@/hooks/useThemes';
 
 interface BulkScoreUpdateButtonProps {
   themeId: string;
@@ -12,6 +13,7 @@ interface BulkScoreUpdateButtonProps {
 export function BulkScoreUpdateButton({ themeId, onComplete }: BulkScoreUpdateButtonProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
+  const { refreshThemes } = useThemes();
 
   const handleBulkUpdate = async () => {
     setIsUpdating(true);
@@ -23,6 +25,9 @@ export function BulkScoreUpdateButton({ themeId, onComplete }: BulkScoreUpdateBu
         description: `Successfully updated ${INDUSTRIAL_ENERGY_EFFICIENCY_SCORES.length} scores for this theme.`,
       });
 
+      // Refresh both local theme and global themes list
+      await refreshThemes();
+      
       if (onComplete) {
         onComplete();
       }
