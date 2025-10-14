@@ -37,8 +37,47 @@ export const FileUploadClassifier = () => {
   });
   const { toast } = useToast();
 
+  // Validate that a string looks like a website domain
+  const isValidWebsite = (str: string): boolean => {
+    if (!str || str.trim().length === 0) return false;
+    
+    const cleaned = str.trim().toLowerCase();
+    
+    // Check if it contains suspicious patterns that indicate it's not a website
+    const invalidPatterns = [
+      /^ltd\.?$/i,           // Just "Ltd" or "Ltd."
+      /^limited$/i,          // Just "Limited"
+      /^inc\.?$/i,           // Just "Inc" or "Inc."
+      /^llc$/i,              // Just "LLC"
+      /^gmbh$/i,             // Just "GmbH"
+      /^[0-9]+$/,            // Only numbers
+      /^[a-z]{1,2}$/i,       // Single or double letter (like "SA", "AS")
+      /\s{2,}/,              // Multiple consecutive spaces
+    ];
+    
+    if (invalidPatterns.some(pattern => pattern.test(cleaned))) {
+      return false;
+    }
+    
+    // Must contain at least one dot (domain structure)
+    if (!cleaned.includes('.')) return false;
+    
+    // Should not start with common company suffixes
+    if (/^(ltd|limited|inc|llc|gmbh|sa|sas|as|bv|ag)\./i.test(cleaned)) {
+      return false;
+    }
+    
+    return true;
+  };
+
   const normalizeUrl = (url: string): string => {
     if (!url || url.trim().length === 0) return '';
+    
+    // CRITICAL: Validate this looks like a website before processing
+    if (!isValidWebsite(url)) {
+      console.warn(`Invalid website format detected: "${url}" - skipping`);
+      return '';
+    }
     
     let normalized = url.trim();
     
@@ -105,22 +144,30 @@ export const FileUploadClassifier = () => {
       const companyName = values[companyNameIndex]?.replace(/^"|"$/g, '').trim() || '';
       const rawWebsite = values[websiteIndex]?.replace(/^"|"$/g, '').trim() || '';
       
-      // Normalize URL (accept all formats)
-      const website = normalizeUrl(rawWebsite);
+      // CRITICAL VALIDATION: Only use website if it passes validation
+      // This prevents company name data from corrupting the website field
+      let validatedWebsite = '';
+      if (rawWebsite && isValidWebsite(rawWebsite)) {
+        validatedWebsite = normalizeUrl(rawWebsite);
+      } else if (rawWebsite && rawWebsite.length > 0) {
+        // Website field has data but doesn't look valid
+        console.warn(`Row ${idx + 2}: Invalid website format "${rawWebsite}" for company "${companyName}" - clearing website field`);
+        warnings.push(`Row ${idx + 2}: "${companyName}" has invalid website format "${rawWebsite}" - cleared for safety`);
+      }
       
       // Warn about missing URLs but still process
-      if (!website || website.length < 3) {
+      if (!validatedWebsite || validatedWebsite.length < 3) {
         warnings.push(`Row ${idx + 2}: "${companyName}" has no valid website - will classify using name and description only`);
       }
 
       const company: Company = {
         company_name: companyName,
-        website: rawWebsite, // Keep original for display
+        website: validatedWebsite, // Only use validated website
       };
       
       // Include business description if available
       if (descriptionIndex !== -1 && values[descriptionIndex]) {
-        company.business_description = values[descriptionIndex];
+        company.business_description = values[descriptionIndex]?.replace(/^"|"$/g, '').trim();
       }
       
       companies.push(company);
