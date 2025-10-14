@@ -152,7 +152,8 @@ const ThemeProfile = () => {
               </div>
               <div className="flex gap-2">
                 <BulkScoreUpdateButton 
-                  themeId={theme.id} 
+                  themeId={theme.id}
+                  themeName={theme.name}
                   onComplete={refreshTheme}
                 />
                 <Button

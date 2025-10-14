@@ -1,57 +1,35 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { bulkUpdateScores, INDUSTRIAL_ENERGY_EFFICIENCY_SCORES } from '@/utils/bulkScoreUpdate';
-import { useThemes } from '@/hooks/useThemes';
+import { BulkScoringModal } from './BulkScoringModal';
 
 interface BulkScoreUpdateButtonProps {
   themeId: string;
+  themeName: string;
   onComplete?: () => void;
 }
 
-export function BulkScoreUpdateButton({ themeId, onComplete }: BulkScoreUpdateButtonProps) {
-  const [isUpdating, setIsUpdating] = useState(false);
-  const { toast } = useToast();
-  const { refreshThemes } = useThemes();
-
-  const handleBulkUpdate = async () => {
-    setIsUpdating(true);
-    try {
-      await bulkUpdateScores(themeId, INDUSTRIAL_ENERGY_EFFICIENCY_SCORES);
-      
-      toast({
-        title: "Scores Updated",
-        description: `Successfully updated ${INDUSTRIAL_ENERGY_EFFICIENCY_SCORES.length} scores for this theme.`,
-      });
-
-      // Refresh both local theme and global themes list
-      await refreshThemes();
-      
-      if (onComplete) {
-        onComplete();
-      }
-    } catch (error) {
-      console.error('Error updating scores:', error);
-      toast({
-        title: "Update Failed",
-        description: "Failed to update scores. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+export function BulkScoreUpdateButton({ themeId, themeName, onComplete }: BulkScoreUpdateButtonProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <Button
-      onClick={handleBulkUpdate}
-      disabled={isUpdating}
-      size="sm"
-      variant="outline"
-    >
-      <Upload className="h-4 w-4 mr-2" />
-      {isUpdating ? 'Updating Scores...' : 'Load Industrial Energy Efficiency Scores'}
-    </Button>
+    <>
+      <Button
+        onClick={() => setIsModalOpen(true)}
+        size="sm"
+        variant="outline"
+      >
+        <Upload className="h-4 w-4 mr-2" />
+        Load Predefined Scores
+      </Button>
+
+      <BulkScoringModal
+        themeId={themeId}
+        themeName={themeName}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onComplete={onComplete}
+      />
+    </>
   );
 }

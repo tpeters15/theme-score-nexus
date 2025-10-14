@@ -116,3 +116,55 @@ export const INDUSTRIAL_ENERGY_EFFICIENCY_SCORES: BulkScoreUpdate[] = [
     notes: 'Regulatory/compliance drivers provide a non-cyclical demand floor, but a severe industrial recession would defer efficiency capex and slow adoption.',
   },
 ];
+
+// Predefined score data for Smart Water Infrastructure & Analytics theme
+export const SMART_WATER_SCORES: BulkScoreUpdate[] = [
+  {
+    criteria_id: 'e4613835-f637-49e8-99f1-57d6894cc990', // A1: TAM
+    score: 3,
+    confidence: 'Medium',
+    notes: 'Blended asset-light TAM for Europe is £2.3–2.7bn (≈€2.7–3.2bn), triangulated from Bluefield and other sources—solidly within the €1–5bn band.',
+  },
+  {
+    criteria_id: '975d1dff-0048-498e-8259-0aadcf152b8e', // A2: Platform Potential (SOM)
+    score: 1,
+    confidence: 'Medium',
+    notes: 'Bottom-up SOM model yields ~£42.2m ARR by 2029 (7,500 target customers × 7.5% share × £75k ACV), below the £60m threshold despite plausible upside with roll-ups.',
+  },
+  {
+    criteria_id: 'd33eecd5-7f34-425a-92eb-138487e882dd', // A3: CAGR
+    score: 3,
+    confidence: 'Medium',
+    notes: 'Blended asset-light growth estimate is ~12%, placing the market in the 5–15% bracket.',
+  },
+  {
+    criteria_id: '0c35a53e-ba40-4d76-ba5f-6d5368bcc828', // A4: Market Maturity
+    score: 3,
+    confidence: 'Medium',
+    notes: 'Market shows transitional maturity with Series B/C rounds common (e.g., Fathom raises, Xylem Vue acquisition), PE activity increasing (EQT–AMCS €600m, Insight Partners–Badger Meter software division) alongside growth equity, and utilities deploying pilots-to-programme (Thames Water 500k smart meters, Anglian Water digital twin rollout). Full enterprise-scale deployments across utility portfolios remain limited, placing the market between VC-dominated early stage and mature PE buyout landscape.',
+  },
+  {
+    criteria_id: 'd880face-8043-4240-be11-3c5257927f65', // B1: Market Fragmentation
+    score: 3,
+    confidence: 'Medium',
+    notes: 'Market is highly fragmented with abundant bolt-ons, but a limited pool of €15m+ revenue pure-play platforms implies a viable (not "ideal") buy-and-build path, potentially starting smaller or via carve-outs.',
+  },
+  {
+    criteria_id: 'ae53ea1f-0f4e-4d9a-b309-55f8ea57c0f2', // B2: Competitive Landscape & Moat
+    score: 5,
+    confidence: 'High',
+    notes: 'High switching costs from deep IT/OT integration and data network effects from multi-utility datasets enable durable moats for best-of-breed software, even as incumbents bundle hardware+software.',
+  },
+  {
+    criteria_id: 'aa88205a-0fe6-4a41-b0fb-9ddd73fe64d8', // B3: Exit Environment
+    score: 5,
+    confidence: 'High',
+    notes: 'Active, liquid exits to strategics and PE, evidenced by recent deals (e.g., EQT–AMCS, Mueller–i2O, Diehl–PREVENTIO) and a broad buyer universe (Xylem, Siemens, ABB, Badger, etc.).',
+  },
+  {
+    criteria_id: 'd6f7c864-6f6b-47e5-8dc5-a3f4b97d4410', // C1: Regulatory & Policy Landscape
+    score: 3,
+    confidence: 'Medium',
+    notes: 'Growth is supported by binding EU/UK mandates (recast DWD, UWWTD, PR24/AMP8), but adoption is also underwritten by clear ROI (NRW and energy savings), indicating medium dependency.',
+  },
+];
