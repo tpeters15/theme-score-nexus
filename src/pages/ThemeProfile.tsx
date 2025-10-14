@@ -22,6 +22,7 @@ import { ThemeKeywords } from "@/components/ThemeKeywords";
 import { ThemeDetailModal } from "@/components/ThemeDetailModal";
 import { useRegulations } from "@/hooks/useRegulations";
 import { useThemes } from "@/hooks/useThemes";
+import { BulkScoreUpdateButton } from "@/components/BulkScoreUpdateButton";
 
 const ThemeProfile = () => {
   const { themeId } = useParams<{ themeId: string }>();
@@ -149,15 +150,21 @@ const ThemeProfile = () => {
                 </Badge>
                 <Badge variant="outline">{theme.sector}</Badge>
               </div>
-              <Button
-                onClick={() => setShowEditModal(true)}
-                variant="outline"
-                size="sm"
-                className="gap-2"
-              >
-                <Edit className="h-4 w-4" />
-                Edit Theme
-              </Button>
+              <div className="flex gap-2">
+                <BulkScoreUpdateButton 
+                  themeId={theme.id} 
+                  onComplete={refreshTheme}
+                />
+                <Button
+                  onClick={() => setShowEditModal(true)}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit Theme
+                </Button>
+              </div>
             </div>
             
           </div>
