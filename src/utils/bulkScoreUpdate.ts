@@ -7,20 +7,50 @@ export interface BulkScoreUpdate {
   notes: string;
 }
 
-export async function bulkUpdateScores(themeId: string, scores: BulkScoreUpdate[]) {
-  const { data, error } = await supabase.functions.invoke('bulk-score-update', {
-    body: {
-      theme_id: themeId,
-      scores,
-    },
-  });
+export async function upsertScoresDirectly(themeId: string, scores: BulkScoreUpdate[]) {
+  const { data: { user } } = await supabase.auth.getUser();
+  const payload = scores.map(s => ({
+    theme_id: themeId,
+    criteria_id: s.criteria_id,
+    score: s.score,
+    confidence: s.confidence,
+    notes: s.notes,
+    updated_by: user?.id ?? null,
+    updated_at: new Date().toISOString(),
+    update_source: 'manual',
+  }));
+
+  const { error } = await supabase
+    .from('detailed_scores')
+    .upsert(payload, { onConflict: 'theme_id,criteria_id' });
 
   if (error) {
-    console.error('Error updating scores:', error);
+    console.error('Direct upsert error:', error);
     throw error;
   }
 
-  return data;
+  return { success: true, count: payload.length };
+}
+
+export async function bulkUpdateScores(themeId: string, scores: BulkScoreUpdate[]) {
+  try {
+    const { data, error } = await supabase.functions.invoke('bulk-score-update', {
+      body: {
+        theme_id: themeId,
+        scores,
+      },
+    });
+
+    if (error) {
+      console.warn('Edge function error, falling back to direct upsert:', error);
+      return await upsertScoresDirectly(themeId, scores);
+    }
+
+    return data;
+  } catch (err) {
+    console.warn('Edge function unavailable, falling back to direct upsert:', err);
+    return await upsertScoresDirectly(themeId, scores);
+  }
 }
 
 // Predefined score data for Industrial & Commercial Energy Efficiency theme
