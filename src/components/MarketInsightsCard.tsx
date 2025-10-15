@@ -1,16 +1,32 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Signal, ExternalLink, Clock, Eye } from "lucide-react";
-import { PROCESSED_SIGNALS_DATA, ProcessedSignalData } from "@/data/processedSignals";
+import { Signal, ExternalLink, Clock, Eye, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { ProcessedSignalDetailModal } from "@/components/ProcessedSignalDetailModal";
+import { useProcessedSignalsFeatured } from "@/hooks/useProcessedSignalsFeatured";
+import type { ProcessedSignalData } from "@/data/processedSignals";
 
 export function SignalHighlightsCard() {
   const [selectedSignal, setSelectedSignal] = useState<ProcessedSignalData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data: dbSignals, isLoading } = useProcessedSignalsFeatured();
 
-  const recentSignals = PROCESSED_SIGNALS_DATA.filter(s => s.is_featured).slice(0, 5);
+  // Transform DB signals to match ProcessedSignalData format
+  const recentSignals: ProcessedSignalData[] = dbSignals?.map(signal => ({
+    signal_id: signal.raw_signal.signal_id,
+    title: signal.raw_signal.title,
+    countries: signal.countries?.join(', ') || '',
+    signal_type: (signal.signal_type_classified as any) || 'news',
+    deal_size: signal.extracted_deal_size || '',
+    published_date: signal.raw_signal.publication_date || '',
+    source: signal.raw_signal.source,
+    source_url: signal.raw_signal.url,
+    days_old: signal.raw_signal.publication_date 
+      ? Math.floor((Date.now() - new Date(signal.raw_signal.publication_date).getTime()) / (1000 * 60 * 60 * 24))
+      : 0,
+    content_snippet: signal.content_snippet || '',
+  })) || [];
 
   const openModal = (signal: ProcessedSignalData) => {
     console.log('Opening modal for signal:', signal);
@@ -51,6 +67,24 @@ export function SignalHighlightsCard() {
     return `${daysOld}d ago`;
   };
 
+  if (isLoading) {
+    return (
+      <Card className="bg-gradient-to-br from-card to-muted/20 border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <div className="p-1.5 rounded-lg bg-blue-500/10">
+              <Signal className="h-4 w-4 text-blue-600" />
+            </div>
+            Signal Highlights
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="bg-gradient-to-br from-card to-muted/20 border-border/50">
       <CardHeader className="pb-3">
@@ -62,7 +96,9 @@ export function SignalHighlightsCard() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {recentSignals.map((signal) => (
+        {recentSignals.length > 0 ? (
+          <>
+            {recentSignals.map((signal) => (
           <div
             key={signal.signal_id}
             className="relative p-3 rounded-lg border bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-200 group cursor-pointer"
@@ -116,6 +152,12 @@ export function SignalHighlightsCard() {
             <ExternalLink className="h-3 w-3 ml-1" />
           </a>
         </Button>
+          </>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <p className="text-sm">No featured signals available</p>
+          </div>
+        )}
       </CardContent>
 
       <ProcessedSignalDetailModal 
