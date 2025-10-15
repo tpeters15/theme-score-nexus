@@ -33,7 +33,7 @@ export function DashboardHeader() {
           <div className="flex items-center gap-4">
             <SidebarTrigger />
             <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <img src={metisLogo} alt="Metis Logo" className="h-11 w-auto" />
+              <img src={metisLogo} alt="Metis Logo" className="h-[66px] w-auto" />
               <h1 className="text-xl font-semibold font-sans">
                 <span style={{ color: '#00216A' }}>Delta</span>
                 {' '}
