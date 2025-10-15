@@ -1,12 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowLeft, FileText, TrendingUp, Users, Calendar, BarChart3, Upload, Settings, Shield, Target, AlertTriangle, CheckCircle, Hash, Edit } from "lucide-react";
+import { ArrowLeft, FileText, TrendingUp, Users, Calendar, BarChart3, Upload, Settings, Shield, Target, AlertTriangle, CheckCircle, Hash, Edit, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useFramework } from "@/hooks/useFramework";
 import { ThemeWithDetailedScores, ResearchDocument, N8nResearchRun } from "@/types/framework";
 import { PILLAR_COLORS } from "@/types/themes";
@@ -35,6 +36,7 @@ const ThemeProfile = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState<ResearchDocument | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
 
   const refreshTheme = async () => {
     if (!themeId) return;
@@ -252,9 +254,25 @@ const ThemeProfile = () => {
         {/* Theme Description */}
         {theme.description && (
           <Card>
-            <CardContent className="pt-6">
-              <p className="text-muted-foreground leading-relaxed">{theme.description}</p>
-            </CardContent>
+            <Collapsible open={isDescriptionOpen} onOpenChange={setIsDescriptionOpen}>
+              <CardContent className="pt-6 pb-4">
+                <div className="space-y-4">
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between p-0 h-auto font-medium text-foreground hover:bg-transparent"
+                    >
+                      <span className="text-sm font-semibold">Theme Description</span>
+                      <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isDescriptionOpen ? 'rotate-180' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-2">
+                    <Separator />
+                    <p className="text-muted-foreground leading-relaxed pt-2">{theme.description}</p>
+                  </CollapsibleContent>
+                </div>
+              </CardContent>
+            </Collapsible>
           </Card>
         )}
 
