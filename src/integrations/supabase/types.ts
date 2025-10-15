@@ -1200,7 +1200,43 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      detailed_scores_with_context: {
+        Row: {
+          ai_research_data: Json | null
+          analyst_notes: string | null
+          category_code: string | null
+          category_name: string | null
+          confidence: string | null
+          criteria_code: string | null
+          criteria_id: string | null
+          criteria_name: string | null
+          id: string | null
+          notes: string | null
+          score: number | null
+          sector_id: string | null
+          theme_id: string | null
+          theme_name: string | null
+          update_source: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "detailed_scores_criteria_id_fkey"
+            columns: ["criteria_id"]
+            isOneToOne: false
+            referencedRelation: "framework_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taxonomy_themes_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_taxonomy_json: {
