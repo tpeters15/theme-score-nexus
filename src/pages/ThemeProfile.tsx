@@ -248,7 +248,7 @@ const ThemeProfile = () => {
                   </div>
                   <div>
                     <div className="text-2xl font-bold">
-                      {formatTAM((theme as any).tam_value, (theme as any).tam_currency)}
+                      {formatTAM(theme.tam_value, theme.tam_currency || 'GBP')}
                     </div>
                     <p className="text-sm text-muted-foreground">Total Addressable Market</p>
                   </div>
@@ -264,7 +264,7 @@ const ThemeProfile = () => {
                   </div>
                   <div>
                     <div className="text-2xl font-bold">
-                      {formatCAGR((theme as any).cagr_percentage)}
+                      {formatCAGR(theme.cagr_percentage)}
                     </div>
                     <p className="text-sm text-muted-foreground">Growth Rate (CAGR)</p>
                   </div>
@@ -280,7 +280,7 @@ const ThemeProfile = () => {
                   </div>
                   <div>
                     <div className="text-2xl font-bold">
-                      {(theme as any).market_maturity || '--'}
+                      {theme.market_maturity || '--'}
                     </div>
                     <p className="text-sm text-muted-foreground">Market Maturity</p>
                   </div>
