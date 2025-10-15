@@ -10,6 +10,7 @@ import { ClassificationResult } from "./ClassificationResult";
 interface Classification {
   id: string;
   primary_theme: string;
+  theme_id?: string;
   sector?: string;
   pillar?: string;
   confidence_score: number;

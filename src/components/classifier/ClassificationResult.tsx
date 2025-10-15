@@ -1,12 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface ClassificationResultProps {
   result: {
     company_name: string;
     website: string;
     primary_theme: string;
+    theme_id?: string;
     sector?: string;
     pillar?: string;
     confidence_score: number;
@@ -46,9 +48,17 @@ export const ClassificationResult = ({ result }: ClassificationResultProps) => {
           </div>
           <div>
             <p className="text-sm font-medium mb-1">Theme</p>
-            <Badge variant="secondary" className="text-sm">
-              {result.primary_theme}
-            </Badge>
+            {result.theme_id ? (
+              <Link to={`/theme/${result.theme_id}`}>
+                <Badge variant="secondary" className="text-sm cursor-pointer hover:bg-secondary/80 transition-colors">
+                  {result.primary_theme}
+                </Badge>
+              </Link>
+            ) : (
+              <Badge variant="secondary" className="text-sm">
+                {result.primary_theme}
+              </Badge>
+            )}
           </div>
         </div>
 
