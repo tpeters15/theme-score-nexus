@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import deltaLogo from "@/assets/delta-logo.png";
+import deltaLogo from "@/assets/delta-metis-logo.png";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,8 +33,8 @@ export function DashboardHeader() {
           <div className="flex items-center gap-4">
             <SidebarTrigger />
             <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <img src={deltaLogo} alt="Delta Intelligence Logo" className="h-11 w-11" />
-              <h1 className="text-xl font-semibold text-foreground font-sans">Delta Intelligence</h1>
+              <img src={deltaLogo} alt="Delta Metis Logo" className="h-11 w-11" />
+              <h1 className="text-xl font-semibold text-foreground font-sans">Delta Metis</h1>
             </Link>
           </div>
           
