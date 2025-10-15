@@ -136,9 +136,8 @@ const ThemeProfile = () => {
   const formatTAM = (value: number | null, currency: string = 'GBP') => {
     if (!value) return '--';
     const symbol = currency === 'GBP' ? '£' : '$';
-    if (value >= 1_000_000_000) return `${symbol}${(value / 1_000_000_000).toFixed(1)}B`;
-    if (value >= 1_000_000) return `${symbol}${(value / 1_000_000).toFixed(1)}M`;
-    return `${symbol}${value.toFixed(1)}`;
+    // Values are stored in billions, so just format directly
+    return `${symbol}${Math.round(value)}Bn`;
   };
 
   const formatCAGR = (percentage: number | null) => {
