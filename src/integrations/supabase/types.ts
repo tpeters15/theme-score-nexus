@@ -1087,6 +1087,9 @@ export type Database = {
       }
       taxonomy_themes: {
         Row: {
+          cagr_percentage: number | null
+          cagr_period_end: number | null
+          cagr_period_start: number | null
           common_edge_cases: string | null
           created_at: string | null
           description: string | null
@@ -1096,13 +1099,19 @@ export type Database = {
           is_active: boolean
           key_identifiers: string[] | null
           keywords: string[] | null
+          market_maturity: string | null
           name: string
           out_of_scope: string[] | null
           sector_id: string
+          tam_currency: string | null
+          tam_value: number | null
           updated_at: string | null
           version: number
         }
         Insert: {
+          cagr_percentage?: number | null
+          cagr_period_end?: number | null
+          cagr_period_start?: number | null
           common_edge_cases?: string | null
           created_at?: string | null
           description?: string | null
@@ -1112,13 +1121,19 @@ export type Database = {
           is_active?: boolean
           key_identifiers?: string[] | null
           keywords?: string[] | null
+          market_maturity?: string | null
           name: string
           out_of_scope?: string[] | null
           sector_id: string
+          tam_currency?: string | null
+          tam_value?: number | null
           updated_at?: string | null
           version?: number
         }
         Update: {
+          cagr_percentage?: number | null
+          cagr_period_end?: number | null
+          cagr_period_start?: number | null
           common_edge_cases?: string | null
           created_at?: string | null
           description?: string | null
@@ -1128,9 +1143,12 @@ export type Database = {
           is_active?: boolean
           key_identifiers?: string[] | null
           keywords?: string[] | null
+          market_maturity?: string | null
           name?: string
           out_of_scope?: string[] | null
           sector_id?: string
+          tam_currency?: string | null
+          tam_value?: number | null
           updated_at?: string | null
           version?: number
         }

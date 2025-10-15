@@ -18,6 +18,7 @@ export function BulkScoreUpdateButton({ themeId, themeName, onComplete }: BulkSc
         onClick={() => setIsModalOpen(true)}
         size="sm"
         variant="outline"
+        data-bulk-trigger
       >
         <Upload className="h-4 w-4 mr-2" />
         Load Predefined Scores

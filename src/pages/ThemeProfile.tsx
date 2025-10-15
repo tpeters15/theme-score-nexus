@@ -1,6 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowLeft, FileText, TrendingUp, Users, Calendar, BarChart3, Upload, Settings, Shield, Target, AlertTriangle, CheckCircle, Hash, Edit, ChevronDown } from "lucide-react";
+import { ArrowLeft, FileText, TrendingUp, Users, Calendar, BarChart3, Upload, Settings, Shield, Target, AlertTriangle, CheckCircle, Hash, Edit, ChevronDown, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -124,10 +130,25 @@ const ThemeProfile = () => {
     return PILLAR_COLORS[pillar as keyof typeof PILLAR_COLORS] || "bg-gray-100 text-gray-800 border-gray-200";
   };
 
+  const formatTAM = (value: number | null, currency: string = 'GBP') => {
+    if (!value) return '--';
+    const symbol = currency === 'GBP' ? '£' : '$';
+    if (value >= 1000000000) return `${symbol}${(value / 1000000000).toFixed(1)}B`;
+    if (value >= 1000000) return `${symbol}${(value / 1000000).toFixed(1)}M`;
+    return `${symbol}${value.toFixed(1)}`;
+  };
+
+  const formatCAGR = (percentage: number | null) => {
+    if (!percentage) return '--';
+    return `${percentage.toFixed(1)}%`;
+  };
+
   // Calculate completion percentages for better UX
   const totalCriteria = theme.detailed_scores.length;
   const scoredCriteria = theme.detailed_scores.filter(s => s.score !== null).length;
   const completionRate = totalCriteria > 0 ? Math.round((scoredCriteria / totalCriteria) * 100) : 0;
+  const documentCount = theme.research_documents?.length || 0;
+  const regulationCount = regulations.length;
 
   return (
     <div className="bg-background">
@@ -153,24 +174,41 @@ const ThemeProfile = () => {
                 </Badge>
                 <Badge variant="outline">{theme.sector}</Badge>
               </div>
-              <div className="flex gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setShowEditModal(true)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Theme
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {
+                    // Trigger bulk score update
+                    const btn = document.querySelector('[data-bulk-trigger]') as HTMLButtonElement;
+                    btn?.click();
+                  }}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Load Predefined Scores
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {
+                    // Trigger file upload
+                    const input = document.getElementById('file-upload') as HTMLInputElement;
+                    input?.click();
+                  }}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Upload Research Document
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <div className="hidden">
                 <BulkScoreUpdateButton 
                   themeId={theme.id}
                   themeName={theme.name}
                   onComplete={refreshTheme}
                 />
-                <Button
-                  onClick={() => setShowEditModal(true)}
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                >
-                  <Edit className="h-4 w-4" />
-                  Edit Theme
-                </Button>
-                {themeId === 'f68542c4-647a-4ff0-b2f1-830d9ee7f99c' && (
-                  <UploadResearchDocumentButton />
-                )}
               </div>
             </div>
             
@@ -211,39 +249,45 @@ const ThemeProfile = () => {
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-primary/10">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {formatTAM((theme as any).tam_value, (theme as any).tam_currency)}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Total Addressable Market</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {formatCAGR((theme as any).cagr_percentage)}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Growth Rate (CAGR)</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
                     <Target className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <div className="text-2xl font-bold">{scoredCriteria}<span className="text-sm text-muted-foreground">/{totalCriteria}</span></div>
-                    <p className="text-sm text-muted-foreground">Criteria Evaluated</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <FileText className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold">{theme.research_documents.length}</div>
-                    <p className="text-sm text-muted-foreground">Research Documents</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Shield className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold">{regulations.length}</div>
-                    <p className="text-sm text-muted-foreground">Regulatory Items</p>
+                    <div className="text-2xl font-bold">
+                      {(theme as any).market_maturity || '--'}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Market Maturity</p>
                   </div>
                 </div>
               </CardContent>
@@ -283,15 +327,15 @@ const ThemeProfile = () => {
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="framework" className="gap-2">
               <BarChart3 className="h-4 w-4" />
-              Framework
+              Framework ({scoredCriteria}/{totalCriteria})
             </TabsTrigger>
             <TabsTrigger value="research" className="gap-2">
               <FileText className="h-4 w-4" />
-              Research
+              Research ({documentCount})
             </TabsTrigger>
             <TabsTrigger value="regulatory" className="gap-2">
               <Shield className="h-4 w-4" />
-              Regulatory
+              Regulatory ({regulationCount})
             </TabsTrigger>
             <TabsTrigger value="keywords" className="gap-2">
               <Hash className="h-4 w-4" />

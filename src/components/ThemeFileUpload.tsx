@@ -238,6 +238,7 @@ export function ThemeFileUpload({ themeId, onUploadComplete }: ThemeFileUploadPr
           onChange={handleFileSelect}
           className="hidden"
           id="file-upload"
+          data-upload-trigger
         />
         <Button asChild variant="outline" size="sm" className="mt-2">
           <label htmlFor="file-upload" className="cursor-pointer">
