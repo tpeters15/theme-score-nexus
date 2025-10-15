@@ -293,6 +293,8 @@ export function ThemeTableView({ themes, onEditTheme }: ThemeTableViewProps) {
       onRowClick={(theme) => navigate(`/theme/${theme.id}`)}
       className="surface-elevated"
       expandedRowRender={renderExpandedRow}
+      defaultSortColumn="weighted_total_score"
+      defaultSortDirection="desc"
     />
   );
 }

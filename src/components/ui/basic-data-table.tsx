@@ -35,6 +35,8 @@ export type DataTableProps<T> = {
   emptyMessage?: string;
   onRowClick?: (row: T, index: number) => void;
   expandedRowRender?: (row: T) => React.ReactNode;
+  defaultSortColumn?: keyof T;
+  defaultSortDirection?: "asc" | "desc";
 };
 
 export function DataTable<T extends Record<string, any>>({
@@ -53,12 +55,17 @@ export function DataTable<T extends Record<string, any>>({
   emptyMessage = "No data available",
   onRowClick,
   expandedRowRender,
+  defaultSortColumn,
+  defaultSortDirection = "asc",
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [sortConfig, setSortConfig] = useState<{
     key: keyof T | null;
     direction: "asc" | "desc";
-  }>({ key: null, direction: "asc" });
+  }>({ 
+    key: defaultSortColumn || null, 
+    direction: defaultSortDirection 
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>({});
   const [filterSearch, setFilterSearch] = useState<Record<string, string>>({});
