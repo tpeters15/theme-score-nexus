@@ -95,7 +95,7 @@ export function SignalsTableView({ signals, onSignalClick }: SignalsTableViewPro
       header: 'Countries',
       sortable: true,
       filterable: true,
-      width: '150px',
+      width: '180px',
       render: (value) => (
         <div className="flex items-center gap-1.5 text-sm font-medium">
           <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
