@@ -110,9 +110,7 @@ function calculateThemeFrameworkScores(
       for (const criterion of criteria.filter(c => c.category_id === category.id)) {
         const score = themeScores.find(s => s.criteria_id === criterion.id);
         if (score && score.score) {
-          // Convert 1-5 scale to 0-100 percentage scale
-          const percentageScore = ((score.score - 1) / 4) * 100;
-          categoryScore += (percentageScore * criterion.weight);
+          categoryScore += (score.score * criterion.weight);
           categoryTotalCriteriaWeight += criterion.weight;
           
           // Count confidence levels
@@ -129,7 +127,7 @@ function calculateThemeFrameworkScores(
       }
     }
 
-    const overall_score = totalWeight > 0 ? Math.round(totalWeightedScore / totalWeight) : 0;
+    const overall_score = totalWeight > 0 ? Number((totalWeightedScore / totalWeight).toFixed(2)) : 0;
 
     // Determine overall confidence
     const totalScoredCriteria = Object.values(confidenceMap).reduce((a, b) => a + b, 0);
