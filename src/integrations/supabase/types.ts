@@ -505,6 +505,7 @@ export type Database = {
           extracted_deal_size: string | null
           has_pitchbook_data: boolean | null
           id: string
+          is_featured: boolean | null
           memo_analysis: string | null
           memo_published_at: string | null
           memo_section: string | null
@@ -524,6 +525,7 @@ export type Database = {
           extracted_deal_size?: string | null
           has_pitchbook_data?: boolean | null
           id?: string
+          is_featured?: boolean | null
           memo_analysis?: string | null
           memo_published_at?: string | null
           memo_section?: string | null
@@ -543,6 +545,7 @@ export type Database = {
           extracted_deal_size?: string | null
           has_pitchbook_data?: boolean | null
           id?: string
+          is_featured?: boolean | null
           memo_analysis?: string | null
           memo_published_at?: string | null
           memo_section?: string | null

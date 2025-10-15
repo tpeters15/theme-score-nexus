@@ -9,6 +9,7 @@ export interface ProcessedSignalData {
   source_url?: string;
   days_old: number;
   content_snippet: string;
+  is_featured?: boolean;
 }
 
 export const PROCESSED_SIGNALS_DATA: ProcessedSignalData[] = [
@@ -22,7 +23,8 @@ export const PROCESSED_SIGNALS_DATA: ProcessedSignalData[] = [
     source: "DG CLIMA (European Commission)",
     source_url: "https://climate.ec.europa.eu/eu-action/carbon-removal_en",
     days_old: 11,
-    content_snippet: "DG CLIMA has initiated studies evaluating the design of an EU-wide purchasing programme to promote permanent carbon dioxide removals (CDR). The studies highlight investment needs and propose mechanisms to stimulate demand for permanent CDR technologies."
+    content_snippet: "DG CLIMA has initiated studies evaluating the design of an EU-wide purchasing programme to promote permanent carbon dioxide removals (CDR). The studies highlight investment needs and propose mechanisms to stimulate demand for permanent CDR technologies.",
+    is_featured: true
   },
   {
     signal_id: "sig_1757239683880_1",
@@ -33,7 +35,8 @@ export const PROCESSED_SIGNALS_DATA: ProcessedSignalData[] = [
     published_date: "2025-09-05T08:00:00Z",
     source: "The Next Web",
     days_old: 2,
-    content_snippet: "Despite strong public support for climate action, European climate tech funding reached a 5-year low in Q1 2025. Industry leaders urge renewed investment to avoid loss of technological leadership."
+    content_snippet: "Despite strong public support for climate action, European climate tech funding reached a 5-year low in Q1 2025. Industry leaders urge renewed investment to avoid loss of technological leadership.",
+    is_featured: true
   },
   {
     signal_id: "sig_1757239683880_2",
@@ -44,7 +47,8 @@ export const PROCESSED_SIGNALS_DATA: ProcessedSignalData[] = [
     published_date: "2025-08-31T09:00:00Z",
     source: "BusinessGreen",
     days_old: 7,
-    content_snippet: "ECNO highlights a 'colossal' investment gap in EU clean tech. The investment lag imperils the EU's competitive position versus the US and China, and threatens climate targets."
+    content_snippet: "ECNO highlights a 'colossal' investment gap in EU clean tech. The investment lag imperils the EU's competitive position versus the US and China, and threatens climate targets.",
+    is_featured: true
   },
   {
     signal_id: "sig_1757239683880_3",
@@ -55,7 +59,8 @@ export const PROCESSED_SIGNALS_DATA: ProcessedSignalData[] = [
     published_date: "2025-09-01T12:00:00Z",
     source: "DG CLIMA (European Commission)",
     days_old: 6,
-    content_snippet: "The European Commission will host a high-level climate summit in Brussels. The event emphasizes economic and social benefits of climate action, with participation from EU officials and industry leaders."
+    content_snippet: "The European Commission will host a high-level climate summit in Brussels. The event emphasizes economic and social benefits of climate action, with participation from EU officials and industry leaders.",
+    is_featured: true
   },
   {
     signal_id: "sig_1757239683880_4",
@@ -66,7 +71,8 @@ export const PROCESSED_SIGNALS_DATA: ProcessedSignalData[] = [
     published_date: "2025-09-05T10:20:00Z",
     source: "Mercury News",
     days_old: 2,
-    content_snippet: "Norway announced a €1.5 billion state-backed initiative to accelerate deployment of electric ferries for domestic maritime transport by 2028. Regional ferry operators must replace 30% of diesel routes."
+    content_snippet: "Norway announced a €1.5 billion state-backed initiative to accelerate deployment of electric ferries for domestic maritime transport by 2028. Regional ferry operators must replace 30% of diesel routes.",
+    is_featured: true
   },
   {
     signal_id: "sig_1757239683880_5",
