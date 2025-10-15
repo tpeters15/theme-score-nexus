@@ -249,9 +249,9 @@ export const useFramework = () => {
       }
     }
 
-    // Calculate overall score on 1-5 scale first, then convert to 0-100 scale for display
-    const scoreOn1to5Scale = totalWeight > 0 ? (totalWeightedScore / totalWeight) : 1;
-    const overall_score = Math.round(((scoreOn1to5Scale - 1) / 4) * 100); // Convert to 0-100 scale
+    // Calculate overall score on 1-5 scale and keep it on that scale for display
+    const scoreOn1to5Scale = totalWeight > 0 ? (totalWeightedScore / totalWeight) : 0;
+    const overall_score = Number(scoreOn1to5Scale.toFixed(2));
 
     // Determine overall confidence
     const totalScores = Object.values(confidenceMap).reduce((a, b) => a + b, 0);

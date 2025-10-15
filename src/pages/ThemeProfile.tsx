@@ -124,8 +124,8 @@ const ThemeProfile = () => {
   }
 
   const getScoreColor = (score: number) => {
-    if (score >= 70) return "text-primary";
-    if (score >= 40) return "text-warning";
+    if (score >= 3.5) return "text-primary";
+    if (score >= 2.5) return "text-warning";
     return "text-destructive";
   };
 
@@ -230,9 +230,9 @@ const ThemeProfile = () => {
                 </div>
                 <div className="text-4xl font-bold">
                   <span className={getScoreColor(theme.overall_score)}>
-                    {theme.overall_score}
+                    {theme.overall_score.toFixed(2)}
                   </span>
-                  <span className="text-lg text-muted-foreground">/100</span>
+                  <span className="text-lg text-muted-foreground">/5</span>
                 </div>
               </div>
             </CardContent>
