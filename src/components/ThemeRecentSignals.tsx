@@ -19,37 +19,56 @@ export function ThemeRecentSignals({ themeId }: ThemeRecentSignalsProps) {
   const { data: themeSignals, isLoading } = useQuery({
     queryKey: ['theme-signals', themeId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get the theme_signals with processed_signal_id
+      const { data: themeSigs, error: themeSigsError } = await supabase
         .from('theme_signals')
-        .select(`
-          id,
-          relevance_score,
-          ai_analysis,
-          processed_signal:processed_signals!inner (
-            id,
-            raw_signal_id,
-            signal_type_classified,
-            countries,
-            content_snippet,
-            extracted_deal_size,
-            processed_timestamp,
-            is_featured,
-            raw_signal:raw_signals!raw_signal_id (
-              signal_id,
-              title,
-              source,
-              publication_date,
-              url
-            )
-          )
-        `)
+        .select('processed_signal_id, relevance_score, ai_analysis')
         .eq('theme_id', themeId)
         .order('relevance_score', { ascending: false })
         .limit(5);
 
-      if (error) throw error;
-      
-      return data?.map(ts => ts.processed_signal as unknown as ProcessedSignal) || [];
+      if (themeSigsError) throw themeSigsError;
+      if (!themeSigs || themeSigs.length === 0) return [];
+
+      // Get all the processed signal IDs
+      const signalIds = themeSigs.map(ts => ts.processed_signal_id);
+
+      // Fetch the actual signals with their raw data
+      const { data: signals, error: signalsError } = await supabase
+        .from('processed_signals')
+        .select(`
+          id,
+          raw_signal_id,
+          signal_type_classified,
+          countries,
+          content_snippet,
+          extracted_deal_size,
+          processed_timestamp,
+          is_featured,
+          raw_signals!raw_signal_id (
+            signal_id,
+            title,
+            source,
+            publication_date,
+            url
+          )
+        `)
+        .in('id', signalIds);
+
+      if (signalsError) throw signalsError;
+      if (!signals) return [];
+
+      // Combine the data - match signals by ID to preserve relevance order
+      return themeSigs
+        .map(ts => {
+          const signal = signals.find(s => s.id === ts.processed_signal_id);
+          if (!signal) return null;
+          return {
+            ...signal,
+            raw_signal: Array.isArray(signal.raw_signals) ? signal.raw_signals[0] : signal.raw_signals
+          } as ProcessedSignal;
+        })
+        .filter((s): s is ProcessedSignal => s !== null);
     },
   });
 
