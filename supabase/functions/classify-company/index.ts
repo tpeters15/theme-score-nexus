@@ -64,6 +64,9 @@ Deno.serve(async (req) => {
       console.log(`Found existing classification for company ${companyId}, reusing results`)
       
       // Copy the existing classification data to the new classification record
+      // Strip any existing "[Reused from previous classification]" prefix to avoid duplication
+      const cleanRationale = existingClassification.rationale?.replace(/^\[Reused from previous classification\]\s*/i, '') || ''
+      
       const { error: copyError } = await supabase
         .from('classifications')
         .update({
@@ -74,7 +77,7 @@ Deno.serve(async (req) => {
           sector: existingClassification.sector,
           business_model: existingClassification.business_model,
           confidence_score: existingClassification.confidence_score,
-          rationale: `[Reused from previous classification] ${existingClassification.rationale}`,
+          rationale: `[Reused from previous classification] ${cleanRationale}`,
           model_used: existingClassification.model_used,
           website_summary: existingClassification.website_summary,
           perplexity_research: existingClassification.perplexity_research,
@@ -167,6 +170,9 @@ Deno.serve(async (req) => {
 
     if (reuseClassification) {
       console.log('Reusing classification found via website/company name')
+      // Strip any existing "[Reused from previous classification]" prefix to avoid duplication
+      const cleanRationale = reuseClassification.rationale?.replace(/^\[Reused from previous classification\]\s*/i, '') || ''
+      
       const { error: copyError2 } = await supabase
         .from('classifications')
         .update({
@@ -177,7 +183,7 @@ Deno.serve(async (req) => {
           sector: reuseClassification.sector,
           business_model: reuseClassification.business_model,
           confidence_score: reuseClassification.confidence_score,
-          rationale: `[Reused from previous classification] ${reuseClassification.rationale}`,
+          rationale: `[Reused from previous classification] ${cleanRationale}`,
           model_used: reuseClassification.model_used,
           website_summary: reuseClassification.website_summary,
           perplexity_research: reuseClassification.perplexity_research,
