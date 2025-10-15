@@ -3,21 +3,33 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Signal, Search } from "lucide-react";
 import { format } from "date-fns";
-import { PROCESSED_SIGNALS_DATA, ProcessedSignalData } from "@/data/processedSignals";
+import { useProcessedSignals } from "@/hooks/useProcessedSignals";
 import { SignalFilterDemo } from "@/components/ui/signal-filter-demo";
 import { SignalsTableView } from "@/components/SignalsTableView";
 import { ImportProcessedSignalsCSV } from "@/components/ImportProcessedSignalsCSV";
+import type { ProcessedSignalData } from "@/data/processedSignals";
 
 export default function Signals() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSignal, setSelectedSignal] = useState<ProcessedSignalData | null>(null);
   const [filters, setFilters] = useState<any[]>([]);
-
-  const signals = PROCESSED_SIGNALS_DATA;
+  
+  const { data: rawSignals = [], isLoading } = useProcessedSignals();
+  
+  // Convert database data to the UI format
+  const signals = rawSignals.map(signal => ({
+    signal_id: signal.raw_signal?.signal_id || signal.id,
+    title: signal.raw_signal?.title || 'No title',
+    countries: Array.isArray(signal.countries) ? signal.countries.join(', ') : 'Unknown',
+    signal_type: (signal.signal_type_classified as any) || 'unknown',
+    deal_size: signal.extracted_deal_size || '',
+    published_date: signal.raw_signal?.publication_date || signal.raw_signal?.scraped_date || new Date().toISOString(),
+    source: signal.raw_signal?.source || 'Unknown',
+    source_url: signal.raw_signal?.url,
+    days_old: signal.days_old_when_processed || 0,
+    content_snippet: signal.content_snippet || signal.raw_signal?.description || 'No content available'
+  }));
 
   const handleSignalClick = (signal: ProcessedSignalData) => {
-    setSelectedSignal(signal);
-    // You can open a modal here if needed
     console.log("Signal clicked:", signal);
   };
 

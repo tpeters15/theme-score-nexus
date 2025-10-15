@@ -45,7 +45,7 @@ export function SignalsTableView({ signals, onSignalClick }: SignalsTableViewPro
 
   const columns: DataTableColumn<ProcessedSignalData>[] = [
     {
-      key: 'signal_id',
+      key: '__expander' as keyof ProcessedSignalData,
       header: '',
       width: '40px',
       render: (value, signal) => (
@@ -147,7 +147,7 @@ export function SignalsTableView({ signals, onSignalClick }: SignalsTableViewPro
       ),
     },
     {
-      key: 'signal_id',
+      key: '__actions' as keyof ProcessedSignalData,
       header: '',
       width: '80px',
       render: (value, signal) => (
