@@ -94,6 +94,7 @@ ${signal.deal_size ? `Deal Size: ${signal.deal_size}` : ''}`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
+        temperature: 0,
         response_format: { type: "json_object" }
       }),
     });

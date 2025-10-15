@@ -10,7 +10,7 @@ export function SignalHighlightsCard() {
   const [selectedSignal, setSelectedSignal] = useState<ProcessedSignalData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const recentSignals = PROCESSED_SIGNALS_DATA.slice(0, 4);
+  const recentSignals = PROCESSED_SIGNALS_DATA.slice(0, 5);
 
   const openModal = (signal: ProcessedSignalData) => {
     console.log('Opening modal for signal:', signal);
