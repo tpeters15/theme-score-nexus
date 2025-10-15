@@ -26,6 +26,7 @@ const mainItems = [
 
 const adminItems = [
   { title: "Taxonomy", url: "/taxonomy", icon: Database },
+  { title: "Theme Populator", url: "/admin/theme-populator", icon: Settings },
 ];
 
 export function AppSidebar() {
