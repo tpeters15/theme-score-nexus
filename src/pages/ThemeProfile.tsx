@@ -254,25 +254,27 @@ const ThemeProfile = () => {
         {/* Theme Description */}
         {theme.description && (
           <Card>
-            <Collapsible open={isDescriptionOpen} onOpenChange={setIsDescriptionOpen}>
-              <CardContent className="pt-6 pb-4">
-                <div className="space-y-4">
+            <CardContent className="pt-6">
+              <Collapsible open={isDescriptionOpen} onOpenChange={setIsDescriptionOpen}>
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <p className={`text-muted-foreground leading-relaxed ${!isDescriptionOpen ? 'line-clamp-2' : ''}`}>
+                      {theme.description}
+                    </p>
+                  </div>
                   <CollapsibleTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="w-full justify-between p-0 h-auto font-medium text-foreground hover:bg-transparent"
+                      size="sm"
+                      className="gap-2 -ml-2"
                     >
-                      <span className="text-sm font-semibold">Theme Description</span>
+                      <span className="text-sm">{isDescriptionOpen ? 'Show less' : 'Show more'}</span>
                       <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isDescriptionOpen ? 'rotate-180' : ''}`} />
                     </Button>
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-2">
-                    <Separator />
-                    <p className="text-muted-foreground leading-relaxed pt-2">{theme.description}</p>
-                  </CollapsibleContent>
                 </div>
-              </CardContent>
-            </Collapsible>
+              </Collapsible>
+            </CardContent>
           </Card>
         )}
 
