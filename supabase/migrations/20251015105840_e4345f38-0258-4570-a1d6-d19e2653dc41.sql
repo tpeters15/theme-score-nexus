@@ -1,0 +1,18 @@
+-- Step 5: Enrich Sustainable Materials & Packaging theme metadata with keywords and enhanced description
+
+UPDATE taxonomy_themes
+SET
+  keywords = ARRAY[
+    'EPR', 'extended producer responsibility', 'recyclable packaging', 'recycled content', 'PCR', 'post-consumer recycled',
+    'bio-based packaging', 'compostable packaging', 'fiber packaging', 'sustainable materials',
+    'packaging waste', 'circular economy', 'reusable packaging', 'deposit-return scheme', 'DRS',
+    'design-for-recycling', 'DfR', 'lightweighting', 'packaging compliance',
+    'traceability software', 'digital watermarks', 'packaging SaaS', 'recyclability rating',
+    'PPWR', 'SUP directive', 'single-use plastics', 'packaging tax',
+    'sorting technology', 'MRF', 'material recovery', 'food-contact packaging',
+    'PFAS-free', 'mono-material packaging', 'waste reduction', 'packaging optimization',
+    'bio-materials', 'seaweed packaging', 'fiber-based laminates'
+  ],
+  description = 'Companies providing bio-based materials, recyclable/reusable packaging solutions, design-for-recycling services, digital traceability platforms, and compliance software that reduce packaging waste and lifecycle emissions in response to EU and national Extended Producer Responsibility (EPR) mandates. Market characterized by four investable business model archetypes: (1) Digital Marketplace/SaaS—procurement platforms connecting brands to sustainable suppliers (£2-4bn TAM, 80-90% gross margins, asset-light), (2) Sustainability Software/Traceability—enterprise tools for recyclability analysis, carbon tracking, and compliance (£1-2bn TAM, 80-90% margins, high scalability), (3) Bio-Materials Manufacturing—alternative packaging materials including seaweed films, fiber-based laminates, compostable plastics (£10-15bn TAM, 30-50% margins, capital-intensive, conditional PE fit), and (4) Consulting/Design Services—engineering and optimization for packaging sustainability (£2-3bn TAM, 30-50% margins, limited scalability). Investment opportunity anchored by £42.0bn total TAM (capital-efficient subset £4.2bn), 5.5% CAGR, and extreme fragmentation (Top 3: 8% share) creating buy-and-build potential across ~50 platform targets. Value proposition balanced between 60% compliance-driven demand (PPWR 65-70% recycling by 2030, SUP bans, EPR fee modulation, UK plastic tax £200/tonne for <30% recycled content) and 40% ROI-driven demand (cost savings from lightweighting, material optimization, brand sustainability positioning), with compliance dependency presenting key risk. Target platform economics: £12-40M revenue potential, 2.5x MOIC, 22% IRR through 3-5 add-ons at 6-8x EBITDA entry, exiting at 8-12x EBITDA to strategic buyers (FMCG brands, packaging OEMs, PE conglomerates, climate-focused funds). Primary risks: HIGH regulatory dependency (policy timing slippage, enforcement fragmentation), WEAK competitive moats in early fragmented market requiring scale to defend, input spread volatility vs. virgin materials (35-45% probability of r-content adoption stall), EARLY market maturity with unproven buyer willingness-to-pay, and MEDIUM-LOW data confidence on unit economics and add-on pipeline execution. Investment recommendation: WATCH—significant policy-driven upside if PPWR implementation proceeds on schedule, but major execution uncertainties and unvalidated commercial assumptions require substantial additional due diligence before deployment.',
+  updated_at = now()
+WHERE id = 'd6e00aaa-c4d2-461d-b7cb-df596ad444af';
