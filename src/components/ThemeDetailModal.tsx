@@ -233,9 +233,9 @@ export function ThemeDetailModal({ theme, isOpen, onClose, onSave }: ThemeDetail
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Weighted Total Score</h3>
+              <h3 className="text-lg font-semibold text-foreground">Investment Score</h3>
               <div className="text-2xl font-bold text-primary">
-                {theme.weighted_total_score.toFixed(1)}
+                {theme.weighted_total_score.toFixed(2)} / 5
               </div>
             </div>
             

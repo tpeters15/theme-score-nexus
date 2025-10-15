@@ -18,14 +18,14 @@ export function ThemeTableView({ themes, onEditTheme }: ThemeTableViewProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const getScoreColor = (score: number) => {
-    if (score >= 70) return "text-score-high";
-    if (score >= 40) return "text-score-medium";
+    if (score >= 3.5) return "text-score-high";
+    if (score >= 2.5) return "text-score-medium";
     return "text-score-low";
   };
 
   const getScoreIcon = (score: number) => {
-    if (score >= 70) return <TrendingUp className="h-4 w-4 text-score-high" />;
-    if (score >= 40) return <Minus className="h-4 w-4 text-score-medium" />;
+    if (score >= 3.5) return <TrendingUp className="h-4 w-4 text-score-high" />;
+    if (score >= 2.5) return <Minus className="h-4 w-4 text-score-medium" />;
     return <TrendingDown className="h-4 w-4 text-score-low" />;
   };
 
@@ -138,14 +138,14 @@ export function ThemeTableView({ themes, onEditTheme }: ThemeTableViewProps) {
           <div className="flex items-center justify-end gap-3">
             <div className="text-right">
               <div className={`text-metric ${getScoreColor(score)}`}>
-                {Math.round(score)}
+                {score.toFixed(2)}
               </div>
-              <div className="text-data-secondary text-xs">/ 100</div>
+              <div className="text-data-secondary text-xs">/ 5</div>
             </div>
             <div className="flex flex-col items-end gap-1">
               {getScoreIcon(score)}
               <Progress 
-                value={score} 
+                value={(score / 5) * 100} 
                 className="h-1.5 w-12"
               />
             </div>

@@ -13,14 +13,14 @@ interface ThemeCardProps {
 export function ThemeCard({ theme, onClick }: ThemeCardProps) {
   const navigate = useNavigate();
   const getScoreColor = (score: number) => {
-    if (score >= SCORE_THRESHOLDS.HIGH) return 'text-emerald-400';
-    if (score >= SCORE_THRESHOLDS.MEDIUM) return 'text-amber-400';
+    if (score >= 3.5) return 'text-emerald-400';
+    if (score >= 2.5) return 'text-amber-400';
     return 'text-red-400';
   };
 
   const getScoreIcon = (score: number) => {
-    if (score >= SCORE_THRESHOLDS.HIGH) return <TrendingUp className="h-4 w-4" />;
-    if (score >= SCORE_THRESHOLDS.MEDIUM) return <Minus className="h-4 w-4" />;
+    if (score >= 3.5) return <TrendingUp className="h-4 w-4" />;
+    if (score >= 2.5) return <Minus className="h-4 w-4" />;
     return <TrendingDown className="h-4 w-4" />;
   };
 
@@ -37,7 +37,7 @@ export function ThemeCard({ theme, onClick }: ThemeCardProps) {
     }
   };
 
-  const scorePercentage = (theme.weighted_total_score / 100) * 100;
+  const scorePercentage = (theme.weighted_total_score / 5) * 100;
 
   const handleCardClick = () => {
     navigate(`/theme/${theme.id}`);
@@ -57,7 +57,7 @@ export function ThemeCard({ theme, onClick }: ThemeCardProps) {
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${scorePercentage >= 70 ? 'bg-emerald-500' : scorePercentage >= 40 ? 'bg-amber-500' : 'bg-red-500'} animate-pulse`} />
+            <div className={`w-3 h-3 rounded-full ${scorePercentage >= 70 ? 'bg-emerald-500' : scorePercentage >= 50 ? 'bg-amber-500' : 'bg-red-500'} animate-pulse`} />
             <div className="text-xs text-muted-foreground">Live Analysis</div>
           </div>
           <Badge 
@@ -83,9 +83,9 @@ export function ThemeCard({ theme, onClick }: ThemeCardProps) {
           <div className="space-y-1">
             <div className={`text-2xl font-bold ${getScoreColor(theme.weighted_total_score)} flex items-center gap-1`}>
               {getScoreIcon(theme.weighted_total_score)}
-              {Math.round(theme.weighted_total_score)}
+              {theme.weighted_total_score.toFixed(2)}
             </div>
-            <div className="text-xs text-muted-foreground">Total Score</div>
+            <div className="text-xs text-muted-foreground">Score / 5</div>
           </div>
           <div className="space-y-1">
             <div className={`text-2xl font-bold ${getConfidenceColor(theme.overall_confidence)}`}>

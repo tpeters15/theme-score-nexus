@@ -57,14 +57,14 @@ export function IntelligenceFeed({ themes }: IntelligenceFeedProps) {
   const flaggedThemes = themes
     .filter(theme => 
       theme.overall_confidence === 'Low' || 
-      theme.weighted_total_score < 40 ||
+      theme.weighted_total_score < 2.5 ||
       theme.scores.some(score => score.confidence === 'Low')
     )
     .slice(0, 5);
 
   // Get top performers for quick access
   const topPerformers = themes
-    .filter(theme => theme.weighted_total_score >= 70)
+    .filter(theme => theme.weighted_total_score >= 3.5)
     .sort((a, b) => b.weighted_total_score - a.weighted_total_score)
     .slice(0, 5);
 

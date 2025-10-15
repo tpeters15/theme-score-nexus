@@ -29,8 +29,8 @@ export function TopThemesOverview({ themes }: TopThemesOverviewProps) {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 70) return "text-green-600";
-    if (score >= 40) return "text-yellow-600";
+    if (score >= 3.5) return "text-green-600";
+    if (score >= 2.5) return "text-yellow-600";
     return "text-red-600";
   };
 
@@ -115,7 +115,7 @@ export function TopThemesOverview({ themes }: TopThemesOverviewProps) {
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">Score:</span>
                     <span className={cn("font-semibold text-sm", getScoreColor(theme.weighted_total_score))}>
-                      {Math.round(theme.weighted_total_score)}%
+                      {theme.weighted_total_score.toFixed(2)}/5
                     </span>
                   </div>
                   
@@ -129,7 +129,7 @@ export function TopThemesOverview({ themes }: TopThemesOverviewProps) {
             <div className="flex items-center gap-3">
               <div className="w-24">
                 <Progress 
-                  value={theme.weighted_total_score} 
+                  value={(theme.weighted_total_score / 5) * 100} 
                   className="h-2"
                 />
               </div>

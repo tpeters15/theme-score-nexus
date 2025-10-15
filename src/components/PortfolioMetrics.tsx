@@ -16,12 +16,12 @@ export function PortfolioMetrics({ themes }: PortfolioMetricsProps) {
   
   // Find top opportunities (high scoring themes)
   const topOpportunities = themes
-    .filter(theme => theme.weighted_total_score >= 70)
+    .filter(theme => theme.weighted_total_score >= 3.5)
     .length;
   
   // Find themes requiring attention (low confidence or low scores)
   const requiresAttention = themes
-    .filter(theme => theme.overall_confidence === 'Low' || theme.weighted_total_score < 40)
+    .filter(theme => theme.overall_confidence === 'Low' || theme.weighted_total_score < 2.5)
     .length;
 
   return (

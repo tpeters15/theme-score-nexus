@@ -27,7 +27,7 @@ export function PillarNavigation({ themes, onPillarSelect }: PillarNavigationPro
     const totalThemes = themes.length;
     const avgScore = themes.reduce((sum, theme) => sum + theme.weighted_total_score, 0) / totalThemes;
     const topThemes = themes
-      .filter(theme => theme.weighted_total_score >= 70)
+      .filter(theme => theme.weighted_total_score >= 3.5)
       .sort((a, b) => b.weighted_total_score - a.weighted_total_score)
       .slice(0, 3);
     
@@ -104,7 +104,7 @@ export function PillarNavigation({ themes, onPillarSelect }: PillarNavigationPro
                     {stats.topThemes.slice(0, 2).map((theme) => (
                       <div key={theme.id} className="text-xs text-muted-foreground flex justify-between">
                         <span className="truncate mr-2">{theme.name}</span>
-                        <span className="font-medium">{Math.round(theme.weighted_total_score)}</span>
+                        <span className="font-medium">{theme.weighted_total_score.toFixed(2)}</span>
                       </div>
                     ))}
                     {stats.topThemes.length === 0 && (

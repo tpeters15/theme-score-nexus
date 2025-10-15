@@ -214,15 +214,15 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-score-high rounded-full"></div>
-                      <span>High (70+)</span>
+                      <span>High (3.5+)</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-score-medium rounded-full"></div>
-                      <span>Medium (40-69)</span>
+                      <span>Medium (2.5-3.4)</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-score-low rounded-full"></div>
-                      <span>Low (0-39)</span>
+                      <span>Low (&lt;2.5)</span>
                     </div>
                   </div>
                 </PopoverContent>

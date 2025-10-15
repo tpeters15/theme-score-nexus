@@ -176,7 +176,7 @@ export const DetailedFrameworkModal: React.FC<DetailedFrameworkModalProps> = ({
           <DialogTitle className="flex items-center justify-between">
             <span>{detailedTheme.name} - Detailed Framework</span>
             <div className="flex items-center gap-2">
-              <Badge variant="outline">Score: {detailedTheme.overall_score}/100</Badge>
+              <Badge variant="outline">Score: {detailedTheme.overall_score.toFixed(2)}/5</Badge>
               <Badge variant={detailedTheme.overall_confidence === 'High' ? 'default' : 
                             detailedTheme.overall_confidence === 'Medium' ? 'secondary' : 'destructive'}>
                 {detailedTheme.overall_confidence} Confidence
