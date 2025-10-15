@@ -1084,6 +1084,48 @@ export type Database = {
         }
         Relationships: []
       }
+      theme_signals: {
+        Row: {
+          ai_analysis: string | null
+          created_at: string | null
+          id: string
+          processed_signal_id: string
+          relevance_score: number | null
+          theme_id: string
+        }
+        Insert: {
+          ai_analysis?: string | null
+          created_at?: string | null
+          id?: string
+          processed_signal_id: string
+          relevance_score?: number | null
+          theme_id: string
+        }
+        Update: {
+          ai_analysis?: string | null
+          created_at?: string | null
+          id?: string
+          processed_signal_id?: string
+          relevance_score?: number | null
+          theme_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_signals_processed_signal_id_fkey"
+            columns: ["processed_signal_id"]
+            isOneToOne: false
+            referencedRelation: "processed_signals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "theme_signals_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "taxonomy_themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null

@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { ProcessedSignalData } from "@/data/processedSignals";
+import type { ProcessedSignal } from "@/hooks/useProcessedSignals";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -27,21 +28,60 @@ interface ThemeMapping {
 }
 
 interface ProcessedSignalDetailModalProps {
-  signal: ProcessedSignalData | null;
-  isOpen: boolean;
-  onClose: () => void;
+  signal: ProcessedSignalData | ProcessedSignal | null;
+  open?: boolean;
+  isOpen?: boolean;
+  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function ProcessedSignalDetailModal({ signal, isOpen, onClose }: ProcessedSignalDetailModalProps) {
+export function ProcessedSignalDetailModal({ 
+  signal, 
+  open, 
+  isOpen, 
+  onClose, 
+  onOpenChange 
+}: ProcessedSignalDetailModalProps) {
   const [themeMappings, setThemeMappings] = useState<ThemeMapping[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
+  
+  const modalOpen = open ?? isOpen ?? false;
+  const handleOpenChange = (newOpen: boolean) => {
+    if (onOpenChange) onOpenChange(newOpen);
+    if (!newOpen && onClose) onClose();
+  };
+  
+  // Normalize signal data
+  const getSignalProp = (key: string): any => {
+    if (!signal) return null;
+    // Handle ProcessedSignal type
+    if ('raw_signal' in signal) {
+      if (key === 'title') return signal.raw_signal?.title;
+      if (key === 'source') return signal.raw_signal?.source;
+      if (key === 'published_date') return signal.raw_signal?.publication_date;
+      if (key === 'source_url' || key === 'url') return signal.raw_signal?.url;
+      if (key === 'signal_type') return signal.signal_type_classified;
+      if (key === 'deal_size') return signal.extracted_deal_size;
+      if (key === 'countries') return signal.countries;
+      if (key === 'content_snippet') return signal.content_snippet;
+      if (key === 'signal_id') return signal.raw_signal?.signal_id;
+      // Calculate days_old from publication_date if needed
+      if (key === 'days_old' && signal.raw_signal?.publication_date) {
+        const pubDate = new Date(signal.raw_signal.publication_date);
+        const now = new Date();
+        return Math.floor((now.getTime() - pubDate.getTime()) / (1000 * 60 * 60 * 24));
+      }
+    }
+    // Handle ProcessedSignalData type
+    return (signal as any)[key];
+  };
 
   useEffect(() => {
-    if (signal && isOpen) {
+    if (signal && modalOpen) {
       analyzeSignalThemes();
     }
-  }, [signal, isOpen]);
+  }, [signal, modalOpen]);
 
   const analyzeSignalThemes = async () => {
     if (!signal) return;
@@ -93,13 +133,24 @@ export function ProcessedSignalDetailModal({ signal, isOpen, onClose }: Processe
     return "bg-green-500";
   };
 
+  const title = getSignalProp('title');
+  const source = getSignalProp('source');
+  const signalType = getSignalProp('signal_type');
+  const dealSize = getSignalProp('deal_size');
+  const publishedDate = getSignalProp('published_date');
+  const countries = getSignalProp('countries');
+  const daysOld = getSignalProp('days_old');
+  const contentSnippet = getSignalProp('content_snippet');
+  const sourceUrl = getSignalProp('source_url');
+  const signalId = getSignalProp('signal_id');
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={modalOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh]">
         <DialogHeader>
           <div className="flex items-start gap-3 pr-6">
-            <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${getUrgencyIndicator(signal.days_old)}`} />
-            <DialogTitle className="text-xl">{signal.title}</DialogTitle>
+            <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${getUrgencyIndicator(daysOld || 0)}`} />
+            <DialogTitle className="text-xl">{title}</DialogTitle>
           </div>
         </DialogHeader>
         
@@ -110,55 +161,63 @@ export function ProcessedSignalDetailModal({ signal, isOpen, onClose }: Processe
               <div className="flex items-center flex-wrap gap-2">
                 <Badge 
                   variant="outline" 
-                  className={cn("text-xs", getSourceColor(signal.source))}
+                  className={cn("text-xs", getSourceColor(source || ''))}
                 >
-                  {signal.source}
+                  {source}
                 </Badge>
-                <Badge 
-                  variant="outline" 
-                  className={cn("text-xs", getTypeColor(signal.signal_type))}
-                >
-                  <FileText className="h-3 w-3 mr-1" />
-                  {signal.signal_type.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                </Badge>
-                {signal.deal_size && (
+                {signalType && (
+                  <Badge 
+                    variant="outline" 
+                    className={cn("text-xs", getTypeColor(signalType))}
+                  >
+                    <FileText className="h-3 w-3 mr-1" />
+                    {signalType.replace('_', ' ').split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                  </Badge>
+                )}
+                {dealSize && (
                   <Badge variant="secondary" className="text-xs">
                     <DollarSign className="h-3 w-3 mr-1" />
-                    {signal.deal_size}
+                    {dealSize}
                   </Badge>
                 )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Published:</span>
-                  <span>{format(new Date(signal.published_date), 'MMM dd, yyyy')}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Countries:</span>
-                  <span>{signal.countries}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Age:</span>
-                  <span>
-                    {signal.days_old === 0 ? 'Today' : signal.days_old === 1 ? 'Yesterday' : `${signal.days_old} days ago`}
-                  </span>
-                </div>
+                {publishedDate && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Published:</span>
+                    <span>{format(new Date(publishedDate), 'MMM dd, yyyy')}</span>
+                  </div>
+                )}
+                {countries && (
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Countries:</span>
+                    <span>{countries}</span>
+                  </div>
+                )}
+                {daysOld !== null && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Age:</span>
+                    <span>
+                      {daysOld === 0 ? 'Today' : daysOld === 1 ? 'Yesterday' : `${daysOld} days ago`}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
             <Separator />
 
             {/* Content Section */}
-            {signal.content_snippet && (
+            {contentSnippet && (
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold">Summary</h3>
                 <div className="prose prose-sm max-w-none">
                   <p className="text-muted-foreground leading-relaxed">
-                    {signal.content_snippet}
+                    {contentSnippet}
                   </p>
                 </div>
               </div>
@@ -202,12 +261,12 @@ export function ProcessedSignalDetailModal({ signal, isOpen, onClose }: Processe
             </div>
 
             {/* Source Link */}
-            {signal.source_url && (
+            {sourceUrl && (
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold">Original Source</h3>
                 <Button asChild variant="outline" className="w-fit">
                   <a 
-                    href={signal.source_url} 
+                    href={sourceUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex items-center gap-2"
@@ -223,17 +282,19 @@ export function ProcessedSignalDetailModal({ signal, isOpen, onClose }: Processe
             {/* Note about source */}
             <div className="bg-muted/50 rounded-lg p-4 text-sm">
               <p className="text-muted-foreground">
-                This is a processed signal from {signal.source}.
+                This is a processed signal from {source}.
               </p>
             </div>
 
             {/* Signal ID */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Signal ID</h3>
-              <code className="text-xs bg-muted px-2 py-1 rounded block w-fit">
-                {signal.signal_id}
-              </code>
-            </div>
+            {signalId && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold">Signal ID</h3>
+                <code className="text-xs bg-muted px-2 py-1 rounded block w-fit">
+                  {signalId}
+                </code>
+              </div>
+            )}
           </div>
         </ScrollArea>
       </DialogContent>

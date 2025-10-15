@@ -26,6 +26,7 @@ import { RegulatorySummaryCard } from "@/components/RegulatorySummaryCard";
 import { FrameworkCategoryCard } from "@/components/FrameworkCategoryCard";
 import { ThemeKeywords } from "@/components/ThemeKeywords";
 import { ThemeDetailModal } from "@/components/ThemeDetailModal";
+import { ThemeRecentSignals } from "@/components/ThemeRecentSignals";
 import { useRegulations } from "@/hooks/useRegulations";
 import { useThemes } from "@/hooks/useThemes";
 import { BulkScoreUpdateButton } from "@/components/BulkScoreUpdateButton";
@@ -315,6 +316,9 @@ const ThemeProfile = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Recent Market Signals */}
+        <ThemeRecentSignals themeId={theme.id} />
 
         {/* Main Content Sections */}
         <Tabs defaultValue="framework" className="space-y-6">
