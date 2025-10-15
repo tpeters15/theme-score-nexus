@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.populate-theme-signals]
 verify_jwt = false
+
+[functions.populate-dashboard-theme-signals]
+verify_jwt = false
