@@ -111,27 +111,15 @@ export function TopThemesOverview({ themes }: TopThemesOverviewProps) {
                 </div>
                 <p className="text-sm text-muted-foreground truncate">{theme.sector}</p>
                 
-                <div className="flex items-center gap-4 mt-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">Score:</span>
-                    <span className={cn("font-semibold text-sm", getScoreColor(theme.weighted_total_score))}>
-                      {theme.weighted_total_score.toFixed(2)}/5
-                    </span>
-                  </div>
-                  
-                  <Badge variant="outline" className={cn("text-xs", getConfidenceColor(theme.overall_confidence))}>
-                    {theme.overall_confidence} Confidence
-                  </Badge>
-                </div>
               </div>
             </div>
             
             <div className="flex items-center gap-3">
-              <div className="w-24">
-                <Progress 
-                  value={(theme.weighted_total_score / 5) * 100} 
-                  className="h-2"
-                />
+              <div className="text-right">
+                <span className={cn("text-2xl font-bold", getScoreColor(theme.weighted_total_score))}>
+                  {theme.weighted_total_score.toFixed(2)}
+                </span>
+                <span className="text-sm text-muted-foreground">/5</span>
               </div>
               <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
