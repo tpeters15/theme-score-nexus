@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ArrowLeft, FileText, TrendingUp, Users, Calendar, BarChart3, Upload, Settings, Shield, Target, AlertTriangle, CheckCircle, Hash, Edit, ChevronDown, MoreVertical } from "lucide-react";
 import {
   DropdownMenu,
@@ -31,6 +31,8 @@ import { useThemes } from "@/hooks/useThemes";
 import { BulkScoreUpdateButton } from "@/components/BulkScoreUpdateButton";
 import { UploadResearchDocumentButton } from "@/components/UploadResearchDocumentButton";
 import { QuickInsights } from "@/components/QuickInsights";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const ThemeProfile = () => {
   const { themeId } = useParams<{ themeId: string }>();
@@ -43,6 +45,8 @@ const ThemeProfile = () => {
   const [selectedDocument, setSelectedDocument] = useState<ResearchDocument | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
+  const { toast } = useToast();
+  const populatingRef = useRef(false);
 
   const refreshTheme = async () => {
     if (!themeId) return;
@@ -85,6 +89,236 @@ const ThemeProfile = () => {
     loadTheme();
   }, [themeId]);
 
+  // Auto-populate EV Charging Infrastructure data once when the theme is loaded
+  useEffect(() => {
+    if (!theme || populatingRef.current) return;
+    if (theme.name !== 'EV Charging Infrastructure') return;
+
+    const run = async () => {
+      try {
+        populatingRef.current = true;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          toast({ title: 'Sign in required', description: 'Please log in to save data', variant: 'destructive' });
+          return;
+        }
+
+        // 1) Update theme TAM/CAGR/Maturity
+        await supabase
+          .from('taxonomy_themes')
+          .update({
+            tam_value: 80000000000, // £80.0bn
+            tam_currency: 'GBP',
+            cagr_percentage: 21,
+            cagr_period_start: 2024,
+            cagr_period_end: 2030,
+            market_maturity: 'TRANSITIONING',
+          })
+          .eq('id', theme.id);
+
+        // 2) Get framework criteria map
+        const { data: criteria, error: criteriaError } = await supabase
+          .from('framework_criteria')
+          .select('id, code');
+        if (criteriaError) throw criteriaError;
+        const cMap: Record<string, string> = {};
+        (criteria || []).forEach((c: any) => { cMap[c.code] = c.id; });
+
+        // 3) Detailed scores with rationales
+        const scores: Record<string, { score: number; notes: string }> = {
+          A1: { score: 5, notes: '€80bn significantly exceeds the €5bn threshold for expansive market classification' },
+          A2: { score: 5, notes: '€2.2bn PE-addressable SOM substantially exceeds the €0.3bn threshold for high potential classification' },
+          A3: { score: 5, notes: '21% CAGR significantly exceeds the 10% threshold for rapid growth classification' },
+          A4: { score: 3, notes: 'Transitioning maturity directly maps to the growth phase rubric (mix of VC and early PE activity)' },
+          B1: { score: 5, notes: 'High fragmentation with top 3 holding only 10.5% share creates ideal structure for platform building and bolt-on acquisitions' },
+          B2: { score: 3, notes: 'Moderate moat strength indicates medium competitive intensity with viable differentiation opportunities through switching costs or proprietary technology' },
+          B3: { score: 3, notes: 'Viable exit quality directly corresponds to medium exit environment with 2-5 relevant M&A transactions in recent years' },
+          C1: { score: 5, notes: 'Only 35% compliance-driven demand falls well below the 40% threshold, indicating primarily ROI-driven market resilient to policy changes' },
+          C2: { score: 5, notes: 'Excellent timing with transitioning maturity, >15% CAGR, and strong regulatory support creates optimal PE investment window' },
+          C3: { score: 3, notes: 'Mixed demand drivers with majority ROI-driven but significant discretionary component creates moderate cyclicality exposure' },
+          C4: { score: 3, notes: 'Mix of medium to medium-high confidence across critical research tools with no major data gaps represents manageable research concerns' },
+        };
+
+        for (const [code, s] of Object.entries(scores)) {
+          const criteria_id = cMap[code];
+          if (!criteria_id) continue;
+
+          const { data: existing, error: selErr } = await supabase
+            .from('detailed_scores')
+            .select('id')
+            .eq('theme_id', theme.id)
+            .eq('criteria_id', criteria_id)
+            .maybeSingle();
+          if (selErr) throw selErr;
+
+          if (existing?.id) {
+            await supabase.from('detailed_scores').update({
+              score: s.score,
+              confidence: 'MEDIUM',
+              notes: s.notes,
+              updated_by: user.id,
+              update_source: 'manual',
+            }).eq('id', existing.id);
+          } else {
+            await supabase.from('detailed_scores').insert({
+              theme_id: theme.id,
+              criteria_id,
+              score: s.score,
+              confidence: 'MEDIUM',
+              notes: s.notes,
+              updated_by: user.id,
+              update_source: 'manual',
+            });
+          }
+        }
+
+        // 4) Regulations and theme linkage
+        const regulations = [
+          {
+            title: 'Regulation (EU) 2023/1804 on Deployment of Alternative Fuels Infrastructure (AFIR)',
+            description: 'Member States must meet strict EV charging-rollout targets on the TEN-T network and urban areas with incremental targets each year from 2024 through 2030. Charging stations must also be "smart" and connected via national data platforms.',
+            jurisdiction: 'EU',
+            status: 'in_force',
+            source_url: 'https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A02023R1804-20250414',
+            compliance_deadline: '2030-12-31',
+            regulatory_body: 'Regulation (EU) 2023/1804',
+            regulation_type: 'infrastructure',
+            impact_level: 'high',
+            impact_description: 'Strong incentive to invest in charging networks; member states will be pushing that build-out aggressively. Projects aligned with AFIR targets can rely on legal "must-build" demand.',
+            relevance_score: 5,
+          },
+          {
+            title: 'The Building etc. (Amendment) (England) (No. 2) Regulations 2022 (SI 2022/984)',
+            description: 'All new residential dwellings must have one chargepoint per home; new non-residential buildings with >10 parking spaces must install EV chargepoints on 20% of spaces and EV-ready wiring on all spaces.',
+            jurisdiction: 'UK',
+            status: 'in_force',
+            source_url: '',
+            compliance_deadline: '2022-06-30',
+            regulatory_body: 'SI 2022/984',
+            regulation_type: 'infrastructure',
+            impact_level: 'high',
+            impact_description: 'Mandatory demand for chargers in construction, driving adoption of chargepoint supply in building sector and raising underlying market size.',
+            relevance_score: 5,
+          },
+          {
+            title: 'The Electric Vehicles (Smart Charge Points) Regulations 2021',
+            description: 'All new home and workplace chargers must be "smart"—capable of receiving tariffs and responding. From 1 July 2022 all new private chargepoints must meet technical "smart" standards; large public and workplace chargepoints have staggered deadlines.',
+            jurisdiction: 'UK',
+            status: 'in_force',
+            source_url: '',
+            compliance_deadline: '2025-04-30',
+            regulatory_body: 'The Electric Vehicles (Smart Charge Points) Regulations 2021',
+            regulation_type: 'infrastructure',
+            impact_level: 'medium',
+            impact_description: 'Adds compliance cost to chargers (favoring higher-end CPOs) and integrates EV charging load management into energy markets, but does not by itself drive large additional volume of chargers.',
+            relevance_score: 3,
+          },
+          {
+            title: 'Ladesäulenverordnung (LSV)',
+            description: 'Price transparency (publish €/kWh and €/minute), standardized billing information, mandatory smart-metering or equivalent on new chargers, and grid-access priority settings for chargers.',
+            jurisdiction: 'DE',
+            status: 'in_force',
+            source_url: '',
+            compliance_deadline: '2023-12-31',
+            regulatory_body: 'Ladesäulenverordnung (LSV)',
+            regulation_type: 'infrastructure',
+            impact_level: 'medium',
+            impact_description: 'Creates some compliance work for operators but also levels the playing field. It indirectly supports investment by clarifying rules and requiring open-access networks.',
+            relevance_score: 3,
+          },
+          {
+            title: 'Ladeinfrastrukturgesetz (LadInfraG 2023)',
+            description: 'Tenants have a right to request a charger, planning/regulatory barriers are reduced, and reference values for connection capacity are set.',
+            jurisdiction: 'DE',
+            status: 'in_force',
+            source_url: '',
+            compliance_deadline: '2023-07-31',
+            regulatory_body: 'Ladeinfrastrukturgesetz (LadInfraG 2023)',
+            regulation_type: 'infrastructure',
+            impact_level: 'medium',
+            impact_description: 'Lowers soft-costs of installation and may open new retrofit markets. Helps unlock private-sector investment by making permitting faster.',
+            relevance_score: 3,
+          },
+        ];
+
+        for (const reg of regulations) {
+          // find existing regulation
+          const { data: existingReg } = await supabase
+            .from('regulations')
+            .select('id')
+            .eq('title', reg.title)
+            .eq('jurisdiction', reg.jurisdiction)
+            .maybeSingle();
+
+          let regulation_id = existingReg?.id as string | undefined;
+          if (!regulation_id) {
+            const { data: inserted } = await supabase
+              .from('regulations')
+              .insert({
+                title: reg.title,
+                description: reg.description,
+                jurisdiction: reg.jurisdiction,
+                regulation_type: reg.regulation_type,
+                status: reg.status,
+                source_url: reg.source_url,
+                analysis_url: reg.source_url,
+                compliance_deadline: reg.compliance_deadline,
+                regulatory_body: reg.regulatory_body,
+                impact_level: reg.impact_level,
+              })
+              .select('id')
+              .single();
+            regulation_id = inserted?.id;
+          } else {
+            await supabase
+              .from('regulations')
+              .update({
+                description: reg.description,
+                source_url: reg.source_url,
+                analysis_url: reg.source_url,
+                compliance_deadline: reg.compliance_deadline,
+                impact_level: reg.impact_level,
+              })
+              .eq('id', regulation_id);
+          }
+
+          if (regulation_id) {
+            const { data: tr } = await supabase
+              .from('theme_regulations')
+              .select('id')
+              .eq('theme_id', theme.id)
+              .eq('regulation_id', regulation_id)
+              .maybeSingle();
+
+            if (tr?.id) {
+              await supabase
+                .from('theme_regulations')
+                .update({ impact_description: reg.impact_description, relevance_score: reg.relevance_score })
+                .eq('id', tr.id);
+            } else {
+              await supabase
+                .from('theme_regulations')
+                .insert({
+                  theme_id: theme.id,
+                  regulation_id,
+                  impact_description: reg.impact_description,
+                  relevance_score: reg.relevance_score,
+                });
+            }
+          }
+        }
+
+        toast({ title: 'EV Charging populated', description: 'TAM, CAGR, scores, and regulations saved.' });
+        await refreshTheme();
+      } catch (e: any) {
+        console.error('Populate failed', e);
+        toast({ title: 'Populate failed', description: e.message || 'Check permissions', variant: 'destructive' });
+      }
+    };
+
+    run();
+  }, [theme]);
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -121,26 +355,26 @@ const ThemeProfile = () => {
   }
 
   const getScoreColor = (score: number) => {
-    if (score >= 70) return "text-green-600";
-    if (score >= 40) return "text-yellow-600";
-    return "text-red-600";
+    if (score >= 70) return "text-primary";
+    if (score >= 40) return "text-warning";
+    return "text-destructive";
   };
 
   const getPillarColor = (pillar: string) => {
-    return PILLAR_COLORS[pillar as keyof typeof PILLAR_COLORS] || "bg-gray-100 text-gray-800 border-gray-200";
+    return PILLAR_COLORS[pillar as keyof typeof PILLAR_COLORS] || "bg-muted text-foreground border-muted";
   };
 
   const formatTAM = (value: number | null, currency: string = 'GBP') => {
     if (!value) return '--';
     const symbol = currency === 'GBP' ? '£' : '$';
-    if (value >= 1000000000) return `${symbol}${(value / 1000000000).toFixed(1)}B`;
-    if (value >= 1000000) return `${symbol}${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1_000_000_000) return `${symbol}${(value / 1_000_000_000).toFixed(1)}B`;
+    if (value >= 1_000_000) return `${symbol}${(value / 1_000_000).toFixed(1)}M`;
     return `${symbol}${value.toFixed(1)}`;
   };
 
   const formatCAGR = (percentage: number | null) => {
-    if (!percentage) return '--';
-    return `${percentage.toFixed(1)}%`;
+    if (!percentage && percentage !== 0) return '--';
+    return `${Number(percentage).toFixed(1)}%`;
   };
 
   // Calculate counts for tab badges
