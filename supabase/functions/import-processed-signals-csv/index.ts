@@ -7,26 +7,43 @@ const corsHeaders = {
 
 interface ProcessedSignalRow {
   signal_id: string
-  signal_type: string | null
-  countries: string | null
-  content_snippet: string | null
-  week_processed: string | null
-  days_old_when_processed: string | null
-  extracted_deal_size: string | null
-  content_length: string | null
-  has_pitchbook_data: string | null
-  processed_timestamp: string | null
+  signal_type: string
+  countries: string
+  content_snippet: string
+  week_processed: string
+  days_old_when_processed: string
+  extracted_deal_size: string
+  content_length: string
+  has_pitchbook_data: string
+  processed_timestamp: string
 }
 
 function parseCSV(text: string): ProcessedSignalRow[] {
   const lines = text.split('\n').filter(line => line.trim())
-  const headers = lines[0].split(',').map(h => h.trim())
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^\uFEFF/, '')) // Remove BOM
   
   return lines.slice(1).map(line => {
-    const values = line.split(',').map(v => v.trim())
+    // Handle CSV with quoted fields that may contain commas
+    const values: string[] = []
+    let current = ''
+    let inQuotes = false
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i]
+      if (char === '"') {
+        inQuotes = !inQuotes
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim())
+        current = ''
+      } else {
+        current += char
+      }
+    }
+    values.push(current.trim())
+    
     const row: any = {}
     headers.forEach((header, index) => {
-      row[header] = values[index] || null
+      row[header] = values[index] || ''
     })
     return row
   })
@@ -77,11 +94,17 @@ Deno.serve(async (req) => {
           continue
         }
 
-        // Parse countries if it's a string
+        // Parse countries - can be comma or semicolon separated
         let countries = null
-        if (row.countries && row.countries !== 'null') {
-          countries = row.countries.split(';').map((c: string) => c.trim())
+        if (row.countries && row.countries.trim() && row.countries !== 'null') {
+          const separator = row.countries.includes(';') ? ';' : ','
+          countries = row.countries.split(separator).map((c: string) => c.trim()).filter(Boolean)
         }
+
+        // Parse has_pitchbook_data
+        const hasPitchbookData = row.has_pitchbook_data?.toLowerCase() === 'yes' || 
+                                 row.has_pitchbook_data?.toLowerCase() === 'true' ||
+                                 row.has_pitchbook_data === '1'
 
         // Insert into processed_signals
         const { error: insertError } = await supabase
@@ -95,7 +118,7 @@ Deno.serve(async (req) => {
             days_old_when_processed: row.days_old_when_processed ? parseInt(row.days_old_when_processed) : null,
             extracted_deal_size: row.extracted_deal_size || null,
             content_length: row.content_length ? parseInt(row.content_length) : null,
-            has_pitchbook_data: row.has_pitchbook_data === 'true' || row.has_pitchbook_data === '1',
+            has_pitchbook_data: hasPitchbookData,
             processed_timestamp: row.processed_timestamp || new Date().toISOString(),
           })
 
