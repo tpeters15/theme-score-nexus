@@ -115,17 +115,6 @@ export function SignalsTableView({ signals, onSignalClick }: SignalsTableViewPro
       ),
     },
     {
-      key: 'days_old',
-      header: 'Age',
-      sortable: true,
-      width: '100px',
-      render: (value) => (
-        <Badge variant="outline" className={cn("text-xs", getDaysOldBadge(value as number))}>
-          {value}d
-        </Badge>
-      ),
-    },
-    {
       key: 'published_date',
       header: 'Published',
       sortable: true,
