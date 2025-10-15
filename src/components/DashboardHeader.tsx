@@ -34,7 +34,11 @@ export function DashboardHeader() {
             <SidebarTrigger />
             <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <img src={deltaLogo} alt="Delta Metis Logo" className="h-11 w-11" />
-              <h1 className="text-xl font-semibold text-foreground font-sans">Delta Metis</h1>
+              <h1 className="text-xl font-semibold font-sans">
+                <span style={{ color: '#00216A' }}>Delta</span>
+                {' '}
+                <span style={{ color: '#CF9200' }}>Metis</span>
+              </h1>
             </Link>
           </div>
           

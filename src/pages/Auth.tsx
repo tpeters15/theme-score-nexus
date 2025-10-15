@@ -104,7 +104,11 @@ export default function Auth() {
               alt="Delta Logo" 
               className="h-12 w-12 object-contain"
             />
-            <h1 className="text-3xl font-bold text-foreground">Delta Metis</h1>
+            <h1 className="text-3xl font-bold">
+              <span style={{ color: '#00216A' }}>Delta</span>
+              {' '}
+              <span style={{ color: '#CF9200' }}>Metis</span>
+            </h1>
           </div>
           <p className="text-muted-foreground">
             Investment Intelligence Platform
