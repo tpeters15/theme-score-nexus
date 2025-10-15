@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { PROCESSED_SIGNALS_DATA, ProcessedSignalData } from "@/data/processedSignals";
 import { SignalFilterDemo } from "@/components/ui/signal-filter-demo";
 import { SignalsTableView } from "@/components/SignalsTableView";
+import { ImportProcessedSignalsCSV } from "@/components/ImportProcessedSignalsCSV";
 
 export default function Signals() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -72,9 +73,12 @@ export default function Signals() {
             Real-time market signals and intelligence feeds from {sources.length} sources
           </p>
         </div>
-        <div className="text-right text-sm text-muted-foreground">
-          <div>{filteredSignals.length} signals</div>
-          <div>Last updated: {signals[0] ? format(new Date(signals[0].published_date), 'MMM dd, HH:mm') : '-'}</div>
+        <div className="flex items-center gap-4">
+          <ImportProcessedSignalsCSV />
+          <div className="text-right text-sm text-muted-foreground">
+            <div>{filteredSignals.length} signals</div>
+            <div>Last updated: {signals[0] ? format(new Date(signals[0].published_date), 'MMM dd, HH:mm') : '-'}</div>
+          </div>
         </div>
       </div>
 
