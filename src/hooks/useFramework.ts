@@ -132,6 +132,12 @@ export const useFramework = () => {
       keywords: themeData.keywords,
       created_at: themeData.created_at,
       updated_at: themeData.updated_at,
+      tam_value: themeData.tam_value,
+      tam_currency: themeData.tam_currency,
+      cagr_percentage: themeData.cagr_percentage,
+      cagr_period_start: themeData.cagr_period_start,
+      cagr_period_end: themeData.cagr_period_end,
+      market_maturity: themeData.market_maturity,
     };
 
       if (themeError) throw themeError;

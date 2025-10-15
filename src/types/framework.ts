@@ -96,6 +96,13 @@ export interface ThemeWithDetailedScores {
   keywords?: string[];
   created_at: string;
   updated_at: string;
+  // Market data
+  tam_value?: number | null;
+  tam_currency?: string | null;
+  cagr_percentage?: number | null;
+  cagr_period_start?: number | null;
+  cagr_period_end?: number | null;
+  market_maturity?: string | null;
   categories: FrameworkCategoryWithCriteria[];
   detailed_scores: DetailedScoreWithCriteria[];
   research_documents: ResearchDocument[];
