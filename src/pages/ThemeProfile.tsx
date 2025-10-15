@@ -21,7 +21,6 @@ import { ThemeFileUpload } from "@/components/ThemeFileUpload";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { DocumentIntelligence } from "@/components/DocumentIntelligence";
 import { InlineScoreEditor } from "@/components/InlineScoreEditor";
-import { ScoreProgressIndicator } from "@/components/ScoreProgressIndicator";
 import { RegulatoryTable } from "@/components/RegulatoryTable";
 import { RegulatorySummaryCard } from "@/components/RegulatorySummaryCard";
 import { FrameworkCategoryCard } from "@/components/FrameworkCategoryCard";
@@ -31,6 +30,7 @@ import { useRegulations } from "@/hooks/useRegulations";
 import { useThemes } from "@/hooks/useThemes";
 import { BulkScoreUpdateButton } from "@/components/BulkScoreUpdateButton";
 import { UploadResearchDocumentButton } from "@/components/UploadResearchDocumentButton";
+import { QuickInsights } from "@/components/QuickInsights";
 
 const ThemeProfile = () => {
   const { themeId } = useParams<{ themeId: string }>();
@@ -143,10 +143,9 @@ const ThemeProfile = () => {
     return `${percentage.toFixed(1)}%`;
   };
 
-  // Calculate completion percentages for better UX
+  // Calculate counts for tab badges
   const totalCriteria = theme.detailed_scores.length;
   const scoredCriteria = theme.detailed_scores.filter(s => s.score !== null).length;
-  const completionRate = totalCriteria > 0 ? Math.round((scoredCriteria / totalCriteria) * 100) : 0;
   const documentCount = theme.research_documents?.length || 0;
   const regulationCount = regulations.length;
 
@@ -231,13 +230,6 @@ const ThemeProfile = () => {
                     {theme.overall_score}
                   </span>
                   <span className="text-lg text-muted-foreground">/100</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Completion</span>
-                    <span>{completionRate}%</span>
-                  </div>
-                  <Progress value={completionRate} className="h-2" />
                 </div>
               </div>
             </CardContent>
@@ -365,18 +357,11 @@ const ThemeProfile = () => {
               </div>
               
               <div className="lg:col-span-1">
-                <div className="sticky top-6 space-y-4">
-                  <Card>
-                    <CardHeader className="pb-4">
-                      <CardTitle className="text-lg">Analysis Progress</CardTitle>
-                      <CardDescription>
-                        Scoring across {theme.categories.length} categories
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ScoreProgressIndicator theme={theme} />
-                    </CardContent>
-                  </Card>
+                <div className="sticky top-6">
+                  <QuickInsights 
+                    regulations={regulations}
+                    recentDocuments={theme.research_documents || []}
+                  />
                 </div>
               </div>
             </div>
