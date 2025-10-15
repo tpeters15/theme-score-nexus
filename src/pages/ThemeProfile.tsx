@@ -23,6 +23,7 @@ import { ThemeDetailModal } from "@/components/ThemeDetailModal";
 import { useRegulations } from "@/hooks/useRegulations";
 import { useThemes } from "@/hooks/useThemes";
 import { BulkScoreUpdateButton } from "@/components/BulkScoreUpdateButton";
+import { UploadResearchDocumentButton } from "@/components/UploadResearchDocumentButton";
 
 const ThemeProfile = () => {
   const { themeId } = useParams<{ themeId: string }>();
@@ -165,6 +166,9 @@ const ThemeProfile = () => {
                   <Edit className="h-4 w-4" />
                   Edit Theme
                 </Button>
+                {themeId === 'f68542c4-647a-4ff0-b2f1-830d9ee7f99c' && (
+                  <UploadResearchDocumentButton />
+                )}
               </div>
             </div>
             
