@@ -91,7 +91,7 @@ export function SignalHighlightsCard() {
                       variant="outline" 
                       className={`text-xs px-2 py-0.5 h-auto ${getCategoryColor(signal)}`}
                     >
-                      {signal.signal_type.replace('_', ' ')}
+                      {signal.signal_type.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                     </Badge>
                     <Badge 
                       variant="secondary" 

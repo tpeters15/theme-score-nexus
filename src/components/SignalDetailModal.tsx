@@ -73,7 +73,7 @@ export function SignalDetailModal({ signal, isOpen, onClose }: SignalDetailModal
                   className={cn("text-xs", getTypeColor(signal.signal_type_classified || ""))}
                 >
                   <FileText className="h-3 w-3 mr-1" />
-                  {signal.signal_type_classified?.replace('_', ' ') || "Unclassified"}
+                  {signal.signal_type_classified?.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') || "Unclassified"}
                 </Badge>
                 {rawSignal.author && (
                   <Badge variant="secondary" className="text-xs">

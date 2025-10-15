@@ -119,7 +119,7 @@ export function ProcessedSignalDetailModal({ signal, isOpen, onClose }: Processe
                   className={cn("text-xs", getTypeColor(signal.signal_type))}
                 >
                   <FileText className="h-3 w-3 mr-1" />
-                  {signal.signal_type.replace('_', ' ')}
+                  {signal.signal_type.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                 </Badge>
                 {signal.deal_size && (
                   <Badge variant="secondary" className="text-xs">

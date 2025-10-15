@@ -92,7 +92,7 @@ export function DiscoveredSignals() {
                     {signal.title}
                   </div>
                   <div className="flex items-center gap-2 flex-wrap mb-2">
-                    <Badge variant="outline">{signal.source_type || "Unknown"}</Badge>
+                    <Badge variant="outline">{(signal.source_type || "Unknown").charAt(0).toUpperCase() + (signal.source_type || "Unknown").slice(1)}</Badge>
                     <Badge variant="secondary">{signal.source}</Badge>
                     <span className="text-xs text-muted-foreground">
                       {new Date(signal.publication_date || signal.scraped_date).toLocaleDateString()}

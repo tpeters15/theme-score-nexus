@@ -86,7 +86,7 @@ export function SignalsTableView({ signals, onSignalClick }: SignalsTableViewPro
       width: '150px',
       render: (value) => (
         <Badge variant="outline" className={cn("text-xs", getTypeColor(value as string))}>
-          {(value as string).replace('_', ' ')}
+          {(value as string).replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
         </Badge>
       ),
     },
