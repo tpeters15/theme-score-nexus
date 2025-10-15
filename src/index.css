@@ -17,9 +17,9 @@
     --popover-foreground: 210 11% 96%;
 
     /* Primary - Professional Blue */
-    --primary: 212 100% 54%;
-    --primary-foreground: 222 13% 7%;
-    --primary-hover: 212 100% 48%;
+    --primary: 219 100% 21%;
+    --primary-foreground: 210 11% 96%;
+    --primary-hover: 219 100% 18%;
 
     /* Refined Grays */
     --secondary: 217 13% 15%;
@@ -44,7 +44,7 @@
 
     --border: 217 13% 20%;
     --input: 217 13% 15%;
-    --ring: 212 100% 54%;
+    --ring: 219 100% 21%;
 
     --radius: 6px;
 
@@ -54,12 +54,12 @@
     
     --sidebar-background: 222 13% 7%;
     --sidebar-foreground: 210 11% 96%;
-    --sidebar-primary: 212 100% 54%;
-    --sidebar-primary-foreground: 222 13% 7%;
+    --sidebar-primary: 219 100% 21%;
+    --sidebar-primary-foreground: 210 11% 96%;
     --sidebar-accent: 217 13% 15%;
     --sidebar-accent-foreground: 210 11% 96%;
     --sidebar-border: 217 13% 20%;
-    --sidebar-ring: 212 100% 54%;
+    --sidebar-ring: 219 100% 21%;
   }
 
   .light {
@@ -72,9 +72,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 13% 9%;
 
-    --primary: 212 100% 54%;
+    --primary: 219 100% 21%;
     --primary-foreground: 210 11% 98%;
-    --primary-hover: 212 100% 48%;
+    --primary-hover: 219 100% 18%;
 
     --secondary: 210 11% 96%;
     --secondary-foreground: 222 13% 9%;
@@ -97,19 +97,19 @@
 
     --border: 215 12% 85%;
     --input: 210 11% 94%;
-    --ring: 212 100% 54%;
+    --ring: 219 100% 21%;
     
     --surface-elevated: 0 0% 100%;
     --surface-hover: 210 11% 98%;
     
     --sidebar-background: 210 11% 98%;
     --sidebar-foreground: 222 13% 9%;
-    --sidebar-primary: 212 100% 54%;
+    --sidebar-primary: 219 100% 21%;
     --sidebar-primary-foreground: 210 11% 98%;
     --sidebar-accent: 210 11% 96%;
     --sidebar-accent-foreground: 222 13% 9%;
     --sidebar-border: 215 12% 85%;
-    --sidebar-ring: 212 100% 54%;
+    --sidebar-ring: 219 100% 21%;
   }
 }
 
