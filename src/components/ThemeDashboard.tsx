@@ -3,6 +3,7 @@ import { ThemeCard } from "./ThemeCard";
 import { ThemeTableView } from "./ThemeTableView";
 import { ThemeDetailModal } from "./ThemeDetailModal";
 import { DetailedFrameworkModal } from "./DetailedFrameworkModal";
+import { PopulateThemeSignalsButton } from "./PopulateThemeSignalsButton";
 
 import { ThemeFilterSegmented } from "./ThemeFilterSegmented";
 import { useThemes } from "@/hooks/useThemes";
@@ -111,6 +112,9 @@ export function ThemeDashboard({ initialPillarFilter, onBackToOverview }: ThemeD
             </div>
             
             <div className="flex items-center gap-2">
+              {/* Populate Signals Button */}
+              <PopulateThemeSignalsButton />
+              
               {/* View Mode Toggle */}
               <div className="flex items-center bg-muted rounded-md p-0.5">
                 <Toggle
