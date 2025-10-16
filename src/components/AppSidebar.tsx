@@ -51,11 +51,13 @@ export function AppSidebar() {
     >
       <SidebarContent className="overflow-visible">
         <SidebarGroup className="overflow-visible">
-          <SidebarGroupLabel>
-            <Link to="/" className="hover:opacity-80 transition-opacity">
-              M/T Intelligence
-            </Link>
-          </SidebarGroupLabel>
+          {open && (
+            <SidebarGroupLabel>
+              <Link to="/" className="hover:opacity-80 transition-opacity">
+                M/T Intelligence
+              </Link>
+            </SidebarGroupLabel>
+          )}
           <SidebarGroupContent className="overflow-visible">
             <SidebarMenu className="overflow-visible">
               {mainItems.map((item) => (
@@ -73,9 +75,11 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup className="overflow-visible">
-          <SidebarGroupLabel className="text-xs text-muted-foreground">
-            Admin
-          </SidebarGroupLabel>
+          {open && (
+            <SidebarGroupLabel className="text-xs text-muted-foreground">
+              Admin
+            </SidebarGroupLabel>
+          )}
           <SidebarGroupContent className="overflow-visible">
             <SidebarMenu className="overflow-visible">
               {adminItems.map((item) => (
