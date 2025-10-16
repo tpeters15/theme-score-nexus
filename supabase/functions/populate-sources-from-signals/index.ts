@@ -30,6 +30,24 @@ Deno.serve(async (req) => {
     console.log(`Found ${rawSignals?.length || 0} raw signals`);
 
     // Group by source name and determine source type
+    // Map raw_signals source_type to valid sources table source_type values
+    const mapSourceType = (rawType: string | null): string => {
+      if (!rawType) return 'rss';
+      
+      const type = rawType.toLowerCase();
+      // Valid types for sources table: rss, api, scraper, manual
+      if (['rss', 'api', 'scraper', 'manual'].includes(type)) {
+        return type;
+      }
+      
+      // Map other types to valid ones
+      if (type.includes('regulatory') || type.includes('government')) return 'scraper';
+      if (type.includes('news') || type.includes('feed')) return 'rss';
+      if (type.includes('database') || type.includes('platform')) return 'api';
+      
+      return 'rss'; // default fallback
+    };
+
     const sourceMap = new Map<string, { source_type: string; urls: string[] }>();
     
     for (const signal of rawSignals || []) {
@@ -37,7 +55,7 @@ Deno.serve(async (req) => {
       
       if (!sourceMap.has(signal.source)) {
         sourceMap.set(signal.source, {
-          source_type: signal.source_type || 'rss',
+          source_type: mapSourceType(signal.source_type),
           urls: []
         });
       }
