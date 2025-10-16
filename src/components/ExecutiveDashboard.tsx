@@ -2,7 +2,6 @@ import { TopThemesOverview } from "./TopThemesOverview";
 import { RecentActivityCard } from "./RecentActivityCard";
 import { SignalHighlightsCard } from "./MarketInsightsCard";
 import { RegulatoryImpactAlerts } from "./RegulatoryImpactAlerts";
-import { MomentumSummaryCard } from "./MomentumSummaryCard";
 import { useThemes } from "@/hooks/useThemes";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -38,9 +37,6 @@ export function ExecutiveDashboard() {
         {/* Market Insights */}
         <SignalHighlightsCard />
       </div>
-
-      {/* Theme Momentum Card */}
-      <MomentumSummaryCard />
       
       {/* Recent Activity - Full Width */}
       <RecentActivityCard themes={themes} />
