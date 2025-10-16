@@ -30,9 +30,11 @@ const adminItems = [
 ];
 
 export function AppSidebar() {
-  const { open } = useSidebar();
+  const { state, open } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
+
+  const collapsed = state === "collapsed";
 
   const isActive = (path: string) => {
     if (path === "/") return currentPath === "/";
@@ -45,14 +47,14 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={!open ? "w-14" : "w-60"}
+      className={collapsed ? "w-14" : "w-60"}
       collapsible="icon"
       style={{ overflow: 'visible' }}
     >
       <SidebarContent className="overflow-visible">
         <SidebarGroup className="overflow-visible">
           {open && (
-            <SidebarGroupLabel>
+            <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
               <Link to="/" className="hover:opacity-80 transition-opacity">
                 M/T Intelligence
               </Link>
@@ -76,7 +78,7 @@ export function AppSidebar() {
 
         <SidebarGroup className="overflow-visible">
           {open && (
-            <SidebarGroupLabel className="text-xs text-muted-foreground">
+            <SidebarGroupLabel className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
               Admin
             </SidebarGroupLabel>
           )}
