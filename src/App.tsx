@@ -34,27 +34,25 @@ const App = () => (
           <AuthProvider>
             <Routes>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/*" element={
+              <Route element={
                 <ProtectedRoute>
-                  <AppLayout>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/themes" element={<Themes />} />
-                      <Route path="/regulatory-tracker" element={<RegulatoryTracker />} />
-                      <Route path="/signals" element={<Signals />} />
-                      <Route path="/research" element={<Research />} />
-                      <Route path="/source-monitors" element={<SourceMonitors />} />
-                      <Route path="/source/:sourceId" element={<SourceProfile />} />
-                      <Route path="/classifier" element={<Classifier />} />
-                      <Route path="/taxonomy" element={<TaxonomyManagement />} />
-                      <Route path="/scraper-management" element={<ScraperManagement />} />
-                      <Route path="/admin/theme-populator" element={<ThemePopulator />} />
-                      <Route path="/theme/:themeId" element={<ThemeProfile />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </AppLayout>
+                  <AppLayout />
                 </ProtectedRoute>
-              } />
+              }>
+                <Route path="/" element={<Index />} />
+                <Route path="/themes" element={<Themes />} />
+                <Route path="/regulatory-tracker" element={<RegulatoryTracker />} />
+                <Route path="/signals" element={<Signals />} />
+                <Route path="/research" element={<Research />} />
+                <Route path="/source-monitors" element={<SourceMonitors />} />
+                <Route path="/source/:sourceId" element={<SourceProfile />} />
+                <Route path="/classifier" element={<Classifier />} />
+                <Route path="/taxonomy" element={<TaxonomyManagement />} />
+                <Route path="/scraper-management" element={<ScraperManagement />} />
+                <Route path="/admin/theme-populator" element={<ThemePopulator />} />
+                <Route path="/theme/:themeId" element={<ThemeProfile />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
             </Routes>
           </AuthProvider>
         </BrowserRouter>
