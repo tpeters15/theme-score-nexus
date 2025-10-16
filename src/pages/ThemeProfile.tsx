@@ -33,6 +33,7 @@ import { useThemes } from "@/hooks/useThemes";
 import { BulkScoreUpdateButton } from "@/components/BulkScoreUpdateButton";
 import { UploadResearchDocumentButton } from "@/components/UploadResearchDocumentButton";
 import { QuickInsights } from "@/components/QuickInsights";
+import { MapWaterSignalsButton } from "@/components/MapWaterSignalsButton";
 
 
 
@@ -321,7 +322,15 @@ const ThemeProfile = () => {
         )}
 
         {/* Recent Market Signals */}
-        <ThemeRecentSignals themeId={theme.id} />
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Recent Market Signals</h2>
+            {theme.name.toLowerCase().includes('water') && (
+              <MapWaterSignalsButton />
+            )}
+          </div>
+          <ThemeRecentSignals themeId={theme.id} />
+        </div>
 
         {/* Main Content Sections */}
         <Tabs defaultValue="framework" className="space-y-6">
