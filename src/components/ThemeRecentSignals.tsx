@@ -1,28 +1,39 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, ExternalLink, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, ExternalLink, Calendar, X } from "lucide-react";
 import { useState } from "react";
 import { ProcessedSignalDetailModal } from "@/components/ProcessedSignalDetailModal";
 import { ProcessedSignal } from "@/hooks/useProcessedSignals";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
+import { removeThemeSignals } from "@/utils/removeThemeSignals";
+import { toast } from "sonner";
 
 interface ThemeRecentSignalsProps {
   themeId: string;
 }
 
+interface ThemeSignalWithId {
+  theme_signal_id: string;
+  processed_signal_id: string;
+  relevance_score: number | null;
+  ai_analysis: string | null;
+}
+
 export function ThemeRecentSignals({ themeId }: ThemeRecentSignalsProps) {
   const [selectedSignal, setSelectedSignal] = useState<ProcessedSignal | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: themeSignals, isLoading } = useQuery({
     queryKey: ['theme-signals', themeId],
     queryFn: async () => {
-      // First get the theme_signals with processed_signal_id
+      // First get the theme_signals with processed_signal_id and theme_signal id
       const { data: themeSigs, error: themeSigsError } = await supabase
         .from('theme_signals')
-        .select('processed_signal_id, relevance_score, ai_analysis')
+        .select('id, processed_signal_id, relevance_score, ai_analysis')
         .eq('theme_id', themeId)
         .order('relevance_score', { ascending: false })
         .limit(5);
@@ -65,12 +76,26 @@ export function ThemeRecentSignals({ themeId }: ThemeRecentSignalsProps) {
           if (!signal) return null;
           return {
             ...signal,
-            raw_signal: Array.isArray(signal.raw_signals) ? signal.raw_signals[0] : signal.raw_signals
-          } as ProcessedSignal;
+            raw_signal: Array.isArray(signal.raw_signals) ? signal.raw_signals[0] : signal.raw_signals,
+            theme_signal_id: ts.id // Store the theme_signal ID for deletion
+          } as ProcessedSignal & { theme_signal_id: string };
         })
-        .filter((s): s is ProcessedSignal => s !== null);
+        .filter((s): s is ProcessedSignal & { theme_signal_id: string } => s !== null);
     },
   });
+
+  const handleRemoveSignal = async (e: React.MouseEvent, themeSignalId: string, signalTitle: string) => {
+    e.stopPropagation();
+    
+    try {
+      await removeThemeSignals([themeSignalId]);
+      toast.success(`Removed "${signalTitle}" from this theme`);
+      queryClient.invalidateQueries({ queryKey: ['theme-signals', themeId] });
+    } catch (error) {
+      console.error('Error removing signal:', error);
+      toast.error('Failed to remove signal');
+    }
+  };
 
   const openModal = (signal: ProcessedSignal) => {
     setSelectedSignal(signal);
@@ -146,14 +171,21 @@ export function ThemeRecentSignals({ themeId }: ThemeRecentSignalsProps) {
               <div
                 key={signal.id}
                 onClick={() => openModal(signal)}
-                className="group cursor-pointer rounded-lg border bg-card p-4 hover:bg-accent/50 transition-colors"
+                className="group cursor-pointer rounded-lg border bg-card p-4 hover:bg-accent/50 transition-colors relative"
               >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  onClick={(e) => handleRemoveSignal(e, signal.theme_signal_id, signal.raw_signal.title)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <h4 className="text-sm font-medium leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+                    <h4 className="text-sm font-medium leading-tight line-clamp-2 group-hover:text-primary transition-colors pr-6">
                       {signal.raw_signal.title}
                     </h4>
-                    <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                   </div>
 
                   {signal.content_snippet && (
