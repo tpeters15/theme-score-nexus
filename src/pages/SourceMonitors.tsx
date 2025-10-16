@@ -9,6 +9,7 @@ import { RefreshCw, Plus, Search } from "lucide-react";
 import { AddSourceDialog } from "@/components/sources/AddSourceDialog";
 import { SourceStats } from "@/components/sources/SourceStats";
 import { SourcesTableView } from "@/components/SourcesTableView";
+import { PopulateSourcesButton } from "@/components/PopulateSourcesButton";
 
 
 export default function SourceMonitors() {
@@ -132,6 +133,7 @@ export default function SourceMonitors() {
           </p>
         </div>
         <div className="flex gap-2">
+          <PopulateSourcesButton />
           <Button onClick={handleRunAll} disabled={triggerScrape.isPending} variant="outline">
             {triggerScrape.isPending ? (
               <>
