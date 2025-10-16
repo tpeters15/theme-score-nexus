@@ -2,7 +2,6 @@ import { TopThemesOverview } from "./TopThemesOverview";
 import { RecentActivityCard } from "./RecentActivityCard";
 import { SignalHighlightsCard } from "./MarketInsightsCard";
 import { RegulatoryImpactAlerts } from "./RegulatoryImpactAlerts";
-import { IntelligenceMemoGenerator } from "./IntelligenceMemoGenerator";
 import { useThemes } from "@/hooks/useThemes";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -31,10 +30,7 @@ export function ExecutiveDashboard() {
       <TopThemesOverview themes={themes} />
       
       {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Intelligence Memo Generator */}
-        <IntelligenceMemoGenerator />
-        
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* Regulatory Alerts */}
         <RegulatoryImpactAlerts />
         

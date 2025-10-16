@@ -1,15 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Signal, ExternalLink, Clock, Eye, Loader2 } from "lucide-react";
+import { Signal, ExternalLink, Clock, Eye, Loader2, FileText } from "lucide-react";
 import { useState } from "react";
 import { ProcessedSignalDetailModal } from "@/components/ProcessedSignalDetailModal";
+import { IntelligenceMemoModal } from "@/components/IntelligenceMemoModal";
 import { useProcessedSignalsFeatured } from "@/hooks/useProcessedSignalsFeatured";
 import type { ProcessedSignalData } from "@/data/processedSignals";
 
 export function SignalHighlightsCard() {
   const [selectedSignal, setSelectedSignal] = useState<ProcessedSignalData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
   const { data: dbSignals, isLoading } = useProcessedSignalsFeatured();
 
   // Transform DB signals to match ProcessedSignalData format
@@ -88,12 +90,23 @@ export function SignalHighlightsCard() {
   return (
     <Card className="bg-gradient-to-br from-card to-muted/20 border-border/50">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <div className="p-1.5 rounded-lg bg-blue-500/10">
-            <Signal className="h-4 w-4 text-blue-600" />
-          </div>
-          Signal Highlights
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <div className="p-1.5 rounded-lg bg-blue-500/10">
+              <Signal className="h-4 w-4 text-blue-600" />
+            </div>
+            Signal Highlights
+          </CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsMemoModalOpen(true)}
+            className="h-8 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <FileText className="h-3.5 w-3.5 mr-1.5" />
+            Generate Memo
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {recentSignals.length > 0 ? (
@@ -164,6 +177,11 @@ export function SignalHighlightsCard() {
         signal={selectedSignal}
         isOpen={isModalOpen}
         onClose={closeModal}
+      />
+
+      <IntelligenceMemoModal
+        isOpen={isMemoModalOpen}
+        onClose={() => setIsMemoModalOpen(false)}
       />
     </Card>
   );
