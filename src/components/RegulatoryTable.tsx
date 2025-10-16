@@ -161,7 +161,7 @@ export function RegulatoryTable({ regulations, onRegulationClick }: RegulatoryTa
               <TableHead>
                 <SortButton field="relevance_score">Relevance</SortButton>
               </TableHead>
-              <TableHead className="w-[120px]">Actions</TableHead>
+              <TableHead className="w-[180px]">Links</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -229,26 +229,28 @@ export function RegulatoryTable({ regulations, onRegulationClick }: RegulatoryTa
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0"
+                          className="h-8 px-2 text-xs"
                           onClick={(e) => {
                             e.stopPropagation();
                             window.open(regulation.source_url, '_blank');
                           }}
                         >
-                          <ExternalLink className="h-3 w-3" />
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          Source
                         </Button>
                       )}
                       {regulation.analysis_url && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0"
+                          className="h-8 px-2 text-xs"
                           onClick={(e) => {
                             e.stopPropagation();
                             window.open(regulation.analysis_url, '_blank');
                           }}
                         >
-                          <FileText className="h-3 w-3" />
+                          <FileText className="h-3 w-3 mr-1" />
+                          Analysis
                         </Button>
                       )}
                     </div>

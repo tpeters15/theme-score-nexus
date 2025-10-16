@@ -22,7 +22,7 @@ import { DocumentViewer } from "@/components/DocumentViewer";
 import { DocumentIntelligence } from "@/components/DocumentIntelligence";
 import { InlineScoreEditor } from "@/components/InlineScoreEditor";
 import { RegulatoryTable } from "@/components/RegulatoryTable";
-import { RegulatorySummaryCard } from "@/components/RegulatorySummaryCard";
+import { RegulatoryUpdatesCard } from "@/components/RegulatoryUpdatesCard";
 import { FrameworkCategoryCard } from "@/components/FrameworkCategoryCard";
 import { ThemeKeywords } from "@/components/ThemeKeywords";
 import { ThemeDetailModal } from "@/components/ThemeDetailModal";
@@ -407,9 +407,6 @@ const ThemeProfile = () => {
           {/* Regulatory Analysis */}
           <TabsContent value="regulatory" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              <div className="lg:col-span-1">
-                <RegulatorySummaryCard regulations={regulations} />
-              </div>
               <div className="lg:col-span-3">
                 <RegulatoryTable 
                   regulations={regulations}
@@ -417,6 +414,9 @@ const ThemeProfile = () => {
                     console.log('Selected regulation:', regulation);
                   }}
                 />
+              </div>
+              <div className="lg:col-span-1">
+                <RegulatoryUpdatesCard regulations={regulations} />
               </div>
             </div>
           </TabsContent>
