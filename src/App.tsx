@@ -20,6 +20,7 @@ import SourceProfile from "./pages/SourceProfile";
 import TaxonomyManagement from "./pages/TaxonomyManagement";
 import ScraperManagement from "./pages/ScraperManagement";
 import ThemePopulator from "./pages/ThemePopulator";
+import Momentum from "./pages/Momentum";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
               }>
                 <Route path="/" element={<Index />} />
                 <Route path="/themes" element={<Themes />} />
+                <Route path="/momentum" element={<Momentum />} />
                 <Route path="/regulatory-tracker" element={<RegulatoryTracker />} />
                 <Route path="/signals" element={<Signals />} />
                 <Route path="/research" element={<Research />} />
