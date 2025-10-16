@@ -21,7 +21,8 @@ import { ThemeFileUpload } from "@/components/ThemeFileUpload";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { DocumentIntelligence } from "@/components/DocumentIntelligence";
 import { InlineScoreEditor } from "@/components/InlineScoreEditor";
-import { RegulatoryTable } from "@/components/RegulatoryTable";
+import { RegulatoryTable, Regulation } from "@/components/RegulatoryTable";
+import { RegulatoryDetailModal } from "@/components/RegulatoryDetailModal";
 import { RegulatoryUpdatesCard } from "@/components/RegulatoryUpdatesCard";
 import { FrameworkCategoryCard } from "@/components/FrameworkCategoryCard";
 import { ThemeKeywords } from "@/components/ThemeKeywords";
@@ -44,6 +45,8 @@ const ThemeProfile = () => {
   const [theme, setTheme] = useState<ThemeWithDetailedScores | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState<ResearchDocument | null>(null);
+  const [selectedRegulation, setSelectedRegulation] = useState<Regulation | null>(null);
+  const [showRegulationModal, setShowRegulationModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
 
@@ -411,7 +414,8 @@ const ThemeProfile = () => {
                 <RegulatoryTable 
                   regulations={regulations}
                   onRegulationClick={(regulation) => {
-                    console.log('Selected regulation:', regulation);
+                    setSelectedRegulation(regulation);
+                    setShowRegulationModal(true);
                   }}
                 />
               </div>
@@ -496,6 +500,18 @@ const ThemeProfile = () => {
           document={selectedDocument}
           isOpen={!!selectedDocument}
           onClose={() => setSelectedDocument(null)}
+        />
+      )}
+
+      {/* Regulatory Detail Modal */}
+      {showRegulationModal && selectedRegulation && (
+        <RegulatoryDetailModal
+          regulation={selectedRegulation}
+          isOpen={showRegulationModal}
+          onClose={() => {
+            setShowRegulationModal(false);
+            setSelectedRegulation(null);
+          }}
         />
       )}
 
