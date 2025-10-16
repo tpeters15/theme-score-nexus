@@ -191,7 +191,7 @@ export function RegulatoryTable({ regulations, onRegulationClick }: RegulatoryTa
                   <TableCell>
                     <div className="space-y-1">
                       <div className="font-medium">{regulation.title}</div>
-                      <div className="text-sm text-muted-foreground">{regulation.regulation_type}</div>
+                      <div className="text-sm text-muted-foreground capitalize">{regulation.regulation_type}</div>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -199,12 +199,12 @@ export function RegulatoryTable({ regulations, onRegulationClick }: RegulatoryTa
                   </TableCell>
                   <TableCell>
                     <Badge className={cn(getImpactColor(regulation.impact_level))}>
-                      {regulation.impact_level}
+                      {regulation.impact_level.charAt(0).toUpperCase() + regulation.impact_level.slice(1)}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge className={cn(getStatusColor(regulation.status))}>
-                      {regulation.status}
+                      {regulation.status.charAt(0).toUpperCase() + regulation.status.slice(1)}
                     </Badge>
                   </TableCell>
                   <TableCell>

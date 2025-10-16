@@ -90,16 +90,16 @@ export function RegulatoryDetailModal({ regulation, isOpen, onClose }: Regulator
                   className={cn("text-xs", getStatusColor(regulation.status))}
                 >
                   {regulation.status === 'active' ? <CheckCircle className="h-3 w-3 mr-1" /> : <Clock className="h-3 w-3 mr-1" />}
-                  {regulation.status}
+                  {regulation.status.charAt(0).toUpperCase() + regulation.status.slice(1)}
                 </Badge>
                 <Badge 
                   variant="outline" 
                   className={cn("text-xs", getImpactColor(regulation.impact_level))}
                 >
                   <AlertTriangle className="h-3 w-3 mr-1" />
-                  {regulation.impact_level} impact
+                  {regulation.impact_level.charAt(0).toUpperCase() + regulation.impact_level.slice(1)} Impact
                 </Badge>
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs capitalize">
                   <Scale className="h-3 w-3 mr-1" />
                   {regulation.regulation_type}
                 </Badge>
