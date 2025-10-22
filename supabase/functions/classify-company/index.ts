@@ -9,8 +9,6 @@ interface ClassificationRequest {
   companyId: string
   companyName: string
   website: string
-  batchId: string
-  classificationId: string
   business_description?: string
 }
 
@@ -45,183 +43,32 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey)
     
-    const { companyId, companyName, website, batchId, classificationId, business_description }: ClassificationRequest = await req.json()
+    const { companyId, companyName, website, business_description }: ClassificationRequest = await req.json()
     
     console.log(`Starting classification for ${companyName} (${website})`)
 
-    // Check for existing completed classification for this company
-    const { data: existingClassification } = await supabase
-      .from('classifications')
+    // Check for existing classification mapping
+    const { data: existingMapping } = await supabase
+      .from('company_theme_mappings')
       .select('*')
       .eq('company_id', companyId)
-      .eq('status', 'Completed')
-      .order('created_at', { ascending: false })
-      .limit(1)
       .maybeSingle()
 
-    // If we have an existing classification, use it instead of re-classifying
-    if (existingClassification) {
-      console.log(`Found existing classification for company ${companyId}, reusing results`)
-      
-      // Copy the existing classification data to the new classification record
-      // Strip any existing "[Reused from previous classification]" prefix
-      const cleanRationale = existingClassification.rationale?.replace(/^\[Reused from previous classification\]\s*/i, '') || ''
-      
-      const { error: copyError } = await supabase
-        .from('classifications')
-        .update({
-          status: 'Completed',
-          primary_theme: existingClassification.primary_theme,
-          theme_id: existingClassification.theme_id,
-          pillar: existingClassification.pillar,
-          sector: existingClassification.sector,
-          business_model: existingClassification.business_model,
-          confidence_score: existingClassification.confidence_score,
-          rationale: cleanRationale,
-          model_used: existingClassification.model_used,
-          website_summary: existingClassification.website_summary,
-          perplexity_research: existingClassification.perplexity_research,
-          context_metadata: {
-            ...existingClassification.context_metadata,
-            reused_from_classification_id: existingClassification.id,
-            reused_at: new Date().toISOString(),
-          }
-        })
-        .eq('id', classificationId)
-
-      if (copyError) {
-        console.error('Error copying classification:', copyError)
-      } else {
-        // Update batch status
-        await supabase
-          .from('classification_batches')
-          .update({ status: 'Completed', updated_at: new Date().toISOString() })
-          .eq('id', batchId)
-
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            classification: existingClassification,
-            reused: true,
-            message: 'Reused existing classification for this company'
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200 
-          }
-        )
-      }
+    if (existingMapping) {
+      console.log(`Found existing classification for company ${companyId}`)
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          mapping: existingMapping,
+          reused: true,
+          message: 'Company already classified'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      )
     }
-
-    // Fallback: try to find existing classification by website domain or company name
-    const normalizeDomain = (url: string) => {
-      try {
-        const u = new URL(url)
-        return u.hostname.replace(/^www\./, '')
-      } catch (_) {
-        return url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]
-      }
-    }
-    const normalizedDomain = normalizeDomain(website)
-
-    // 1) Try matching by website_domain
-    const { data: domainCompany } = await supabase
-      .from('companies')
-      .select('id')
-      .eq('website_domain', normalizedDomain)
-      .maybeSingle()
-
-    let reuseClassification: any = null
-
-    if (domainCompany) {
-      const { data: byDomain } = await supabase
-        .from('classifications')
-        .select('*')
-        .eq('company_id', domainCompany.id)
-        .eq('status', 'Completed')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      if (byDomain) reuseClassification = byDomain
-    }
-
-    // 2) If not found, try matching by company name (case-insensitive)
-    if (!reuseClassification) {
-      const { data: nameCompany } = await supabase
-        .from('companies')
-        .select('id')
-        .ilike('company_name', companyName)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-      if (nameCompany) {
-        const { data: byName } = await supabase
-          .from('classifications')
-          .select('*')
-          .eq('company_id', nameCompany.id)
-          .eq('status', 'Completed')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-        if (byName) reuseClassification = byName
-      }
-    }
-
-    if (reuseClassification) {
-      console.log('Reusing classification found via website/company name')
-      // Strip any existing "[Reused from previous classification]" prefix
-      const cleanRationale = reuseClassification.rationale?.replace(/^\[Reused from previous classification\]\s*/i, '') || ''
-      
-      const { error: copyError2 } = await supabase
-        .from('classifications')
-        .update({
-          status: 'Completed',
-          primary_theme: reuseClassification.primary_theme,
-          theme_id: reuseClassification.theme_id,
-          pillar: reuseClassification.pillar,
-          sector: reuseClassification.sector,
-          business_model: reuseClassification.business_model,
-          confidence_score: reuseClassification.confidence_score,
-          rationale: cleanRationale,
-          model_used: reuseClassification.model_used,
-          website_summary: reuseClassification.website_summary,
-          perplexity_research: reuseClassification.perplexity_research,
-          context_metadata: {
-            ...reuseClassification.context_metadata,
-            reused_from_classification_id: reuseClassification.id,
-            reused_at: new Date().toISOString(),
-            reuse_lookup: { normalizedDomain, companyName }
-          }
-        })
-        .eq('id', classificationId)
-
-      if (!copyError2) {
-        await supabase
-          .from('classification_batches')
-          .update({ status: 'Completed', updated_at: new Date().toISOString() })
-          .eq('id', batchId)
-
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            classification: reuseClassification,
-            reused: true,
-            message: 'Reused existing classification matched by website/company name'
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200 
-          }
-        )
-      }
-    }
-
-    // Update status to Processing (only if we're doing a new classification)
-    await supabase
-      .from('classifications')
-      .update({ status: 'Processing' })
-      .eq('id', classificationId)
 
     // ==================== WEBSITE SCRAPING ====================
     console.log('Scraping company website with Firecrawl')
@@ -230,7 +77,6 @@ Deno.serve(async (req) => {
     let websiteError = null
     let hasValidWebsite = true
     
-    // Check if website is valid before attempting scrape
     if (!website || website.length < 3 || !website.includes('.')) {
       websiteError = 'No valid website URL provided'
       hasValidWebsite = false
@@ -323,7 +169,7 @@ Respond with a JSON object:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.0-flash-exp',
         messages: [
           { role: 'user', content: stage0Prompt }
         ],
@@ -341,51 +187,16 @@ Respond with a JSON object:
     
     console.log('Stage 0 result:', stage0Result)
 
-    // If not climate-related, classify as "Other"
+    // If not climate-related, don't create any mapping
     if (!stage0Result.is_climate_related) {
-      console.log('Company not climate-related, classifying as "Other"')
+      console.log('Company not climate-related')
       
-      const updateData = {
-        status: 'Completed',
-        primary_theme: null,
-        theme_id: null,
-        pillar: 'Other',
-        sector: null,
-        business_model: null,
-        confidence_score: 0.95,
-        rationale: `Not climate-related: ${stage0Result.rationale}`,
-        model_used: 'gemini-2.5-flash',
-        website_summary: websiteContent.substring(0, 1000),
-        context_metadata: {
-          stage0_climate_check: false,
-          stage0_rationale: stage0Result.rationale,
-          website_scraped: !!websiteContent,
-          scraping_error: websiteError,
-          has_valid_website: hasValidWebsite,
-        }
-      }
-
-      const { error: updateError } = await supabase
-        .from('classifications')
-        .update(updateData)
-        .eq('id', classificationId)
-
-      if (updateError) {
-        throw new Error(`Failed to update classification: ${updateError.message}`)
-      }
-
-      await supabase
-        .from('classification_batches')
-        .update({ status: 'Completed', updated_at: new Date().toISOString() })
-        .eq('id', batchId)
-
-      console.log(`Classification completed for ${companyName} - classified as Other`)
-
       return new Response(
         JSON.stringify({ 
           success: true, 
-          classification: updateData,
-          stages_used: 'Stage 0 only (Out of Scope)'
+          climate_related: false,
+          rationale: stage0Result.rationale,
+          message: 'Company is not climate-related - no theme mapping created'
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -410,18 +221,15 @@ ${!hasValidWebsite ? 'NOTE: No valid website URL was provided. Base classificati
 Taxonomy (select ONE theme):
 ${JSON.stringify(compressedTaxonomy, null, 2)}
 
-IMPORTANT: If the company does NOT fit any theme (even after careful analysis), you can classify it as "Other":
-- Set pillar to "Other"
-- Set theme_id, theme_name, sector, and business_model to null
-- Explain why it doesn't fit any theme in the rationale
+IMPORTANT: If the company does NOT fit any theme (even after careful analysis), return null for theme_id and explain why.
 
 Respond with a JSON object:
 {
-  "theme_id": "uuid of the selected theme OR null if Other",
-  "theme_name": "theme name OR null if Other",
-  "pillar": "pillar name OR 'Other' if no fit",
-  "sector": "sector name OR null if Other",
-  "business_model": "primary business model from theme's list OR null if Other",
+  "theme_id": "uuid of the selected theme OR null if no fit",
+  "theme_name": "theme name OR null if no fit",
+  "pillar": "pillar name",
+  "sector": "sector name OR null",
+  "business_model": "primary business model from theme's list OR null",
   "confidence_score": 0.0-1.0,
   "rationale": "brief explanation (2-3 sentences)"
 }`
@@ -433,7 +241,7 @@ Respond with a JSON object:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.0-flash-exp',
         messages: [
           { role: 'user', content: stage1Prompt }
         ],
@@ -469,33 +277,23 @@ ${!hasValidWebsite ? 'NOTE: No valid website URL was provided. Search using comp
 CRITICAL VERIFICATION STEP:
 1. Research the company "${companyName}" ${hasValidWebsite ? `(website: ${website})` : ''} using current web sources
 2. ${business_description ? `VERIFY that the web search results match the expected business description above. If the search results describe a completely different company, set "company_verification_passed" to false and reduce confidence.` : 'Focus on finding accurate information about this specific company.'}
-3. Gather information on:
-   - Business model and revenue streams
-   - Products/services offered
-   - Market positioning and customers
-   - Technology and approach
-   - Recent news and developments
+3. Select the BEST FITTING theme from the taxonomy
 
-Then classify into ONE theme from this taxonomy:
+Taxonomy (select ONE theme):
 ${JSON.stringify(compressedTaxonomy, null, 2)}
-
-IMPORTANT: If after research the company still does NOT fit any theme, you can classify it as "Other":
-- Set pillar to "Other"
-- Set theme_id, theme_name, sector, and business_model to null
-- Explain why it doesn't fit any theme in the rationale
 
 Respond with a JSON object:
 {
-  "company_verification_passed": ${business_description ? 'true/false (does research match expected business description?)' : 'true'},
-  "verification_notes": ${business_description ? '"brief note if verification failed"' : 'null'},
-  "theme_id": "uuid of the selected theme OR null if Other",
-  "theme_name": "theme name OR null if Other",
-  "pillar": "pillar name OR 'Other' if no fit",
-  "sector": "sector name OR null if Other",
-  "business_model": "primary business model from theme's list OR null if Other",
-  "confidence_score": 0.0-1.0 (reduce by 0.3 if company_verification_passed is false),
-  "rationale": "detailed explanation based on web research (3-4 sentences)",
-  "sources_consulted": "brief note on what sources informed the decision"
+  "company_verification_passed": true/false,
+  "verification_notes": "explanation if verification failed OR null",
+  "theme_id": "uuid of the selected theme OR null if no fit",
+  "theme_name": "theme name OR null if no fit",
+  "pillar": "pillar name",
+  "sector": "sector name OR null",
+  "business_model": "primary business model OR null",
+  "confidence_score": 0.0-1.0,
+  "rationale": "detailed explanation referencing research sources",
+  "sources_consulted": "list of sources used for research"
 }`
 
     const stage2Response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -505,82 +303,58 @@ Respond with a JSON object:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
+        model: 'google/gemini-2.0-flash-exp',
         messages: [
           { role: 'user', content: stage2Prompt }
         ],
-        tools: [
-          {
-            google_search_retrieval: {}
-          }
-        ],
         response_format: { type: 'json_object' },
+        tools: [{
+          type: 'google_search'
+        }]
       }),
     })
 
     if (!stage2Response.ok) {
       const errorText = await stage2Response.text()
-      console.error('Stage 2 failed:', errorText)
-      // Fallback to Stage 1 result if Stage 2 fails
-      finalResult = stage1Result
-      finalResult.sources_consulted = 'Stage 2 research failed, using website analysis only'
-    } else {
-      const stage2Data = await stage2Response.json()
-      finalResult = JSON.parse(stage2Data.choices[0].message.content)
-      console.log('Stage 2 result:', finalResult)
+      throw new Error(`Lovable AI Stage 2 error: ${stage2Response.status} - ${errorText}`)
     }
 
-    // ==================== STAGE 3: Save Final Classification ====================
-    console.log('Stage 3: Saving final classification')
+    const stage2Data = await stage2Response.json()
+    const stage2Result = JSON.parse(stage2Data.choices[0].message.content)
     
-    const updateData = {
-      status: 'Completed',
-      primary_theme: finalResult.theme_name,
-      theme_id: finalResult.theme_id,
-      pillar: finalResult.pillar,
-      sector: finalResult.sector,
-      business_model: finalResult.business_model,
-      confidence_score: finalResult.confidence_score,
-      rationale: finalResult.rationale,
-      model_used: 'gemini-2.5-pro',
-      website_summary: websiteContent.substring(0, 1000),
-      perplexity_research: finalResult.sources_consulted || null,
-      context_metadata: {
-        stage0_climate_check: true,
-        stage1_confidence: stage1Result.confidence_score,
-        stage2_always_run: true,
-        company_verification_passed: finalResult.company_verification_passed !== false,
-        verification_notes: finalResult.verification_notes || null,
-        website_scraped: !!websiteContent,
-        scraping_error: websiteError,
-        has_valid_website: hasValidWebsite,
-        classified_as_other: finalResult.pillar === 'Other',
+    console.log('Stage 2 result:', stage2Result)
+    
+    finalResult = stage2Result
+
+    // ==================== STAGE 3: Save to company_theme_mappings ====================
+    console.log('Stage 3: Saving final classification')
+
+    // Only create mapping if we have a valid theme
+    if (finalResult.theme_id) {
+      const { error: mappingError } = await supabase
+        .from('company_theme_mappings')
+        .insert({
+          company_id: companyId,
+          theme_id: finalResult.theme_id,
+          is_primary: true,
+          confidence_score: finalResult.confidence_score,
+          notes: finalResult.rationale,
+          classified_by: null, // System classification
+        })
+
+      if (mappingError) {
+        throw new Error(`Failed to create theme mapping: ${mappingError.message}`)
       }
     }
-
-    const { error: updateError } = await supabase
-      .from('classifications')
-      .update(updateData)
-      .eq('id', classificationId)
-
-    if (updateError) {
-      throw new Error(`Failed to update classification: ${updateError.message}`)
-    }
-
-    // Update batch status
-    await supabase
-      .from('classification_batches')
-      .update({ status: 'Completed', updated_at: new Date().toISOString() })
-      .eq('id', batchId)
 
     console.log(`Classification completed for ${companyName}`)
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        classification: updateData,
+        result: finalResult,
         stages_used: 'Stage 0 (climate check) + Stage 1 (website) + Stage 2 (Google Search)',
-        verification_passed: updateData.context_metadata.company_verification_passed
+        verification_passed: finalResult.company_verification_passed !== false
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
