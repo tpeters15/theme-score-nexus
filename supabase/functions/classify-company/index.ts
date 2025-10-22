@@ -191,6 +191,15 @@ Respond with a JSON object:
     if (!stage0Result.is_climate_related) {
       console.log('Company not climate-related')
       
+      // Update company status
+      await supabase
+        .from('companies')
+        .update({
+          classification_status: 'not_climate_related',
+          classification_error_message: stage0Result.rationale
+        })
+        .eq('id', companyId)
+      
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -345,6 +354,23 @@ Respond with a JSON object:
       if (mappingError) {
         throw new Error(`Failed to create theme mapping: ${mappingError.message}`)
       }
+
+      // Update company status to completed
+      await supabase
+        .from('companies')
+        .update({
+          classification_status: 'completed'
+        })
+        .eq('id', companyId)
+    } else {
+      // No theme found - update status
+      await supabase
+        .from('companies')
+        .update({
+          classification_status: 'no_theme_found',
+          classification_error_message: finalResult.rationale
+        })
+        .eq('id', companyId)
     }
 
     console.log(`Classification completed for ${companyName}`)
@@ -364,6 +390,22 @@ Respond with a JSON object:
 
   } catch (error) {
     console.error('Classification error:', error)
+    
+    // Update company status to failed
+    try {
+      const { companyId } = await req.json()
+      if (companyId) {
+        await supabase
+          .from('companies')
+          .update({
+            classification_status: 'failed',
+            classification_error_message: error.message
+          })
+          .eq('id', companyId)
+      }
+    } catch (updateError) {
+      console.error('Failed to update company status:', updateError)
+    }
     
     return new Response(
       JSON.stringify({ 
