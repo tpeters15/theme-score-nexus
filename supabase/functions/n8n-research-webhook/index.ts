@@ -2,7 +2,41 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature',
+}
+
+// Verify webhook signature for authentication
+async function verifyWebhookSignature(payload: string, signature: string | null): Promise<boolean> {
+  if (!signature) return false
+  
+  const webhookSecret = Deno.env.get('N8N_WEBHOOK_SECRET')
+  if (!webhookSecret) {
+    console.error('N8N_WEBHOOK_SECRET not configured')
+    return false
+  }
+  
+  const encoder = new TextEncoder()
+  const key = encoder.encode(webhookSecret)
+  const message = encoder.encode(payload)
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    key,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify']
+  )
+  
+  const signatureBytes = hexToBytes(signature)
+  return crypto.subtle.verify('HMAC', cryptoKey, signatureBytes, message)
+}
+
+function hexToBytes(hex: string): Uint8Array {
+  const bytes = new Uint8Array(hex.length / 2)
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substr(i, 2), 16)
+  }
+  return bytes
 }
 
 Deno.serve(async (req) => {
@@ -12,6 +46,25 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Verify webhook authentication
+    const rawBody = await req.text()
+    const signature = req.headers.get('x-webhook-signature')
+    
+    const isValid = await verifyWebhookSignature(rawBody, signature)
+    if (!isValid) {
+      console.error('Invalid webhook signature')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid signature' }),
+        {
+          status: 401,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -23,7 +76,7 @@ Deno.serve(async (req) => {
       }
     )
 
-    const { action, data } = await req.json()
+    const { action, data } = JSON.parse(rawBody)
     
     console.log('Received n8n webhook:', { action, data })
 

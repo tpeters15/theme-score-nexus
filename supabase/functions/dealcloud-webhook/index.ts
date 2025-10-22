@@ -2,7 +2,42 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature',
+}
+
+// Verify webhook signature for authentication
+function verifyWebhookSignature(payload: string, signature: string | null): boolean {
+  if (!signature) return false
+  
+  const webhookSecret = Deno.env.get('DEALCLOUD_WEBHOOK_SECRET')
+  if (!webhookSecret) {
+    console.error('DEALCLOUD_WEBHOOK_SECRET not configured')
+    return false
+  }
+  
+  // Use crypto.subtle to verify HMAC-SHA256 signature
+  const encoder = new TextEncoder()
+  const key = encoder.encode(webhookSecret)
+  const message = encoder.encode(payload)
+  
+  return crypto.subtle.importKey(
+    'raw',
+    key,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify']
+  ).then(cryptoKey => {
+    const signatureBytes = hexToBytes(signature)
+    return crypto.subtle.verify('HMAC', cryptoKey, signatureBytes, message)
+  })
+}
+
+function hexToBytes(hex: string): Uint8Array {
+  const bytes = new Uint8Array(hex.length / 2)
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substr(i, 2), 16)
+  }
+  return bytes
 }
 
 interface DealCloudCompany {
@@ -18,11 +53,40 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Verify webhook authentication
+    const rawBody = await req.text()
+    const signature = req.headers.get('x-webhook-signature')
+    
+    const isValid = await verifyWebhookSignature(rawBody, signature)
+    if (!isValid) {
+      console.error('Invalid webhook signature')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid signature' }),
+        {
+          status: 401,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    const { company } = await req.json() as { company: DealCloudCompany }
+    const { company } = JSON.parse(rawBody) as { company: DealCloudCompany }
+    
+    // Validate input data
+    if (!company?.dealcloud_id || !company?.company_name || !company?.website) {
+      throw new Error('Invalid company data: missing required fields')
+    }
+    
+    // Validate data lengths
+    if (company.company_name.length > 500 || company.website.length > 1000) {
+      throw new Error('Invalid company data: field length exceeds limits')
+    }
 
     console.log(`Processing DealCloud company: ${company.company_name}`)
 

@@ -14,175 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      classification_batches: {
-        Row: {
-          batch_name: string
-          company_count: number | null
-          created_at: string
-          id: string
-          status: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          batch_name: string
-          company_count?: number | null
-          created_at?: string
-          id?: string
-          status?: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          batch_name?: string
-          company_count?: number | null
-          created_at?: string
-          id?: string
-          status?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      classifications: {
-        Row: {
-          batch_id: string | null
-          business_model: string | null
-          classification_type: string | null
-          company_id: string
-          confidence_score: number | null
-          context_metadata: Json | null
-          created_at: string
-          dealcloud_id: string | null
-          id: string
-          model_used: string | null
-          n8n_execution_id: string | null
-          perplexity_research: string | null
-          pillar: string | null
-          pitchbook_data: string | null
-          preqin_data: string | null
-          primary_theme: string | null
-          rationale: string | null
-          sector: string | null
-          source_system: string
-          sourcescrub_description: string | null
-          status: string
-          taxonomy_version: number | null
-          theme_id: string | null
-          updated_at: string | null
-          website_summary: string | null
-        }
-        Insert: {
-          batch_id?: string | null
-          business_model?: string | null
-          classification_type?: string | null
-          company_id: string
-          confidence_score?: number | null
-          context_metadata?: Json | null
-          created_at?: string
-          dealcloud_id?: string | null
-          id?: string
-          model_used?: string | null
-          n8n_execution_id?: string | null
-          perplexity_research?: string | null
-          pillar?: string | null
-          pitchbook_data?: string | null
-          preqin_data?: string | null
-          primary_theme?: string | null
-          rationale?: string | null
-          sector?: string | null
-          source_system: string
-          sourcescrub_description?: string | null
-          status?: string
-          taxonomy_version?: number | null
-          theme_id?: string | null
-          updated_at?: string | null
-          website_summary?: string | null
-        }
-        Update: {
-          batch_id?: string | null
-          business_model?: string | null
-          classification_type?: string | null
-          company_id?: string
-          confidence_score?: number | null
-          context_metadata?: Json | null
-          created_at?: string
-          dealcloud_id?: string | null
-          id?: string
-          model_used?: string | null
-          n8n_execution_id?: string | null
-          perplexity_research?: string | null
-          pillar?: string | null
-          pitchbook_data?: string | null
-          preqin_data?: string | null
-          primary_theme?: string | null
-          rationale?: string | null
-          sector?: string | null
-          source_system?: string
-          sourcescrub_description?: string | null
-          status?: string
-          taxonomy_version?: number | null
-          theme_id?: string | null
-          updated_at?: string | null
-          website_summary?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "classifications_batch_id_fkey"
-            columns: ["batch_id"]
-            isOneToOne: false
-            referencedRelation: "classification_batches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "classifications_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "classifications_theme_id_fkey"
-            columns: ["theme_id"]
-            isOneToOne: false
-            referencedRelation: "taxonomy_themes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       companies: {
         Row: {
+          classification_error_message: string | null
+          classification_status: string | null
           company_name: string | null
           created_at: string
           dealcloud_id: string | null
           description: string | null
           id: string
+          needs_dealcloud_sync: boolean | null
+          source_system: string | null
           updated_at: string | null
           website_domain: string
         }
         Insert: {
+          classification_error_message?: string | null
+          classification_status?: string | null
           company_name?: string | null
           created_at?: string
           dealcloud_id?: string | null
           description?: string | null
           id?: string
+          needs_dealcloud_sync?: boolean | null
+          source_system?: string | null
           updated_at?: string | null
           website_domain: string
         }
         Update: {
+          classification_error_message?: string | null
+          classification_status?: string | null
           company_name?: string | null
           created_at?: string
           dealcloud_id?: string | null
           description?: string | null
           id?: string
+          needs_dealcloud_sync?: boolean | null
+          source_system?: string | null
           updated_at?: string | null
           website_domain?: string
         }
         Relationships: []
       }
-      company_theme_mappings: {
+      company_business_models: {
         Row: {
-          batch_id: string | null
+          business_model_id: string
           classification_method: string | null
           classified_at: string
           classified_by: string | null
@@ -194,11 +70,10 @@ export type Database = {
           is_positive_example: boolean
           is_primary: boolean
           notes: string | null
-          theme_id: string
           updated_at: string | null
         }
         Insert: {
-          batch_id?: string | null
+          business_model_id: string
           classification_method?: string | null
           classified_at?: string
           classified_by?: string | null
@@ -210,11 +85,10 @@ export type Database = {
           is_positive_example?: boolean
           is_primary?: boolean
           notes?: string | null
-          theme_id: string
           updated_at?: string | null
         }
         Update: {
-          batch_id?: string | null
+          business_model_id?: string
           classification_method?: string | null
           classified_at?: string
           classified_by?: string | null
@@ -226,17 +100,85 @@ export type Database = {
           is_positive_example?: boolean
           is_primary?: boolean
           notes?: string | null
-          theme_id?: string
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "company_theme_mappings_batch_id_fkey"
-            columns: ["batch_id"]
+            foreignKeyName: "company_business_models_business_model_id_fkey"
+            columns: ["business_model_id"]
             isOneToOne: false
-            referencedRelation: "classification_batches"
+            referencedRelation: "taxonomy_business_models"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "company_business_models_classified_by_fkey"
+            columns: ["classified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_business_models_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_theme_mappings: {
+        Row: {
+          classified_at: string
+          classified_by: string | null
+          company_id: string
+          confidence_score: number | null
+          created_at: string | null
+          dealcloud_sync_error: string | null
+          id: string
+          is_example: boolean
+          is_positive_example: boolean
+          is_primary: boolean
+          notes: string | null
+          synced_at: string | null
+          synced_to_dealcloud: boolean | null
+          theme_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          classified_at?: string
+          classified_by?: string | null
+          company_id: string
+          confidence_score?: number | null
+          created_at?: string | null
+          dealcloud_sync_error?: string | null
+          id?: string
+          is_example?: boolean
+          is_positive_example?: boolean
+          is_primary?: boolean
+          notes?: string | null
+          synced_at?: string | null
+          synced_to_dealcloud?: boolean | null
+          theme_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          classified_at?: string
+          classified_by?: string | null
+          company_id?: string
+          confidence_score?: number | null
+          created_at?: string | null
+          dealcloud_sync_error?: string | null
+          id?: string
+          is_example?: boolean
+          is_positive_example?: boolean
+          is_primary?: boolean
+          notes?: string | null
+          synced_at?: string | null
+          synced_to_dealcloud?: boolean | null
+          theme_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
           {
             foreignKeyName: "company_theme_mappings_classified_by_fkey"
             columns: ["classified_by"]
@@ -259,6 +201,77 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      dealcloud_sync_log: {
+        Row: {
+          company_id: string | null
+          dealcloud_entry_id: string | null
+          error_message: string | null
+          id: string
+          request_payload: Json | null
+          response_payload: Json | null
+          sync_status: string
+          synced_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          dealcloud_entry_id?: string | null
+          error_message?: string | null
+          id?: string
+          request_payload?: Json | null
+          response_payload?: Json | null
+          sync_status: string
+          synced_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          dealcloud_entry_id?: string | null
+          error_message?: string | null
+          id?: string
+          request_payload?: Json | null
+          response_payload?: Json | null
+          sync_status?: string
+          synced_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealcloud_sync_log_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dealcloud_theme_mapping: {
+        Row: {
+          created_at: string | null
+          dealcloud_entry_id: number
+          dealcloud_object_id: number | null
+          id: string
+          sector_entry_id: number | null
+          sector_name: string | null
+          theme_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          dealcloud_entry_id: number
+          dealcloud_object_id?: number | null
+          id?: string
+          sector_entry_id?: number | null
+          sector_name?: string | null
+          theme_name: string
+        }
+        Update: {
+          created_at?: string | null
+          dealcloud_entry_id?: number
+          dealcloud_object_id?: number | null
+          id?: string
+          sector_entry_id?: number | null
+          sector_name?: string | null
+          theme_name?: string
+        }
+        Relationships: []
       }
       detailed_scores: {
         Row: {
@@ -852,24 +865,21 @@ export type Database = {
       taxonomy_business_models: {
         Row: {
           created_at: string | null
-          description: string | null
+          description: string
           id: string
           name: string
-          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          description?: string | null
+          description: string
           id?: string
           name: string
-          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          description?: string | null
+          description?: string
           id?: string
           name?: string
-          updated_at?: string | null
         }
         Relationships: []
       }
@@ -959,13 +969,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "taxonomy_theme_business_models_business_model_id_fkey"
-            columns: ["business_model_id"]
-            isOneToOne: false
-            referencedRelation: "taxonomy_business_models"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "taxonomy_theme_business_models_theme_id_fkey"
             columns: ["theme_id"]
             isOneToOne: false
@@ -1042,6 +1045,13 @@ export type Database = {
           version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "taxonomy_themes_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "detailed_scores_with_context"
+            referencedColumns: ["sector_id"]
+          },
           {
             foreignKeyName: "taxonomy_themes_sector_id_fkey"
             columns: ["sector_id"]
@@ -1177,21 +1187,11 @@ export type Database = {
             referencedRelation: "framework_criteria"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "taxonomy_themes_sector_id_fkey"
-            columns: ["sector_id"]
-            isOneToOne: false
-            referencedRelation: "taxonomy_sectors"
-            referencedColumns: ["id"]
-          },
         ]
       }
     }
     Functions: {
-      get_taxonomy_json: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_taxonomy_json: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
