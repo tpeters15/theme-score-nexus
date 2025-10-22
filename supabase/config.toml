@@ -12,9 +12,6 @@ verify_jwt = false
 [functions.scrape-carbon-brief]
 verify_jwt = false
 
-[functions.n8n-research-webhook]
-verify_jwt = false
-
 [functions.scrape-iea-sources]
 verify_jwt = false
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { FrameworkCategory, FrameworkCriteria, DetailedScore, ResearchDocument, N8nResearchRun, ThemeWithDetailedScores, FrameworkCategoryWithCriteria, UserRole } from '@/types/framework';
+import { FrameworkCategory, FrameworkCriteria, DetailedScore, ResearchDocument, ThemeWithDetailedScores, FrameworkCategoryWithCriteria, UserRole } from '@/types/framework';
 import { Theme } from '@/types/themes';
 
 export const useFramework = () => {
@@ -178,15 +178,6 @@ export const useFramework = () => {
       // Filter documents to only include those with files that actually exist in storage
       const validDocuments = await filterExistingDocuments(documentsData || []);
 
-      // Fetch research runs
-      const { data: runsData, error: runsError } = await supabase
-        .from('n8n_research_runs')
-        .select('*')
-        .eq('theme_id', themeId)
-        .order('started_at', { ascending: false });
-
-      if (runsError) throw runsError;
-
       // Manually join categories with their criteria
       const categoriesWithCriteria: FrameworkCategoryWithCriteria[] = (categoriesData || []).map(category => ({
         ...category,
@@ -207,7 +198,6 @@ export const useFramework = () => {
         categories: categoriesWithCriteria,
         detailed_scores: scoresWithCriteria,
         research_documents: validDocuments,
-        research_runs: runsData || [],
         overall_score,
         overall_confidence
       };
@@ -295,59 +285,6 @@ export const useFramework = () => {
     }
   };
 
-  const startN8nResearch = async (themeId: string, criteriaIds: string[], webhookUrl: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // Create research run record
-      const { data: runData, error: runError } = await supabase
-        .from('n8n_research_runs')
-        .insert({
-          theme_id: themeId,
-          criteria_ids: criteriaIds,
-          webhook_url: webhookUrl,
-          started_by: user?.id,
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (runError) throw runError;
-
-      // Trigger n8n webhook
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          run_id: runData.id,
-          theme_id: themeId,
-          criteria_ids: criteriaIds,
-          criteria_details: criteriaIds.map(id => {
-            const criterion = criteria.find(c => c.id === id);
-            return {
-              id,
-              name: criterion?.name,
-              code: criterion?.code,
-              ai_prompt: criterion?.ai_prompt,
-              scoring_rubric: criterion?.scoring_rubric
-            };
-          }).filter(Boolean)
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to trigger n8n workflow');
-      }
-
-      return runData;
-    } catch (error) {
-      console.error('Error starting n8n research:', error);
-      throw error;
-    }
-  };
-
   return {
     categories,
     criteria,
@@ -355,7 +292,6 @@ export const useFramework = () => {
     userRole,
     fetchThemeWithDetailedScores,
     updateDetailedScore,
-    startN8nResearch,
     refreshFrameworkData: fetchFrameworkData
   };
 };

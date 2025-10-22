@@ -57,24 +57,9 @@ export interface ResearchDocument {
   file_path?: string;
   file_size?: number;
   mime_type?: string;
-  n8n_agent_run_id?: string;
   created_by?: string;
   created_at: string;
   updated_at: string;
-}
-
-export interface N8nResearchRun {
-  id: string;
-  theme_id: string;
-  criteria_ids: string[];
-  status: string; // Database stores as string with CHECK constraint
-  webhook_url?: string;
-  n8n_execution_id?: string;
-  started_by?: string;
-  started_at: string;
-  completed_at?: string;
-  error_message?: string;
-  results_summary?: Json;
 }
 
 export interface FrameworkCategoryWithCriteria extends FrameworkCategory {
@@ -106,7 +91,6 @@ export interface ThemeWithDetailedScores {
   categories: FrameworkCategoryWithCriteria[];
   detailed_scores: DetailedScoreWithCriteria[];
   research_documents: ResearchDocument[];
-  research_runs: N8nResearchRun[];
   overall_score: number;
   overall_confidence: 'High' | 'Medium' | 'Low';
 }

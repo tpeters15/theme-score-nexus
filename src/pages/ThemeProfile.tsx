@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useFramework } from "@/hooks/useFramework";
-import { ThemeWithDetailedScores, ResearchDocument, N8nResearchRun } from "@/types/framework";
+import { ThemeWithDetailedScores, ResearchDocument } from "@/types/framework";
 import { PILLAR_COLORS } from "@/types/themes";
 import { ThemeFileUpload } from "@/components/ThemeFileUpload";
 import { DocumentViewer } from "@/components/DocumentViewer";

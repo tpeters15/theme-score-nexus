@@ -14,7 +14,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useFramework } from '@/hooks/useFramework';
 import { ThemeWithDetailedScores, DetailedScore, Json, ScoringRubric } from '@/types/framework';
 import { Theme } from '@/types/themes';
-import { Play, FileText, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { FileText } from 'lucide-react';
 
 interface DetailedFrameworkModalProps {
   theme: Theme | null;
@@ -29,11 +29,9 @@ export const DetailedFrameworkModal: React.FC<DetailedFrameworkModalProps> = ({
 }) => {
   const [detailedTheme, setDetailedTheme] = useState<ThemeWithDetailedScores | null>(null);
   const [loading, setLoading] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState('');
-  const [selectedCriteriaForResearch, setSelectedCriteriaForResearch] = useState<string[]>([]);
   const [localScores, setLocalScores] = useState<{ [criteriaId: string]: Partial<DetailedScore> }>({});
   
-  const { fetchThemeWithDetailedScores, updateDetailedScore, startN8nResearch, userRole } = useFramework();
+  const { fetchThemeWithDetailedScores, updateDetailedScore, userRole } = useFramework();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -95,36 +93,6 @@ export const DetailedFrameworkModal: React.FC<DetailedFrameworkModalProps> = ({
     }
   };
 
-  const handleStartResearch = async () => {
-    if (!theme || !webhookUrl || selectedCriteriaForResearch.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please provide webhook URL and select criteria",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      await startN8nResearch(theme.id, selectedCriteriaForResearch, webhookUrl);
-      
-      toast({
-        title: "Success",
-        description: "Research started successfully",
-      });
-      
-      setWebhookUrl('');
-      setSelectedCriteriaForResearch([]);
-      await loadDetailedTheme();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to start research",
-        variant: "destructive",
-      });
-    }
-  };
-
   const parseScoringRubric = (rubric: Json): ScoringRubric | null => {
     try {
       if (typeof rubric === 'string') {
@@ -136,21 +104,6 @@ export const DetailedFrameworkModal: React.FC<DetailedFrameworkModalProps> = ({
       return null;
     } catch {
       return null;
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'running':
-        return <Play className="h-4 w-4 text-blue-500" />;
-      case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'failed':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <AlertCircle className="h-4 w-4 text-gray-500" />;
     }
   };
 
@@ -186,9 +139,8 @@ export const DetailedFrameworkModal: React.FC<DetailedFrameworkModalProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="framework" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="framework">Framework Scoring</TabsTrigger>
-            <TabsTrigger value="research">Research Management</TabsTrigger>
             <TabsTrigger value="documents">Research Documents</TabsTrigger>
           </TabsList>
 
@@ -309,98 +261,6 @@ export const DetailedFrameworkModal: React.FC<DetailedFrameworkModalProps> = ({
                 </Card>
               ))}
             </ScrollArea>
-          </TabsContent>
-
-          <TabsContent value="research" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Start New Research</CardTitle>
-                <CardDescription>
-                  Trigger n8n research agents to automatically gather data for selected criteria
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="webhook-url">n8n Webhook URL</Label>
-                  <Input
-                    id="webhook-url"
-                    value={webhookUrl}
-                    onChange={(e) => setWebhookUrl(e.target.value)}
-                    placeholder="https://your-n8n-instance.com/webhook/research"
-                    disabled={userRole !== 'admin' && userRole !== 'analyst'}
-                  />
-                </div>
-
-                <div>
-                  <Label>Select Criteria for Research</Label>
-                  <div className="grid grid-cols-2 gap-2 mt-2 max-h-32 overflow-y-auto">
-                    {detailedTheme.categories.flatMap(category =>
-                      category.criteria.map(criteria => (
-                        <label key={criteria.id} className="flex items-center space-x-2 text-sm">
-                          <input
-                            type="checkbox"
-                            checked={selectedCriteriaForResearch.includes(criteria.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedCriteriaForResearch(prev => [...prev, criteria.id]);
-                              } else {
-                                setSelectedCriteriaForResearch(prev => prev.filter(id => id !== criteria.id));
-                              }
-                            }}
-                            disabled={userRole !== 'admin' && userRole !== 'analyst'}
-                          />
-                          <span>{criteria.code}: {criteria.name}</span>
-                        </label>
-                      ))
-                    )}
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={handleStartResearch}
-                  disabled={!webhookUrl || selectedCriteriaForResearch.length === 0 || 
-                           (userRole !== 'admin' && userRole !== 'analyst')}
-                  className="w-full"
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  Start Research
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Research History</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-64">
-                  {detailedTheme.research_runs.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-4">No research runs yet</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {detailedTheme.research_runs.map((run) => (
-                        <div key={run.id} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex items-center space-x-2">
-                            {getStatusIcon(run.status)}
-                            <div>
-                              <p className="text-sm font-medium">
-                                {run.criteria_ids.length} criteria researched
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Started: {new Date(run.started_at).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge variant="outline" className="capitalize">
-                            {run.status}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value="documents" className="space-y-4">

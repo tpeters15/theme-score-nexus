@@ -14,7 +14,6 @@ export interface ResearchDocument {
   created_by?: string;
   created_at: string;
   updated_at: string;
-  n8n_agent_run_id?: string;
   // Related data
   theme?: {
     id: string;

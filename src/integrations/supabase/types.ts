@@ -465,48 +465,6 @@ export type Database = {
           },
         ]
       }
-      n8n_research_runs: {
-        Row: {
-          completed_at: string | null
-          criteria_ids: string[] | null
-          error_message: string | null
-          id: string
-          n8n_execution_id: string | null
-          results_summary: Json | null
-          started_at: string | null
-          started_by: string | null
-          status: string | null
-          theme_id: string | null
-          webhook_url: string | null
-        }
-        Insert: {
-          completed_at?: string | null
-          criteria_ids?: string[] | null
-          error_message?: string | null
-          id?: string
-          n8n_execution_id?: string | null
-          results_summary?: Json | null
-          started_at?: string | null
-          started_by?: string | null
-          status?: string | null
-          theme_id?: string | null
-          webhook_url?: string | null
-        }
-        Update: {
-          completed_at?: string | null
-          criteria_ids?: string[] | null
-          error_message?: string | null
-          id?: string
-          n8n_execution_id?: string | null
-          results_summary?: Json | null
-          started_at?: string | null
-          started_by?: string | null
-          status?: string | null
-          theme_id?: string | null
-          webhook_url?: string | null
-        }
-        Relationships: []
-      }
       processed_signals: {
         Row: {
           analysis_priority: number | null
@@ -745,7 +703,6 @@ export type Database = {
           file_size: number | null
           id: string
           mime_type: string | null
-          n8n_agent_run_id: string | null
           theme_id: string | null
           title: string
           updated_at: string | null
@@ -760,7 +717,6 @@ export type Database = {
           file_size?: number | null
           id?: string
           mime_type?: string | null
-          n8n_agent_run_id?: string | null
           theme_id?: string | null
           title: string
           updated_at?: string | null
@@ -775,7 +731,6 @@ export type Database = {
           file_size?: number | null
           id?: string
           mime_type?: string | null
-          n8n_agent_run_id?: string | null
           theme_id?: string | null
           title?: string
           updated_at?: string | null
