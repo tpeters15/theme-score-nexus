@@ -135,15 +135,10 @@ Deno.serve(async (req) => {
       }))
     }))
 
-    // ==================== STAGE 0: Climate Relevance Check ====================
-    console.log('Stage 0: Quick climate relevance check')
+    // ==================== STAGE 1: Initial Classification ====================
+    console.log('Stage 1: Analyzing website content with Gemini')
     
-    // Check if we have sufficient website content (not just cookie/privacy policy)
-    const hasSubstantialContent = websiteContent.length > 500 && 
-      !websiteContent.toLowerCase().includes('cookie') || 
-      websiteContent.toLowerCase().includes('privacy policy')
-    
-    const stage0Prompt = `You are a climate tech investment analyst. Determine if this company is climate-related.
+    const stage1Prompt = `You are a climate tech investment analyst. Analyze this company and classify it into ONE primary theme from our taxonomy.
 
 Company: ${companyName}
 ${hasValidWebsite ? `Website: ${website}` : 'Website: Not provided'}
@@ -151,80 +146,23 @@ ${hasValidWebsite ? `Website: ${website}` : 'Website: Not provided'}
 ${business_description ? `Business Description (from SourceScrub):\n${business_description}\n` : ''}
 ${websiteContent ? `Website Content:\n${websiteContent.substring(0, 8000)}` : hasValidWebsite ? 'Website content unavailable.' : 'No website available - classify based on company name and business description.'}
 
-${!hasValidWebsite ? 'NOTE: No valid website URL was provided. Base your assessment on the company name and business description only.\n' : ''}
-${!hasSubstantialContent ? 'NOTE: Website content appears insufficient (mostly cookie/privacy policy). You MUST respond is_climate_related: true to proceed to web research unless you are CERTAIN the company is not climate-related.\n' : ''}
+${!hasValidWebsite ? 'NOTE: No valid website URL was provided. Base classification on company name and business description. Reduce confidence slightly due to limited information.\n' : ''}
 
-A company is climate-related if it:
-- Reduces greenhouse gas emissions (decarbonization)
-- Enables renewable energy or energy transition
-- Improves resource sustainability (water, waste, circular economy)
-- Provides climate adaptation or resilience solutions
-- Manufactures components/systems for climate solutions
-- Provides software/services enabling climate solutions
+Taxonomy (select ONE theme):
+${JSON.stringify(compressedTaxonomy, null, 2)}
 
-IMPORTANT: If website content is insufficient or unclear, default to is_climate_related: true to allow web research.
+IMPORTANT: If the company does NOT fit any theme (even after careful analysis), return null for theme_id and explain why.
 
 Respond with a JSON object:
 {
-  "is_climate_related": true/false,
-  "rationale": "brief explanation (1-2 sentences)",
-  "has_sufficient_data": true/false
+  "theme_id": "uuid of the selected theme OR null if no fit",
+  "theme_name": "theme name OR null if no fit",
+  "pillar": "pillar name",
+  "sector": "sector name OR null",
+  "business_model": "primary business model from theme's list OR null",
+  "confidence_score": 0.0-1.0,
+  "rationale": "brief explanation (2-3 sentences)"
 }`
-
-    const stage0Response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableAiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'user', content: stage0Prompt }
-        ],
-        response_format: { type: 'json_object' },
-      }),
-    })
-
-    if (!stage0Response.ok) {
-      const errorText = await stage0Response.text()
-      throw new Error(`Lovable AI Stage 0 error: ${stage0Response.status} - ${errorText}`)
-    }
-
-    const stage0Data = await stage0Response.json()
-    const stage0Result = JSON.parse(stage0Data.choices[0].message.content)
-    
-    console.log('Stage 0 result:', stage0Result)
-
-    // If not climate-related, don't create any mapping
-    if (!stage0Result.is_climate_related) {
-      console.log('Company not climate-related')
-      
-      // Update company status
-      await supabase
-        .from('companies')
-        .update({
-          classification_status: 'not_climate_related',
-          classification_error_message: stage0Result.rationale
-        })
-        .eq('id', companyId)
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          climate_related: false,
-          rationale: stage0Result.rationale,
-          message: 'Company is not climate-related - no theme mapping created'
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      )
-    }
-
-    // ==================== STAGE 1: Initial Classification ====================
-    console.log('Stage 1: Analyzing website content with Gemini')
     
     const stage1Prompt = `You are a climate tech investment analyst. Analyze this company and classify it into ONE primary theme from our taxonomy.
 
@@ -388,7 +326,7 @@ Respond with a JSON object:
       JSON.stringify({ 
         success: true, 
         result: finalResult,
-        stages_used: 'Stage 0 (climate check) + Stage 1 (website) + Stage 2 (Google Search)',
+        stages_used: 'Stage 1 (website) + Stage 2 (Google Search)',
         verification_passed: finalResult.company_verification_passed !== false
       }),
       { 
