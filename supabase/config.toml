@@ -3,7 +3,7 @@ project_id = "blwwpvvdnpkipjgajwiw"
 [functions.get-taxonomy]
 verify_jwt = false
 
-[functions.batch-classification-webhook]
+[functions.classify-company]
 verify_jwt = false
 
 [functions.scrape-carbon-brief]
