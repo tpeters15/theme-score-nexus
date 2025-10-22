@@ -169,7 +169,7 @@ Respond with a JSON object:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-exp',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'user', content: stage0Prompt }
         ],
@@ -241,7 +241,7 @@ Respond with a JSON object:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-exp',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'user', content: stage1Prompt }
         ],
@@ -303,7 +303,7 @@ Respond with a JSON object:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-exp',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'user', content: stage2Prompt }
         ],
