@@ -33,7 +33,7 @@ export const SingleCompanyClassifier = () => {
           company_name: companyName,
           website_domain: website.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0],
           description: description || null,
-          source_system: "dashboard",
+          source_system: "manual",
           classification_status: "pending"
         }, {
           onConflict: 'website_domain',

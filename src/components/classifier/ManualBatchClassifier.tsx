@@ -71,7 +71,7 @@ export const ManualBatchClassifier = () => {
               .replace(/^www\./, '')
               .split('/')[0],
             description: company.description || null,
-            source_system: "dashboard_batch",
+            source_system: "manual",
             classification_status: "pending"
           }, {
             onConflict: 'website_domain',
