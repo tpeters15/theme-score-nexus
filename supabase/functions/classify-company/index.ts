@@ -138,6 +138,11 @@ Deno.serve(async (req) => {
     // ==================== STAGE 0: Climate Relevance Check ====================
     console.log('Stage 0: Quick climate relevance check')
     
+    // Check if we have sufficient website content (not just cookie/privacy policy)
+    const hasSubstantialContent = websiteContent.length > 500 && 
+      !websiteContent.toLowerCase().includes('cookie') || 
+      websiteContent.toLowerCase().includes('privacy policy')
+    
     const stage0Prompt = `You are a climate tech investment analyst. Determine if this company is climate-related.
 
 Company: ${companyName}
@@ -147,6 +152,7 @@ ${business_description ? `Business Description (from SourceScrub):\n${business_d
 ${websiteContent ? `Website Content:\n${websiteContent.substring(0, 8000)}` : hasValidWebsite ? 'Website content unavailable.' : 'No website available - classify based on company name and business description.'}
 
 ${!hasValidWebsite ? 'NOTE: No valid website URL was provided. Base your assessment on the company name and business description only.\n' : ''}
+${!hasSubstantialContent ? 'NOTE: Website content appears insufficient (mostly cookie/privacy policy). You MUST respond is_climate_related: true to proceed to web research unless you are CERTAIN the company is not climate-related.\n' : ''}
 
 A company is climate-related if it:
 - Reduces greenhouse gas emissions (decarbonization)
@@ -156,10 +162,13 @@ A company is climate-related if it:
 - Manufactures components/systems for climate solutions
 - Provides software/services enabling climate solutions
 
+IMPORTANT: If website content is insufficient or unclear, default to is_climate_related: true to allow web research.
+
 Respond with a JSON object:
 {
   "is_climate_related": true/false,
-  "rationale": "brief explanation (1-2 sentences)"
+  "rationale": "brief explanation (1-2 sentences)",
+  "has_sufficient_data": true/false
 }`
 
     const stage0Response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
