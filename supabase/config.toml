@@ -3,6 +3,9 @@ project_id = "blwwpvvdnpkipjgajwiw"
 [functions.get-taxonomy]
 verify_jwt = false
 
+[functions.get-business-models]
+verify_jwt = false
+
 [functions.classify-company]
 verify_jwt = false
 

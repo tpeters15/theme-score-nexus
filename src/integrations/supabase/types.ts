@@ -951,35 +951,6 @@ export type Database = {
           },
         ]
       }
-      taxonomy_theme_business_models: {
-        Row: {
-          business_model_id: string
-          created_at: string | null
-          id: string
-          theme_id: string
-        }
-        Insert: {
-          business_model_id: string
-          created_at?: string | null
-          id?: string
-          theme_id: string
-        }
-        Update: {
-          business_model_id?: string
-          created_at?: string | null
-          id?: string
-          theme_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "taxonomy_theme_business_models_theme_id_fkey"
-            columns: ["theme_id"]
-            isOneToOne: false
-            referencedRelation: "taxonomy_themes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       taxonomy_themes: {
         Row: {
           cagr_percentage: number | null
@@ -1194,6 +1165,7 @@ export type Database = {
       }
     }
     Functions: {
+      get_business_models_json: { Args: never; Returns: Json }
       get_taxonomy_json: { Args: never; Returns: Json }
       has_role: {
         Args: {

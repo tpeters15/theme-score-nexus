@@ -40,11 +40,10 @@ export interface TaxonomyTheme {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  // Note: Business models are NOT theme-specific
+  // They are independent classification tags fetched separately
 }
 
-export interface TaxonomyThemeBusinessModel {
-  id: string;
-  theme_id: string;
-  business_model_id: string;
-  created_at: string;
-}
+// Removed: TaxonomyThemeBusinessModel interface
+// Business models are independent tags, not theme-specific
+// They are associated with companies via company_business_models table
