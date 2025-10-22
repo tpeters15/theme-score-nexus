@@ -13,7 +13,6 @@ import Signals from "./pages/Signals";
 import Research from "./pages/Research";
 import RegulatoryTracker from "./pages/RegulatoryTracker";
 import SourceMonitors from "./pages/SourceMonitors";
-import Classifier from "./pages/Classifier";
 import Auth from "./pages/Auth";
 import ThemeProfile from "./pages/ThemeProfile";
 import SourceProfile from "./pages/SourceProfile";
@@ -46,7 +45,6 @@ const App = () => (
                 <Route path="/research" element={<Research />} />
                 <Route path="/source-monitors" element={<SourceMonitors />} />
                 <Route path="/source/:sourceId" element={<SourceProfile />} />
-                <Route path="/classifier" element={<Classifier />} />
                 <Route path="/taxonomy" element={<TaxonomyManagement />} />
                 <Route path="/scraper-management" element={<ScraperManagement />} />
                 <Route path="/admin/theme-populator" element={<ThemePopulator />} />
