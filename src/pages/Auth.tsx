@@ -7,9 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import deltaLogo from "@/assets/delta-metis-logo.png";
-
+import { z } from "zod";
 import { Loader2, Shield, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+const emailSchema = z.string().email({ message: "Please enter a valid email address" });
+const passwordSchema = z.string().min(6, { message: "Password must be at least 6 characters" });
 
 export default function Auth() {
   const [user, setUser] = useState<User | null>(null);
@@ -17,7 +20,9 @@ export default function Auth() {
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
 
   // Form states
@@ -61,6 +66,15 @@ export default function Auth() {
     e.preventDefault();
     setAuthLoading(true);
     setError(null);
+    setSuccess(null);
+
+    // Validate inputs
+    const emailValidation = emailSchema.safeParse(email);
+    if (!emailValidation.success) {
+      setError(emailValidation.error.errors[0].message);
+      setAuthLoading(false);
+      return;
+    }
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -74,6 +88,56 @@ export default function Auth() {
         } else {
           setError(error.message);
         }
+      }
+    } catch (error) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const signUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    // Validate inputs
+    const emailValidation = emailSchema.safeParse(email);
+    if (!emailValidation.success) {
+      setError(emailValidation.error.errors[0].message);
+      setAuthLoading(false);
+      return;
+    }
+
+    const passwordValidation = passwordSchema.safeParse(password);
+    if (!passwordValidation.success) {
+      setError(passwordValidation.error.errors[0].message);
+      setAuthLoading(false);
+      return;
+    }
+
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+        },
+      });
+
+      if (error) {
+        if (error.message.includes("User already registered")) {
+          setError("This email is already registered. Please sign in instead.");
+        } else {
+          setError(error.message);
+        }
+      } else {
+        setSuccess("Account created! Please check your email to verify your account.");
+        setEmail("");
+        setPassword("");
       }
     } catch (error) {
       setError("An unexpected error occurred. Please try again.");
@@ -117,13 +181,18 @@ export default function Auth() {
 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-center">Welcome Back</CardTitle>
+            <CardTitle className="text-center">
+              {isSignUp ? "Create Account" : "Welcome Back"}
+            </CardTitle>
             <CardDescription className="text-center">
-              Sign in to access Delta's investment intelligence platform
+              {isSignUp 
+                ? "Sign up to access Delta's investment intelligence platform"
+                : "Sign in to access Delta's investment intelligence platform"
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={signIn} className="space-y-4">
+            <form onSubmit={isSignUp ? signUp : signIn} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -169,15 +238,39 @@ export default function Auth() {
                 disabled={authLoading}
               >
                 {authLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Sign In
+                {isSignUp ? "Create Account" : "Sign In"}
               </Button>
             </form>
 
             {error && (
-              <Alert className="mt-4">
-                <AlertDescription>{error}</AlertDescription>
+              <Alert className="mt-4 border-destructive">
+                <AlertDescription className="text-destructive">{error}</AlertDescription>
               </Alert>
             )}
+
+            {success && (
+              <Alert className="mt-4 border-green-600">
+                <AlertDescription className="text-green-600">{success}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="mt-4 text-center">
+              <Button
+                type="button"
+                variant="link"
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setError(null);
+                  setSuccess(null);
+                }}
+                className="text-sm"
+              >
+                {isSignUp 
+                  ? "Already have an account? Sign in" 
+                  : "Don't have an account? Sign up"
+                }
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
