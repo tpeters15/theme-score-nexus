@@ -17,6 +17,7 @@ export type Database = {
       companies: {
         Row: {
           classification_error_message: string | null
+          classification_research_summary: string | null
           classification_status: string | null
           company_name: string | null
           created_at: string
@@ -30,6 +31,7 @@ export type Database = {
         }
         Insert: {
           classification_error_message?: string | null
+          classification_research_summary?: string | null
           classification_status?: string | null
           company_name?: string | null
           created_at?: string
@@ -43,6 +45,7 @@ export type Database = {
         }
         Update: {
           classification_error_message?: string | null
+          classification_research_summary?: string | null
           classification_status?: string | null
           company_name?: string | null
           created_at?: string

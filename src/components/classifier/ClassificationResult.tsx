@@ -16,6 +16,7 @@ interface ClassificationResultProps {
     status: string;
     website_summary?: string;
     perplexity_research?: string;
+    research_summary?: string;
   };
 }
 
@@ -100,6 +101,17 @@ export const ClassificationResult = ({ result }: ClassificationResultProps) => {
             )}
           </div>
         </div>
+
+        {result.research_summary && (
+          <div>
+            <p className="text-sm font-medium mb-2">Research Summary</p>
+            <div className="bg-muted/50 rounded-lg p-4 text-sm prose prose-sm max-w-none">
+              <pre className="whitespace-pre-wrap font-sans text-muted-foreground leading-relaxed">
+                {result.research_summary}
+              </pre>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

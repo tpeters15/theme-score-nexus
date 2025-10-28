@@ -16,9 +16,11 @@ interface Classification {
   business_model: string;
   context_metadata: any;
   updated_at: string;
+  research_summary?: string;
   company?: {
     company_name: string;
     website_domain: string;
+    classification_research_summary?: string;
   };
   theme?: {
     name: string;
@@ -151,11 +153,29 @@ export const ClassificationDetailModal = ({
 
             <Separator />
 
+            {/* Research Summary */}
+            {(classification.company?.classification_research_summary || classification.research_summary) && (
+              <>
+                <div className="space-y-3">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Building2 className="h-4 w-4" />
+                    Research Summary
+                  </h3>
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap prose prose-sm max-w-none">
+                      {classification.company?.classification_research_summary || classification.research_summary}
+                    </div>
+                  </div>
+                </div>
+                <Separator />
+              </>
+            )}
+
             {/* Rationale */}
             <div className="space-y-3">
               <h3 className="font-semibold flex items-center gap-2">
                 <Layers className="h-4 w-4" />
-                Rationale
+                Classification Rationale
               </h3>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">
                 {classification.rationale || "No rationale provided"}

@@ -282,8 +282,81 @@ Respond with a JSON object:
     
     finalResult = stage2Result
 
+    // ==================== STAGE 2.5: Research Synthesis ====================
+    console.log('Stage 2.5: Creating consolidated research summary')
+    
+    let researchSummary = ''
+    
+    try {
+      const synthesisPrompt = `You are a climate tech investment analyst. Create a comprehensive research synthesis for this company classification.
+
+Company: ${companyName}
+Website: ${website || 'Not provided'}
+
+INFORMATION SOURCES:
+
+1. Website Scraping Results:
+${websiteContent ? websiteContent.substring(0, 6000) : 'No website content available'}
+
+2. Web Research Findings:
+${stage2Result.rationale}
+${stage2Result.sources_consulted ? `\nSources: ${stage2Result.sources_consulted}` : ''}
+
+3. Initial Classification:
+- Theme: ${finalResult.theme_name || 'None'}
+- Pillar: ${finalResult.pillar}
+- Sector: ${finalResult.sector || 'N/A'}
+- Business Model: ${finalResult.business_model || 'N/A'}
+- Confidence: ${(finalResult.confidence_score * 100).toFixed(0)}%
+
+Create a structured research summary in this format:
+
+## Executive Summary
+[2-3 sentences summarizing what the company does and its climate tech relevance]
+
+## Business Model Analysis
+[Describe revenue model, target customers, value proposition]
+
+## Technology & Products
+[Key technologies, products/services, technical approach]
+
+## Market Position & Impact
+[Market stage, competitive positioning, climate impact potential]
+
+## Classification Rationale
+[Why this theme/sector/pillar fits best, key evidence from research]
+
+Make this comprehensive but concise (aim for 400-600 words). This will be used by analysts to verify the classification.`
+
+      const synthesisResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${lovableAiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { role: 'user', content: synthesisPrompt }
+          ],
+        }),
+      })
+
+      if (synthesisResponse.ok) {
+        const synthesisData = await synthesisResponse.json()
+        researchSummary = synthesisData.choices[0].message.content
+        console.log(`Generated research summary (${researchSummary.length} characters)`)
+      } else {
+        console.error('Failed to generate research summary:', synthesisResponse.status)
+        researchSummary = `# Research Summary\n\n**Website Analysis:**\n${websiteContent ? websiteContent.substring(0, 500) : 'No website content'}\n\n**Classification:**\n${finalResult.rationale}`
+      }
+    } catch (error) {
+      console.error('Research synthesis error:', error)
+      researchSummary = `# Research Summary\n\n**Classification Rationale:**\n${finalResult.rationale}`
+    }
+
     // ==================== STAGE 3: Save to company_theme_mappings ====================
-    console.log('Stage 3: Saving final classification')
+    console.log('Stage 3: Saving final classification and research summary')
 
     // Only create mapping if we have a valid theme
     if (finalResult.theme_id) {
@@ -302,11 +375,12 @@ Respond with a JSON object:
         throw new Error(`Failed to create theme mapping: ${mappingError.message}`)
       }
 
-      // Update company status to completed
+      // Update company status to completed and save research summary
       await supabase
         .from('companies')
         .update({
-          classification_status: 'completed'
+          classification_status: 'completed',
+          classification_research_summary: researchSummary
         })
         .eq('id', companyId)
     } else {

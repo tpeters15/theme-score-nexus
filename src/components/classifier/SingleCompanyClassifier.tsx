@@ -63,7 +63,7 @@ export const SingleCompanyClassifier = () => {
 
       toast.success("Classification completed successfully!");
 
-      // Fetch the classification result from company_theme_mappings
+      // Fetch the classification result with research summary
       const { data: mappingData, error: mappingError } = await supabase
         .from("company_theme_mappings")
         .select(`
@@ -79,6 +79,13 @@ export const SingleCompanyClassifier = () => {
         `)
         .eq("company_id", companyData.id)
         .eq("is_primary", true)
+        .single();
+
+      // Fetch company for research summary
+      const { data: companyFullData } = await supabase
+        .from("companies")
+        .select("classification_research_summary")
+        .eq("id", companyData.id)
         .single();
 
       if (mappingError) {
@@ -97,7 +104,8 @@ export const SingleCompanyClassifier = () => {
         rationale: mappingData?.notes || classifyData?.rationale || "No rationale provided",
         status: "Completed",
         website_summary: true,
-        perplexity_research: true
+        perplexity_research: true,
+        research_summary: companyFullData?.classification_research_summary
       });
 
       // Clear form
